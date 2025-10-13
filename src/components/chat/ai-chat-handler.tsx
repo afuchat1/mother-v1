@@ -62,19 +62,28 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
       try {
         const photoDataUri = sentImage ? await toBase64(sentImage) : undefined;
         const result = await aiAssistantAnswersQuestions({ question: input, photoDataUri });
-        const aiMessage: Message = {
-          id: `ai_${Date.now()}`,
-          text: result.answer,
-          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          sender: aiUser,
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      } catch (error) {
-        console.error('AI Assistant Error:', error);
+        
+        if (result.answer) {
+            const aiMessage: Message = {
+              id: `ai_${Date.now()}`,
+              text: result.answer,
+              createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              sender: aiUser,
+            };
+            setMessages(prev => [...prev, aiMessage]);
+        } else {
+            // This handles cases where the flow might return an error object
+            // This is a temporary way to handle Genkit flow errors on the client
+            const error = (result as any).error;
+            throw new Error(error || 'The AI assistant returned an empty response.');
+        }
+
+      } catch (error: any) {
+        console.error('AI Assistant Error:', error.message || error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to get a response from the AI assistant.',
+          description: error.message || 'Failed to get a response from the AI assistant.',
         });
         const errorMessage: Message = {
             id: `err_${Date.now()}`,
