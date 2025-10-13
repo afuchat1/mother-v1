@@ -3,10 +3,11 @@ import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, X, Trash2, Reply, Camera } from "lucide-react";
+import { Send, Paperclip, Mic, X, Trash2, Reply, Camera, Plus } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { Message } from '@/lib/types';
 import CameraView from './camera-view';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type ChatInputProps = {
     input: string;
@@ -159,18 +160,28 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
            ) : (
             <>
               {handleImageChange && handleImageFile && (
-                <>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={() => setShowCamera(true)} type="button">
-                      <Camera className="h-5 w-5" />
-                      <span className="sr-only">Take photo</span>
-                  </Button>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={handleAttachClick} type="button">
-                      <Paperclip className="h-5 w-5" />
-                      <span className="sr-only">Attach file</span>
-                  </Button>
-                  <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-                </>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9">
+                        <Plus className="h-5 w-5" />
+                        <span className="sr-only">Attach</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                      <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setShowCamera(true)} type="button" className="flex flex-col h-auto p-3 gap-1">
+                              <Camera className="h-5 w-5" />
+                              <span className="text-xs">Camera</span>
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleAttachClick} type="button" className="flex flex-col h-auto p-3 gap-1">
+                              <Paperclip className="h-5 w-5" />
+                              <span className="text-xs">File</span>
+                          </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
               )}
+              <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
               <Textarea
                   placeholder="Message"
                   className="flex-1 resize-none bg-input border-0 rounded-full py-1.5 px-4 h-9 text-base"
