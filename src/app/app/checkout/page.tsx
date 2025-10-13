@@ -32,8 +32,8 @@ export default function CheckoutPage() {
     }
 
     return (
-        <main className="flex flex-col flex-1 bg-secondary">
-             <header className="flex items-center gap-2 bg-background p-2 sticky top-0 z-10 border-b">
+        <main className="flex flex-col h-full bg-secondary">
+             <header className="flex items-center gap-2 bg-background p-2 sticky top-0 z-10 border-b shrink-0">
                 <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
                     <ArrowLeft />
                 </Button>

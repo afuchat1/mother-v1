@@ -6,8 +6,11 @@ import { DollarSign, ShoppingCart, BookOpen } from "lucide-react";
 
 export default function ProfilePage() {
   return (
-    <main className="flex-1 bg-secondary">
-      <div className="p-4">
+    <main className="flex flex-col h-full bg-secondary">
+       <header className="p-4 border-b sticky top-0 bg-background z-10 shrink-0">
+            <h1 className="text-2xl font-bold font-headline">Account</h1>
+        </header>
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col items-center gap-4 mb-8">
             <Avatar className="h-24 w-24 border-2 border-primary">
                 <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />

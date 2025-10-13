@@ -20,7 +20,7 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
 
   return (
     <div className="flex flex-col h-full bg-background">
-        <header className="p-4 border-b sticky top-0 bg-background z-10">
+        <header className="p-4 border-b sticky top-0 bg-background z-10 shrink-0">
             <h1 className="text-2xl font-bold font-headline">Chats</h1>
         </header>
         <ScrollArea className="flex-1">
