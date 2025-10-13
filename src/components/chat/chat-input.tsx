@@ -184,7 +184,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
            {isRecording ? (
-             <div className="flex-1 flex items-center bg-input rounded-full h-9 px-4">
+             <div className="flex-1 flex items-center bg-input rounded-md h-10 px-4">
                <div className="flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                  <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
@@ -202,7 +202,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               {handleImageChange && handleImageFile && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9">
+                      <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-10 w-10">
                         <Plus className="h-5 w-5" />
                         <span className="sr-only">Attach</span>
                       </Button>
@@ -224,7 +224,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
               <Textarea
                   placeholder="Message"
-                  className="flex-1 resize-none bg-input border-0 rounded-full py-1.5 px-4 h-9 text-base"
+                  className="flex-1 resize-none bg-input border-0 rounded-md py-2 px-3 h-10 text-base"
                   rows={1}
                   value={input}
                   onChange={handleInputChange}
@@ -241,7 +241,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                 <Button 
                   type="submit"
                   size="icon" 
-                  className="shrink-0 bg-primary rounded-full h-9 w-9"
+                  className="shrink-0 bg-primary rounded-md h-10 w-10"
                   disabled={isLoading}
                   >
                     <Send className="h-5 w-5" />
@@ -251,7 +251,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="shrink-0 text-muted-foreground h-9 w-9" 
+                  className="shrink-0 text-muted-foreground h-10 w-10" 
                   type="button" 
                   onClick={handleMicClick}
                   onMouseDown={handleRecordButtonPress}
@@ -268,3 +268,5 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     </div>
   );
 }
+
+    
