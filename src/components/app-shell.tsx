@@ -80,11 +80,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const isChatActive = !!activeChat;
 
   return (
-    <div className={cn("min-h-screen w-full bg-background", isChatActive ? 'flex flex-col' : 'block')}>
+    <div className={cn("h-[100dvh] w-full bg-background", isChatActive ? 'flex flex-col' : 'block')}>
         <main className={cn(
           "flex-1", 
           showBottomNav && !isChatActive && "pb-16",
-          isChatActive && "flex flex-col overflow-hidden"
+          isChatActive ? "flex flex-col overflow-y-hidden" : "h-full"
         )}>
             {children}
         </main>
