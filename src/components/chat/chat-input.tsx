@@ -1,14 +1,15 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, X } from "lucide-react";
+import { Send, Paperclip, Mic, X, Trash2 } from "lucide-react";
+import { cn } from '@/lib/utils';
 
 type ChatInputProps = {
     input: string;
     handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => void;
-    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => void;
     isLoading?: boolean;
     handleImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     imagePreview?: string | null;
@@ -17,9 +18,80 @@ type ChatInputProps = {
 
 export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, imagePreview, removeImage }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleAttachClick = () => {
     fileInputRef.current?.click();
+  };
+  
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      
+      const audioChunks: Blob[] = [];
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        handleSubmit({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>, { voiceUrl: audioUrl });
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      recorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
+    } catch (err) {
+      console.error("Error starting recording:", err);
+      // You might want to show a toast to the user here
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    }
+  };
+
+  const cancelRecording = () => {
+     if (mediaRecorderRef.current && isRecording) {
+      // Don't call stop(), just clean up
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    }
+  }
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   return (
@@ -39,35 +111,60 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       )}
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
-            {handleImageChange && (
-              <>
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={handleAttachClick} type="button">
-                    <Paperclip className="h-6 w-6" />
-                    <span className="sr-only">Attach file</span>
+           {isRecording ? (
+             <div className="flex-1 flex items-center bg-secondary rounded-full h-10 px-4">
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                 <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
+               </div>
+               <div className="flex-1"></div>
+                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" type="button" onClick={cancelRecording}>
+                    <Trash2 className="h-5 w-5" />
+                    <span className="sr-only">Cancel Recording</span>
                 </Button>
-                <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-              </>
-            )}
-            <Textarea
-                placeholder="Message"
-                className="flex-1 resize-none bg-secondary border-0 rounded-full py-2 px-4 h-10 text-base"
-                rows={1}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(e as any);
-                    }
-                }}
-            />
-            {(input || imagePreview) ? (
-                <Button type="submit" size="icon" className="shrink-0 bg-primary rounded-full h-10 w-10" disabled={isLoading}>
+             </div>
+           ) : (
+            <>
+              {handleImageChange && (
+                <>
+                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={handleAttachClick} type="button">
+                      <Paperclip className="h-6 w-6" />
+                      <span className="sr-only">Attach file</span>
+                  </Button>
+                  <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+                </>
+              )}
+              <Textarea
+                  placeholder="Message"
+                  className="flex-1 resize-none bg-secondary border-0 rounded-full py-2 px-4 h-10 text-base"
+                  rows={1}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit(e as any);
+                      }
+                  }}
+              />
+            </>
+           )}
+            {(input || imagePreview || isRecording) ? (
+                <Button 
+                  type={isRecording ? "button" : "submit"} 
+                  size="icon" 
+                  className={cn(
+                    "shrink-0 bg-primary rounded-full h-10 w-10",
+                    isRecording && "bg-red-500 hover:bg-red-600"
+                  )} 
+                  disabled={isLoading}
+                  onClick={isRecording ? stopRecording : undefined}
+                  >
                     <Send className="h-5 w-5" />
-                    <span className="sr-only">Send</span>
+                    <span className="sr-only">{isRecording ? "Stop and Send" : "Send"}</span>
                 </Button>
             ) : (
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" type="button">
+                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" type="button" onClick={handleMicClick}>
                     <Mic className="h-6 w-6" />
                     <span className="sr-only">Record voice</span>
                 </Button>

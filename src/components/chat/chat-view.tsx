@@ -36,9 +36,9 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
     e.preventDefault();
-    if (!input.trim() && !image) return;
+    if (!input.trim() && !image && !options?.voiceUrl) return;
     
     const newMessage: Message = {
         id: `msg_${Date.now()}`,
@@ -46,6 +46,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         sender: currentUser,
         imageUrl: image ? URL.createObjectURL(image) : undefined,
+        voiceUrl: options?.voiceUrl,
     };
 
     setMessages(prev => [...prev, newMessage]);
