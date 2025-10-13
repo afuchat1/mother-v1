@@ -16,11 +16,11 @@ export default function ChatPage() {
     
     // On mobile, if no chat is active, show the list.
     // If a chat is active, show the chat view.
-    const showChatListOnMobile = !activeChat;
+    const showChatList = !activeChat;
 
     return (
         <main className="flex h-full flex-col overflow-hidden">
-            {showChatListOnMobile ? (
+            {showChatList ? (
                 <ChatList chats={allChats} activeChat={activeChat} setActiveChat={setActiveChat} />
             ) : (
                 activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />

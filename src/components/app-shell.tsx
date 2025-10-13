@@ -26,7 +26,7 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
             {navItems.map((item) => {
-                 const isActive = activePath.startsWith(item.href);
+                 const isActive = activePath === item.href || (item.href !== '/app/chat' && activePath.startsWith(item.href));
                 
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     e.preventDefault();
@@ -61,6 +61,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { cart, activeChat, setActiveChat } = context;
 
   const handleNavClick = (href: string) => {
+    // When navigating to the main chat list, we want to ensure no chat is active
     if (href === '/app/chat') {
         setActiveChat(null);
     }
@@ -72,8 +73,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const activePath = pathname;
   
   // An active chat is present if the context has one AND we are on a relevant chat page.
-  const isChatPage = activePath.startsWith('/app/chat') || activePath.startsWith('/app/ai-chat');
-  const isChatActive = isChatPage && activeChat;
+  const isChatActive = !!activeChat;
 
   // The bottom nav should be hidden ONLY when a chat is active.
   const showBottomNav = !isChatActive;
@@ -83,8 +83,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
         <main className={cn(
           "flex-1",
-          // The main content area should be scrollable by default
-          "overflow-y-auto",
+          // The main content area should be scrollable by default, except when a chat is active
+          !isChatActive && "overflow-y-auto",
           // When the bottom nav is shown, add padding to avoid content being hidden behind it
           showBottomNav ? "pb-16" : "" ,
           // When a chat is active, we use a flex layout to contain the header/footer
