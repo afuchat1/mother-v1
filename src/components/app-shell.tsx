@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useContext } from 'react';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { cn } from '@/lib/utils';
 import {
   Home,
@@ -26,7 +26,7 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
             {navItems.map((item) => {
-                 const isActive = (activePath === '/app/chat' || activePath === '/app') && item.href === '/app/chat'
+                 const isActive = (activePath === '/app' || activePath.startsWith('/app/chat')) && item.href === '/app/chat'
                  ? true
                  : activePath.startsWith(item.href) && item.href !== '/app/chat';
                 
@@ -72,8 +72,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const activePath = pathname;
+  
+  const isChatActive = activePath.startsWith('/app/chat') && activeChat;
 
-  const isChatActive = !!activeChat;
   const showBottomNav = !isChatActive;
   const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
@@ -81,7 +82,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
         <main className={cn(
           "flex-1",
-          showBottomNav && "pb-16",
+          showBottomNav ? "pb-16" : "" ,
           isChatActive ? "flex flex-col overflow-hidden" : "overflow-y-auto"
         )}>
             {children}

@@ -2,7 +2,7 @@
 import { useContext } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

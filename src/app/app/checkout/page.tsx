@@ -2,7 +2,7 @@
 
 import { useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

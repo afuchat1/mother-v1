@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, MessageSquare, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 
 export default function ProductDetailPage() {
   const router = useRouter();

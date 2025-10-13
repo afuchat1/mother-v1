@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import type { Chat, Product, CartItem } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { chats as allChats } from '@/lib/data';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import { usePathname } from 'next/navigation';
 
@@ -26,9 +26,11 @@ export default function AppLayout({
         }
     } else if (pathname.startsWith('/app/chat')) {
         // On mobile, show the chat list by default
-        setActiveChat(null);
+        if (activeChat) {
+          setActiveChat(null);
+        }
     }
-  }, [pathname]);
+  }, [pathname, activeChat]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {

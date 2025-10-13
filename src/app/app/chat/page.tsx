@@ -2,7 +2,7 @@
 import { useContext } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import ChatList from '@/components/chat/chat-list';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { chats as allChats } from '@/lib/data';
 
 export default function ChatPage() {

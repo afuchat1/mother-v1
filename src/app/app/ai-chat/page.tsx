@@ -1,7 +1,7 @@
 'use client';
 import { useContext, useEffect, useState } from 'react';
 import ChatView from '@/components/chat/chat-view';
-import { AppContext } from '@/lib/context';
+import { AppContext } from '@/lib/context.tsx';
 import { chats } from '@/lib/data';
 import type { Chat } from '@/lib/types';
 
