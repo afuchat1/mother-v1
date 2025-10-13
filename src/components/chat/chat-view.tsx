@@ -255,7 +255,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isAiReplying}
-        handleImageChange={handleImagechange}
+        handleImageChange={handleImageChange}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
         replyTo={replyTo}
