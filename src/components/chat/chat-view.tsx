@@ -1,3 +1,6 @@
+
+'use client';
+import { useState } from 'react';
 import type { Chat } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import ChatMessages from "./chat-messages";
@@ -10,9 +13,24 @@ type ChatViewProps = {
 };
 
 export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
+  const [input, setInput] = useState('');
+
   if (chat.type === 'ai') {
     return <AiChatHandler chat={chat} />;
   }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    // Handle message submission for regular chats.
+    // This is not yet implemented.
+    console.log("Submitting:", input);
+    setInput('');
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -26,7 +44,11 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
         </div>
       </header>
       <ChatMessages messages={chat.messages} />
-      <ChatInput />
+      <ChatInput 
+        input={input}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+      />
     </div>
   );
 }
