@@ -95,7 +95,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   };
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 bg-background p-2 md:p-4 border-t">
+    <div className="fixed bottom-0 left-0 right-0 bg-transparent p-2">
        {imagePreview && removeImage && (
         <div className="p-2 relative w-24 h-24">
           <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
@@ -112,13 +112,13 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
            {isRecording ? (
-             <div className="flex-1 flex items-center bg-input rounded-full h-10 px-4">
+             <div className="flex-1 flex items-center bg-input rounded-full h-9 px-4">
                <div className="flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                  <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
                </div>
                <div className="flex-1"></div>
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" type="button" onClick={cancelRecording}>
+                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" type="button" onClick={cancelRecording}>
                     <Trash2 className="h-5 w-5" />
                     <span className="sr-only">Cancel Recording</span>
                 </Button>
@@ -127,8 +127,8 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
             <>
               {handleImageChange && (
                 <>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={handleAttachClick} type="button">
-                      <Paperclip className="h-6 w-6" />
+                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={handleAttachClick} type="button">
+                      <Paperclip className="h-5 w-5" />
                       <span className="sr-only">Attach file</span>
                   </Button>
                   <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
@@ -136,7 +136,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               )}
               <Textarea
                   placeholder="Message"
-                  className="flex-1 resize-none bg-input border-0 rounded-full py-2 px-4 h-10 text-base"
+                  className="flex-1 resize-none bg-input border-0 rounded-full py-1.5 px-4 h-9 text-base"
                   rows={1}
                   value={input}
                   onChange={handleInputChange}
@@ -154,7 +154,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                   type={isRecording ? "button" : "submit"} 
                   size="icon" 
                   className={cn(
-                    "shrink-0 bg-primary rounded-full h-10 w-10",
+                    "shrink-0 bg-primary rounded-full h-9 w-9",
                     isRecording && "bg-red-500 hover:bg-red-600"
                   )} 
                   disabled={isLoading}
@@ -164,8 +164,8 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                     <span className="sr-only">{isRecording ? "Stop and Send" : "Send"}</span>
                 </Button>
             ) : (
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" type="button" onClick={handleMicClick}>
-                    <Mic className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" type="button" onClick={handleMicClick}>
+                    <Mic className="h-5 w-5" />
                     <span className="sr-only">Record voice</span>
                 </Button>
             )}

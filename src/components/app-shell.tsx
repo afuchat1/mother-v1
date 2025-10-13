@@ -61,9 +61,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   
   if (!context) return null;
   
-  const { cart, setActiveChat } = context;
+  const { cart, activeChat, setActiveChat } = context;
 
   const handleNavClick = (href: string) => {
+    if (href === '/app/chat') {
+        setActiveChat(null);
+    }
     router.push(href);
   };
 
@@ -71,14 +74,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const activePath = pathname;
 
-  const showCartFab = activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout');
+  const showBottomNav = !activeChat;
+  const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-        <main className="flex-1 pb-16">
+        <main className={cn("flex-1", showBottomNav && "pb-16")}>
             {children}
         </main>
-        <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />
+        {showBottomNav && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
         {showCartFab && cartItemCount > 0 && (
             <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
