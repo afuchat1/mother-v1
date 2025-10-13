@@ -7,11 +7,10 @@ import { AppContext } from '@/lib/context';
 import { chats as allChats } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import {
-  MessageSquare,
+  Home,
   Store,
   Bot,
   User,
-  ShoppingCart
 } from 'lucide-react';
 import { AfuChatLogo } from '@/components/icons';
 import { currentUser } from '@/lib/data';
@@ -23,10 +22,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 const navItems = [
-  { href: '/app/chat', icon: MessageSquare, label: 'Chats' },
-  { href: '/app/mall', icon: Store, label: 'AfuMall' },
-  { href: '/app/cart', icon: ShoppingCart, label: 'Cart', isCart: true },
+  { href: '/app/chat', icon: Home, label: 'Home' },
+  { href: '/app/mall', icon: Store, label: 'Shop' },
   { href: '#', icon: Bot, label: 'AI', isAi: true },
+  { href: '/app/profile', icon: User, label: 'Account' },
 ];
 
 function BottomNavbar() {
@@ -36,8 +35,7 @@ function BottomNavbar() {
 
     if (!context) return null;
 
-    const { activeChat, setActiveChat, cart } = context;
-    const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const { activeChat, setActiveChat } = context;
 
     const handleAiChatClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -59,11 +57,9 @@ function BottomNavbar() {
                     const isActive = isAiActive || isLinkActive;
 
                     const linkContent = (
-                        <div className="relative">
+                        <div className="relative flex flex-col items-center gap-1">
                             <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                            {item.isCart && cartItemCount > 0 && (
-                                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 justify-center rounded-full p-0">{cartItemCount}</Badge>
-                            )}
+                            <span className={cn("text-xs", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
                         </div>
                     );
 
@@ -75,7 +71,6 @@ function BottomNavbar() {
                                 className="flex flex-col items-center justify-center gap-1 text-xs"
                             >
                                 {linkContent}
-                                <span className="sr-only">{item.label}</span>
                             </button>
                         );
                     }
@@ -87,17 +82,9 @@ function BottomNavbar() {
                             className="flex flex-col items-center justify-center gap-1 text-xs"
                         >
                             {linkContent}
-                            <span className="sr-only">{item.label}</span>
                         </Link>
                     );
                 })}
-                 <Link href="/app/profile" className="flex flex-col items-center justify-center gap-1 text-xs">
-                    <Avatar className={cn("h-7 w-7 border", pathname.startsWith('/app/profile') ? 'border-primary' : '')}>
-                        <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                     <span className="sr-only">Profile</span>
-                 </Link>
             </div>
         </nav>
     );
@@ -110,8 +97,7 @@ function DesktopSidebar() {
 
     if (!context) return null;
 
-    const { activeChat, setActiveChat, cart } = context;
-    const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const { activeChat, setActiveChat } = context;
 
     const handleAiChatClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -142,9 +128,6 @@ function DesktopSidebar() {
                         <>
                             <item.icon className="h-5 w-5" />
                             <span>{item.label}</span>
-                            {item.isCart && cartItemCount > 0 && (
-                               <Badge variant="destructive" className="ml-auto">{cartItemCount}</Badge>
-                            )}
                         </>
                     );
 
@@ -178,11 +161,9 @@ function DesktopSidebar() {
                 })}
             </nav>
             <div className="mt-auto p-4 border-t">
-                 <Link
-                    href="/app/profile"
+                 <div
                     className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                        pathname.startsWith('/app/profile') ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground"
                     )}
                 >
                     <Avatar className="h-8 w-8 border">
@@ -190,13 +171,27 @@ function DesktopSidebar() {
                         <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span>{currentUser.name}</span>
-                </Link>
+                </div>
             </div>
         </aside>
     );
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  const context = useContext(AppContext);
+  if (!context) return (
+    <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
+        <DesktopSidebar />
+        <main className="flex-1 pb-16 md:pb-0">
+            {children}
+        </main>
+        <BottomNavbar />
+    </div>
+  );
+
+  const { cart } = context;
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
         <DesktopSidebar />
@@ -204,6 +199,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
             {children}
         </main>
         <BottomNavbar />
+        {cartItemCount > 0 && (
+            <Link href="/app/cart" className="md:hidden fixed bottom-20 right-4 z-20">
+                <Button size="icon" className="rounded-full h-14 w-14 shadow-lg">
+                    <Store className="h-6 w-6" />
+                    <Badge variant="destructive" className="absolute top-0 right-0 h-6 w-6 justify-center rounded-full p-0">{cartItemCount}</Badge>
+                </Button>
+            </Link>
+        )}
     </div>
   );
 }
