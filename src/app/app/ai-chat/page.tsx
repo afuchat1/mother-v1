@@ -1,32 +1,34 @@
 'use client';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import { AppContext } from '@/lib/context';
 import { chats } from '@/lib/data';
+import type { Chat } from '@/lib/types';
 
 export default function AiChatPage() {
     const context = useContext(AppContext);
-    
+    const [aiChat, setAiChat] = useState<Chat | null>(null);
+
+    useEffect(() => {
+        const foundChat = chats.find(c => c.type === 'ai');
+        if (foundChat) {
+            setAiChat(foundChat);
+        }
+    }, []);
+
     if (!context) {
         return <p>Loading chat context...</p>;
     }
     
-    const { activeChat, setActiveChat } = context;
-    const aiChat = chats.find(c => c.type === 'ai');
+    const { setActiveChat } = context;
 
     if (!aiChat) {
-        return <p>AI Chat not configured.</p>;
+        return <p>Loading AI Chat...</p>;
     }
 
-    // Since this page is dedicated to the AI chat, we can render it directly
-    // The activeChat state is managed in the layout
     return (
         <main className="flex h-full flex-col overflow-hidden">
-            {activeChat && activeChat.type === 'ai' ? (
-                <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
-            ) : (
-                <p>Loading AI Chat...</p>
-            )}
+            <ChatView key={aiChat.id} chat={aiChat} setActiveChat={setActiveChat} />
         </main>
     );
 }
