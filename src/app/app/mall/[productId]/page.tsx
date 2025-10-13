@@ -1,4 +1,5 @@
 'use client';
+import { useContext } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { products, users } from '@/lib/data';
@@ -6,11 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, MessageSquare, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { AppContext } from '@/lib/context';
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const context = useContext(AppContext);
   const { productId } = params;
+
+  if (!context) {
+    return <p>Loading...</p>
+  }
+  const { addToCart } = context;
 
   const product = products.find((p) => p.id === productId);
 
@@ -63,7 +71,7 @@ export default function ProductDetailPage() {
               </CardContent>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button size="lg" className="font-bold">
+                <Button size="lg" className="font-bold" onClick={() => addToCart(product)}>
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart
                 </Button>

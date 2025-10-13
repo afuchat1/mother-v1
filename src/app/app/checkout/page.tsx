@@ -1,0 +1,144 @@
+'use client';
+
+import { useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AppContext } from '@/lib/context';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, CreditCard } from 'lucide-react';
+
+export default function CheckoutPage() {
+    const router = useRouter();
+    const context = useContext(AppContext);
+
+    if (!context) {
+        return <p>Loading...</p>
+    }
+
+    const { cart, clearCart } = context;
+
+    const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const tax = subtotal * 0.08;
+    const total = subtotal + tax;
+
+    const handlePlaceOrder = () => {
+        // In a real app, this would process payment.
+        alert('Order placed successfully! (This is a demo)');
+        clearCart();
+        router.push('/app/mall');
+    }
+
+    return (
+        <main className="flex-1 bg-secondary">
+             <header className="flex items-center gap-2 bg-background p-2 md:p-4 sticky top-0 z-10 border-b">
+                <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
+                    <ArrowLeft />
+                </Button>
+                <h1 className="text-xl font-bold font-headline">Checkout</h1>
+             </header>
+             <div className="p-4 md:p-6 lg:p-8">
+                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <div className="md:col-span-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Shipping & Payment</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-6">
+                                <div className="grid gap-2">
+                                    <h3 className="font-semibold">Shipping Address</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className='space-y-1.5'>
+                                            <Label htmlFor="first-name">First Name</Label>
+                                            <Input id="first-name" placeholder="John" />
+                                        </div>
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="last-name">Last Name</Label>
+                                            <Input id="last-name" placeholder="Doe" />
+                                        </div>
+                                    </div>
+                                    <div className='space-y-1.5'>
+                                        <Label htmlFor="address">Address</Label>
+                                        <Input id="address" placeholder="123 Main St" />
+                                    </div>
+                                    <div className="grid sm:grid-cols-3 gap-4">
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="city">City</Label>
+                                            <Input id="city" placeholder="Anytown" />
+                                        </div>
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="state">State</Label>
+                                            <Input id="state" placeholder="CA" />
+                                        </div>
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="zip">Zip Code</Label>
+                                            <Input id="zip" placeholder="12345" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div className="grid gap-2">
+                                     <h3 className="font-semibold">Payment Information</h3>
+                                     <div className='space-y-1.5'>
+                                        <Label htmlFor="card-number">Card Number</Label>
+                                        <Input id="card-number" placeholder="**** **** **** 1234" />
+                                    </div>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="expiry">Expiry Date</Label>
+                                            <Input id="expiry" placeholder="MM/YY" />
+                                        </div>
+                                         <div className='space-y-1.5'>
+                                            <Label htmlFor="cvc">CVC</Label>
+                                            <Input id="cvc" placeholder="123" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div>
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Order Summary</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <ul className="space-y-2 text-sm text-muted-foreground">
+                                    {cart.map(item => (
+                                        <li key={item.product.id} className="flex justify-between">
+                                            <span>{item.product.name} x{item.quantity}</span>
+                                            <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Separator />
+                                <div className="space-y-2">
+                                     <div className="flex justify-between text-sm">
+                                        <span>Subtotal</span>
+                                        <span>${subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Taxes</span>
+                                        <span>${tax.toFixed(2)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span>${total.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                             <CardFooter>
+                                <Button className="w-full font-bold" onClick={handlePlaceOrder}>
+                                    <CreditCard className="mr-2 h-5 w-5" /> Place Order
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        </main>
+    );
+}

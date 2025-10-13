@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils';
 import {
   MessageSquare,
   Store,
-  GraduationCap,
   Bot,
   User,
+  ShoppingCart
 } from 'lucide-react';
 import { AfuChatLogo } from '@/components/icons';
 import { currentUser } from '@/lib/data';
@@ -20,10 +20,12 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const navItems = [
   { href: '/app/chat', icon: MessageSquare, label: 'Chats' },
   { href: '/app/mall', icon: Store, label: 'AfuMall' },
+  { href: '/app/cart', icon: ShoppingCart, label: 'Cart', isCart: true },
   { href: '#', icon: Bot, label: 'AI', isAi: true },
 ];
 
@@ -34,7 +36,8 @@ function BottomNavbar() {
 
     if (!context) return null;
 
-    const { activeChat, setActiveChat } = context;
+    const { activeChat, setActiveChat, cart } = context;
+    const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleAiChatClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -56,10 +59,12 @@ function BottomNavbar() {
                     const isActive = isAiActive || isLinkActive;
 
                     const linkContent = (
-                        <>
+                        <div className="relative">
                             <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                            <span className="sr-only">{item.label}</span>
-                        </>
+                            {item.isCart && cartItemCount > 0 && (
+                                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 justify-center rounded-full p-0">{cartItemCount}</Badge>
+                            )}
+                        </div>
                     );
 
                     if (item.isAi) {
@@ -70,6 +75,7 @@ function BottomNavbar() {
                                 className="flex flex-col items-center justify-center gap-1 text-xs"
                             >
                                 {linkContent}
+                                <span className="sr-only">{item.label}</span>
                             </button>
                         );
                     }
@@ -81,11 +87,12 @@ function BottomNavbar() {
                             className="flex flex-col items-center justify-center gap-1 text-xs"
                         >
                             {linkContent}
+                            <span className="sr-only">{item.label}</span>
                         </Link>
                     );
                 })}
                  <Link href="/app/profile" className="flex flex-col items-center justify-center gap-1 text-xs">
-                    <Avatar className="h-7 w-7 border">
+                    <Avatar className={cn("h-7 w-7 border", pathname.startsWith('/app/profile') ? 'border-primary' : '')}>
                         <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
                         <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
@@ -103,7 +110,8 @@ function DesktopSidebar() {
 
     if (!context) return null;
 
-    const { activeChat, setActiveChat } = context;
+    const { activeChat, setActiveChat, cart } = context;
+    const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleAiChatClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -133,7 +141,10 @@ function DesktopSidebar() {
                      const linkContent = (
                         <>
                             <item.icon className="h-5 w-5" />
-                            {item.label}
+                            <span>{item.label}</span>
+                            {item.isCart && cartItemCount > 0 && (
+                               <Badge variant="destructive" className="ml-auto">{cartItemCount}</Badge>
+                            )}
                         </>
                     );
 

@@ -30,3 +30,8 @@ export type Product = {
   imageUrl: string;
   seller: User;
 };
+
+export type CartItem = {
+  product: Product;
+  quantity: number;
+};
