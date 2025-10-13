@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import type { Chat } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import { cn } from "@/lib/utils";
@@ -11,14 +11,21 @@ type ChatListProps = {
 };
 
 export default function ChatList({ chats, activeChat, setActiveChat }: ChatListProps) {
+  const { setOpenMobile } = useSidebar();
   const regularChats = chats.filter(c => c.type !== 'ai');
+  
+  const handleChatSelection = (chat: Chat) => {
+    setActiveChat(chat);
+    setOpenMobile(false);
+  }
+
   return (
     <ScrollArea className="h-full">
         <SidebarMenu>
             {regularChats.map((chat) => (
             <SidebarMenuItem key={chat.id}>
                 <SidebarMenuButton
-                onClick={() => setActiveChat(chat)}
+                onClick={() => handleChatSelection(chat)}
                 isActive={activeChat?.id === chat.id}
                 className="h-auto justify-start gap-3 px-2 py-2"
                 >
