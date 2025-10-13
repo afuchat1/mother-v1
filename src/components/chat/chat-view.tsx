@@ -175,15 +175,24 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                     throw new Error('The AI assistant returned an empty response.');
                 }
             } catch (error: any) {
-                console.error('AI Assistant Error:', error.message || error);
+                let title = 'Error';
+                let description = error.message || 'Failed to get a response from the AI assistant.';
+                let text = 'Sorry, I encountered an error. Please try again.';
+
+                if (error.message && error.message.includes('429')) {
+                    title = 'API Quota Exceeded';
+                    description = 'You have exceeded your free tier limit for the AI model.';
+                    text = 'Sorry, I cannot respond right now due to high usage. Please try again later.';
+                }
+
                 toast({
                   variant: 'destructive',
-                  title: 'Error',
-                  description: error.message || 'Failed to get a response from the AI assistant.',
+                  title: title,
+                  description: description,
                 });
                 const errorMessage: Message = {
                     id: `err_${Date.now()}`,
-                    text: 'Sorry, I encountered an error. Please try again.',
+                    text: text,
                     createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     sender: aiUser,
                 };
