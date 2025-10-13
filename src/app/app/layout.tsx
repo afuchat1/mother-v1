@@ -19,17 +19,11 @@ export default function AppLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // When the path is /app/chat, we want to show the AI chat by default
-    if (pathname === '/app/chat') {
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat) {
-            setActiveChat(aiChat);
-        }
-    } else {
-        // Clear the active chat if we navigate away from the chat page
-        // and the current active chat is the AI one.
-        if (activeChat?.type === 'ai') {
-            setActiveChat(null);
+    // On initial load of the chat page, default to the first non-AI chat.
+    if (pathname === '/app/chat' && !activeChat) {
+        const defaultChat = allChats.find(c => c.type !== 'ai');
+        if (defaultChat) {
+            setActiveChat(defaultChat);
         }
     }
   }, [pathname]);

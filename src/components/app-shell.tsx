@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { AppContext } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import {
@@ -13,7 +13,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { AfuChatLogo } from '@/components/icons';
-import { currentUser } from '@/lib/data';
+import { currentUser, chats as allChats } from '@/lib/data';
 import {
   Avatar,
   AvatarFallback,
@@ -29,32 +29,70 @@ const navItems = [
   { href: '/app/profile', icon: User, label: 'Account' },
 ];
 
+function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActive: boolean, onClick: (href: string) => void }) {
+    const isAiChat = item.href === '/app/ai-chat';
+    const effectiveHref = isAiChat ? '/app/chat' : item.href;
+
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (isAiChat) {
+            e.preventDefault();
+        }
+        onClick(item.href);
+    };
+
+    return (
+        <Link
+            href={effectiveHref}
+            onClick={handleClick}
+            className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
+                isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                "md:flex md:items-center md:gap-3 md:rounded-lg md:px-3 md:py-2 md:transition-all", // Desktop styles
+                "flex-1 flex-col items-center justify-center gap-1 text-xs h-full md:flex-row md:justify-start md:h-auto md:text-sm" // Mobile styles merged
+            )}
+        >
+            <div className="relative flex flex-col items-center gap-1 md:flex-row md:gap-3">
+                <item.icon className={cn("h-6 w-6 md:h-5 md:w-5", isActive ? "text-primary md:text-inherit" : "text-muted-foreground md:text-inherit")} />
+                <span className={cn("text-xs font-medium md:text-sm", isActive ? "text-primary md:text-inherit" : "text-muted-foreground md:text-inherit")}>{item.label}</span>
+            </div>
+        </Link>
+    );
+}
+
+
 function BottomNavbar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const context = useContext(AppContext);
+
+    const handleNavClick = (href: string) => {
+        if (href === '/app/ai-chat') {
+            const aiChat = allChats.find(c => c.type === 'ai');
+            if (aiChat && context) {
+                context.setActiveChat(aiChat);
+                router.push('/app/chat');
+            }
+        } else {
+             if (href === '/app/chat' && context) {
+                const firstChat = allChats.find(c => c.type !== 'ai');
+                if (firstChat) context.setActiveChat(firstChat);
+            }
+            router.push(href);
+        }
+    };
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden">
             <div className="flex h-16 items-center justify-around">
                 {navItems.map((item) => {
-                    // Special handling for AI chat to be active on /app/chat
-                    const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat';
-                    // Regular active check for other items
-                    const isRegularActive = item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
-                    
-                    const isActive = isAiChatActive || isRegularActive;
+                     const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat' && context?.activeChat?.type === 'ai';
+                     const isHomeActive = item.href === '/app/chat' && pathname === '/app/chat' && context?.activeChat?.type !== 'ai';
+                     const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
+                     const isActive = isAiChatActive || isHomeActive || isOtherActive;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href === '/app/ai-chat' ? '/app/chat' : item.href}
-                            className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
-                        >
-                            <div className="relative flex flex-col items-center gap-1">
-                                <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                                <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
-                            </div>
-                        </Link>
-                    );
+                    return <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} />;
                 })}
             </div>
         </nav>
@@ -63,6 +101,26 @@ function BottomNavbar() {
 
 function DesktopSidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const context = useContext(AppContext);
+
+    const handleNavClick = (href: string) => {
+        if (href === '/app/ai-chat') {
+            const aiChat = allChats.find(c => c.type === 'ai');
+            if (aiChat && context) {
+                context.setActiveChat(aiChat);
+            }
+            router.push('/app/chat');
+        } else {
+            if (href === '/app/chat' && context) {
+                const firstChat = allChats.find(c => c.type !== 'ai');
+                if (firstChat && context.activeChat?.id !== firstChat.id) {
+                     context.setActiveChat(firstChat);
+                }
+            }
+            router.push(href);
+        }
+    };
 
     return (
         <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-sidebar">
@@ -74,18 +132,24 @@ function DesktopSidebar() {
             </div>
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map((item) => {
-                    const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat';
-                    const isRegularActive = item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
+                    const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat' && context?.activeChat?.type === 'ai';
+                    const isHomeActive = item.href === '/app/chat' && pathname === '/app/chat' && context?.activeChat?.type !== 'ai';
+                    const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
+                    const isActive = isAiChatActive || isHomeActive || isOtherActive;
 
-                    const isActive = isAiChatActive || isRegularActive;
-                    
                     return (
                         <Link
                             key={item.href}
                             href={item.href === '/app/ai-chat' ? '/app/chat' : item.href}
+                             onClick={(e) => {
+                                if (item.href === '/app/ai-chat' || item.href === '/app/chat') {
+                                    e.preventDefault();
+                                }
+                                handleNavClick(item.href)
+                            }}
                             className={cn(
                                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                                isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                                isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/80"
                             )}
                         >
                            <item.icon className="h-5 w-5" />
@@ -114,8 +178,7 @@ function DesktopSidebar() {
 export default function AppShell({ children }: { children: ReactNode }) {
   const context = useContext(AppContext);
   const pathname = usePathname();
-  const router = useRouter();
-
+  
   if (!context) return (
     <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
         <DesktopSidebar />
@@ -126,7 +189,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
   
-  const { cart, activeChat, setActiveChat } = context;
+  const { cart } = context;
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
@@ -150,6 +213,3 @@ export default function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-// Since we are using a client component, we need to add this to get the chats from the context
-import { chats as allChats } from '@/lib/data';
