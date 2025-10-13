@@ -154,7 +154,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     <div className="bg-background p-2 border-t">
        {replyTo && cancelReply && (
           <div className="px-2 pb-2">
-            <div className="flex items-center justify-between rounded-lg bg-secondary p-2 pl-3">
+            <div className="flex items-center justify-between rounded-md bg-secondary p-2 pl-3">
               <div className="flex items-center gap-2 overflow-hidden">
                 <Reply className="h-4 w-4 text-primary shrink-0" />
                 <div className="overflow-hidden">
@@ -268,5 +268,3 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     </div>
   );
 }
-
-    

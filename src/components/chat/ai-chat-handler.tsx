@@ -4,7 +4,7 @@ import type { Chat, Message } from '@/lib/types';
 import { aiUser, currentUser } from '@/lib/data';
 import ChatAvatar from './chat-avatar';
 import ChatMessages from './chat-messages';
-import ChatInput from './chat-input';
+import AiChatInput from './ai-chat-input';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { speechToText } from '@/ai/flows/speech-to-text';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +20,7 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
     reader.onerror = error => reject(error);
 });
 
-export default function AiChatHandler({ chat, handleNewMessage, updateMessage }: { chat: Chat, handleNewMessage: (message: Message) => void, updateMessage: (messageId: string, updates: Partial<Message>) => void }) {
+export default function AiChatHandler({ chat, handleNewMessage, updateMessage, hideInput }: { chat: Chat, handleNewMessage: (message: Message) => void, updateMessage: (messageId: string, updates: Partial<Message>) => void, hideInput?: boolean }) {
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -153,42 +153,42 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
       }
     });
   };
+  
+  const isConversationStarted = !(chat.messages.length === 1 && chat.messages[0].sender.id === 'ai');
 
   return (
     <>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        <div className="relative">
-            <ChatMessages messages={chat.messages} onReply={handleReply} />
-            {isPending && (
-            <div className="p-4">
-                <div className="flex items-end gap-2 justify-start">
-                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                    <div className="flex items-center space-x-2 p-2">
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
+        {isConversationStarted && (
+            <div className="relative">
+                <ChatMessages messages={chat.messages} onReply={handleReply} />
+                {isPending && (
+                <div className="p-4">
+                    <div className="flex items-end gap-2 justify-start">
+                    <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                    <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                        <div className="flex items-center space-x-2 p-2">
+                            <Skeleton className="h-2 w-2 rounded-full" />
+                            <Skeleton className="h-2 w-2 rounded-full" />
+                            <Skeleton className="h-2 w-2 rounded-full" />
+                        </div>
+                    </div>
                     </div>
                 </div>
-                </div>
+                )}
             </div>
-            )}
-        </div>
+        )}
       </div>
-      <div className="shrink-0">
-        <ChatInput
-          input={input}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-          isLoading={isPending}
-          handleImageChange={handleImageChange}
-          handleImageFile={handleImageFile}
-          imagePreview={image ? URL.createObjectURL(image) : null}
-          removeImage={() => setImage(null)}
-          replyTo={replyTo}
-          cancelReply={cancelReply}
-        />
-      </div>
+      {!hideInput && (
+          <div className="shrink-0">
+            <AiChatInput
+              input={input}
+              handleInputChange={handleInputChange}
+              handleSubmit={handleSubmit}
+              isLoading={isPending}
+            />
+          </div>
+      )}
     </>
   );
 }
