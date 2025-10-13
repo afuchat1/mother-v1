@@ -1,14 +1,12 @@
 'use client';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import ChatList from '@/components/chat/chat-list';
 import { AppContext } from '@/lib/context';
 import { chats as allChats } from '@/lib/data';
-import { usePathname } from 'next/navigation';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
-    const pathname = usePathname();
 
     if (!context) {
         return <p>Loading chat context...</p>;

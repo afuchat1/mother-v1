@@ -19,21 +19,16 @@ export default function AppLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // When the path changes, determine which chat should be active.
     if (pathname === '/app/ai-chat') {
         const aiChat = allChats.find(c => c.type === 'ai');
         if (aiChat && activeChat?.id !== aiChat.id) {
             setActiveChat(aiChat);
         }
     } else if (pathname.startsWith('/app/chat')) {
-         // On mobile, we want to show the chat list, so we leave activeChat as null.
-         // On desktop, we'd select a default chat, but we're mobile-only now.
-         if (activeChat && activeChat.type === 'ai') {
-            // If user navigates from AI chat to regular chat, clear active chat
-            setActiveChat(null);
-         }
+        // On mobile, show the chat list by default
+        setActiveChat(null);
     }
-  }, [pathname, activeChat, setActiveChat]);
+  }, [pathname]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {

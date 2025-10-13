@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { chats } from '@/lib/data';
 
 const navItems = [
   { href: '/app/chat', icon: Home, label: 'Home' },
@@ -57,28 +56,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   
-  if (!context) return null; // Or a loading skeleton
+  if (!context) return null;
   
-  const { cart, activeChat, setActiveChat } = context;
+  const { cart } = context;
 
   const handleNavClick = (href: string) => {
-    if (href === '/app/ai-chat') {
-        const aiChat = chats.find(c => c.type === 'ai');
-        router.push('/app/chat');
-        if (aiChat) setActiveChat(aiChat);
-    } else if (href === '/app/chat') {
-        if(activeChat?.type === 'ai') setActiveChat(null);
-        router.push(href);
-    }
-    else {
-        router.push(href);
-    }
+    router.push(href);
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Determine active path, treating AI chat as a special case for highlighting
-  const activePath = pathname === '/app/chat' && activeChat?.type === 'ai' ? '/app/ai-chat' : pathname;
+  const activePath = pathname;
 
   const showCartFab = activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout');
 
