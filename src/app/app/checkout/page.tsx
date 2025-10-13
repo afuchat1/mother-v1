@@ -40,16 +40,16 @@ export default function CheckoutPage() {
                 <h1 className="text-xl font-bold font-headline">Checkout</h1>
              </header>
              <div className="p-4">
-                <div className="grid grid-cols-1 gap-8 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 gap-8">
                     <div>
                         <Card>
                             <CardHeader>
                                 <CardTitle>Shipping & Payment</CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-6">
-                                <div className="grid gap-2">
+                                <div className="grid gap-4">
                                     <h3 className="font-semibold">Shipping Address</h3>
-                                    <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4">
                                         <div className='relative'>
                                             <Input id="first-name" placeholder="John" />
                                             <Label htmlFor="first-name">First Name</Label>
@@ -63,7 +63,7 @@ export default function CheckoutPage() {
                                         <Input id="address" placeholder="123 Main St" />
                                         <Label htmlFor="address">Address</Label>
                                     </div>
-                                    <div className="grid sm:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 gap-4">
                                          <div className='relative'>
                                             <Input id="city" placeholder="Anytown" />
                                             <Label htmlFor="city">City</Label>
@@ -79,13 +79,13 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
                                 <Separator />
-                                <div className="grid gap-2">
+                                <div className="grid gap-4">
                                      <h3 className="font-semibold">Payment Information</h3>
                                      <div className='relative'>
                                         <Input id="card-number" placeholder="**** **** **** 1234" />
                                         <Label htmlFor="card-number">Card Number</Label>
                                     </div>
-                                    <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4">
                                          <div className='relative'>
                                             <Input id="expiry" placeholder="MM/YY" />
                                             <Label htmlFor="expiry">Expiry Date</Label>

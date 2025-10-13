@@ -10,8 +10,8 @@ export default function LoginPage() {
   const loginHeroImage = PlaceHolderImages.find(img => img.id === 'loginHero');
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 xl:min-h-screen">
-      <div className="flex items-center justify-center py-12">
+    <div className="w-full min-h-screen">
+      <div className="flex items-center justify-center py-12 h-full">
         <div className="mx-auto grid w-[350px] gap-6">
           <Card className="p-4 sm:p-6 border-0 shadow-none">
             <CardHeader className="text-center">
@@ -37,18 +37,6 @@ export default function LoginPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        {loginHeroImage && (
-          <Image
-            src={loginHeroImage.imageUrl}
-            alt="AfuChat Hero"
-            width="1200"
-            height="800"
-            className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            data-ai-hint={loginHeroImage.imageHint}
-          />
-        )}
       </div>
     </div>
   );
