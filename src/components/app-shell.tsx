@@ -73,22 +73,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const activePath = pathname;
 
-  const showBottomNav = !activeChat;
+  const isChatActive = !!activeChat;
+  const showBottomNav = !isChatActive;
   const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
-  // When a chat is active, we use a different layout structure to enforce fixed header/footer
-  const isChatActive = !!activeChat;
-
   return (
-    <div className={cn("h-[100dvh] w-full bg-background", isChatActive ? 'flex flex-col' : 'block')}>
+    <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
         <main className={cn(
-          "flex-1", 
-          showBottomNav && !isChatActive && "pb-16",
-          isChatActive ? "flex flex-col overflow-y-hidden" : "h-full"
+          "flex-1",
+          showBottomNav && "pb-16",
+          isChatActive ? "flex flex-col overflow-hidden" : "overflow-y-auto"
         )}>
             {children}
         </main>
-        {showBottomNav && !isChatActive && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
+        {showBottomNav && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
         {showCartFab && cartItemCount > 0 && (
             <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">

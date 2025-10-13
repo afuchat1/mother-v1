@@ -218,20 +218,20 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   if (chat.type === 'ai') {
     return (
-        <div className="flex h-full flex-col bg-background">
+        <>
             {commonHeader}
             <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
-        </div>
+        </>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <>
       {commonHeader}
       <div className="flex-1 overflow-y-auto relative" ref={scrollRef}>
         <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isAiReplying && (
-        <div className="p-4 md:p-6">
+        <div className="p-4">
             <div className="flex items-end gap-2 justify-start">
             <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
             <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
@@ -266,6 +266,6 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
             cancelReply={cancelReply}
         />
       </div>
-    </div>
+    </>
   );
 }
