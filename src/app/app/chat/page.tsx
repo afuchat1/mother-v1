@@ -2,15 +2,18 @@
 import { useContext } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// This is a bit of a hack to get the state from the layout.
-// In a real app, this would be managed with a proper state management library or context provider at a higher level.
-const AppContext = require('react').createContext(null);
+import { AppContext } from '@/lib/context';
 
 export default function ChatPage() {
-    // We are reaching into the parent layout's state. This is not a standard pattern
-    // but works for this specific MVP structure to avoid prop drilling.
-    const { activeChat, setActiveChat } = useContext(AppContext);
+    const context = useContext(AppContext);
+
+    if (!context) {
+        // This can happen if the provider is not found.
+        // You might want to render an error message or a loading state.
+        return <p>Error: Chat context not found.</p>;
+    }
+
+    const { activeChat, setActiveChat } = context;
 
     if (!activeChat) {
         return (
