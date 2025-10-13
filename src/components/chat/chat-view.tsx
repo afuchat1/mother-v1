@@ -98,7 +98,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   return (
     <div className="flex h-full flex-col bg-background">
       {commonHeader}
-      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto pb-36" ref={scrollRef}>
         <ChatMessages messages={chat.messages} />
       </div>
       <ChatInput 

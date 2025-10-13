@@ -95,7 +95,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-transparent p-2 md:p-4">
+    <div className="fixed bottom-16 left-0 right-0 bg-background p-2 md:p-4 border-t">
        {imagePreview && removeImage && (
         <div className="p-2 relative w-24 h-24">
           <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
