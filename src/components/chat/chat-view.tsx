@@ -139,7 +139,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
             try {
                 const aiInput: any = { 
                   question: sentInput,
-                  chatHistory: currentChatHistory.slice(-5).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
+                  chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
                 };
 
                 if (currentReplyTo) {
