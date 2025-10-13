@@ -1,0 +1,81 @@
+'use client';
+import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { products, users } from '@/lib/data';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowLeft, MessageSquare, ShoppingCart } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
+export default function ProductDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const { productId } = params;
+
+  const product = products.find((p) => p.id === productId);
+
+  if (!product) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center bg-secondary">
+        <p className="text-muted-foreground">Product not found.</p>
+        <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
+      </div>
+    );
+  }
+
+  const { name, description, price, imageUrl, seller } = product;
+
+  return (
+    <div className="flex-1 bg-secondary">
+       <header className="flex items-center gap-2 bg-background p-2 md:p-4 sticky top-0 z-10 border-b md:hidden">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
+                <ArrowLeft />
+            </Button>
+            <h2 className="font-semibold font-headline text-lg">Product Details</h2>
+      </header>
+      <div className="p-4 md:p-6 lg:p-8">
+        <Card className="overflow-hidden">
+          <div className="md:grid md:grid-cols-2 md:gap-8">
+            <div className="p-4 md:p-0">
+              <Image
+                src={imageUrl}
+                alt={name}
+                width={600}
+                height={400}
+                className="w-full h-auto object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+                data-ai-hint="product image"
+              />
+            </div>
+            <div className="p-4 md:p-6 lg:p-8 flex flex-col">
+              <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">{name}</h1>
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={seller.avatarUrl} alt={seller.name} />
+                  <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="font-medium text-muted-foreground">{seller.name}</span>
+              </div>
+              <p className="text-4xl font-bold text-primary mb-6">${price.toFixed(2)}</p>
+              
+              <CardContent className="p-6 bg-secondary/50 rounded-lg flex-grow mb-6">
+                <h2 className="text-lg font-semibold mb-2">Description</h2>
+                <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
+              </CardContent>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button size="lg" className="font-bold">
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  Add to Cart
+                </Button>
+                <Button size="lg" variant="outline">
+                   <MessageSquare className="mr-2 h-5 w-5" />
+                  Message Seller
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,14 +13,16 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg bg-background">
       <CardHeader className="p-0">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          width={300}
-          height={200}
-          className="h-48 w-full object-cover"
-          data-ai-hint="product image"
-        />
+        <Link href={`/app/mall/${product.id}`}>
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              width={300}
+              height={200}
+              className="h-48 w-full object-cover"
+              data-ai-hint="product image"
+            />
+        </Link>
       </CardHeader>
       <CardContent className="p-4">
         <CardTitle className="mb-2 text-lg font-headline">{product.name}</CardTitle>
@@ -34,7 +37,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             </Avatar>
             <span>{product.seller.name}</span>
         </div>
-        <Button variant="outline" size="sm">View</Button>
+        <Link href={`/app/mall/${product.id}`} passHref>
+          <Button variant="outline" size="sm">View</Button>
+        </Link>
       </CardFooter>
     </Card>
   );

@@ -1,6 +1,5 @@
 'use client';
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { products as initialProducts, currentUser } from "@/lib/data";
 import ProductCard from "@/components/mall/product-card";
 import AddProductDialog from "@/components/mall/add-product-dialog";
