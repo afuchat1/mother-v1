@@ -6,7 +6,7 @@ import { AppContext } from '@/lib/context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MinusCircle, PlusCircle, Trash2, ArrowRight } from 'lucide-react';
+import { MinusCircle, PlusCircle, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
