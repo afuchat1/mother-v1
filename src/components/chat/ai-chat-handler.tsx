@@ -20,7 +20,7 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
     reader.onerror = error => reject(error);
 });
 
-export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, handleNewMessage: (message: Message) => void }) {
+export default function AiChatHandler({ chat, handleNewMessage, updateMessage }: { chat: Chat, handleNewMessage: (message: Message) => void, updateMessage: (messageId: string, updates: Partial<Message>) => void }) {
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -99,9 +99,10 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
 
     let userQuestion = input;
     const currentReplyTo = replyTo;
+    const userMessageId = `user_${Date.now()}`;
 
     const userMessage: Message = {
-      id: `user_${Date.now()}`,
+      id: userMessageId,
       text: input,
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sender: currentUser,
@@ -125,7 +126,8 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
 
             if (transcriptionResult && transcriptionResult.text) {
                 userQuestion = transcriptionResult.text;
-                // You could update the message with transcribed text if desired
+                // Update the original message with the transcribed text
+                updateMessage(userMessageId, { text: transcriptionResult.text });
             } else {
                  throw new Error("Failed to transcribe audio.");
             }

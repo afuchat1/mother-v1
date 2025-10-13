@@ -87,6 +87,15 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     }));
   };
 
+  const updateMessage = (messageId: string, updates: Partial<Message>) => {
+    setChat(prevChat => ({
+      ...prevChat,
+      messages: prevChat.messages.map(msg => 
+        msg.id === messageId ? { ...msg, ...updates } : msg
+      )
+    }));
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
@@ -209,7 +218,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     return (
         <div className="flex h-full flex-col bg-background">
             {commonHeader}
-            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} />
+            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
         </div>
     );
   }
