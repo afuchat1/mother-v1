@@ -24,7 +24,6 @@ import {
 const navItems = [
   { href: '/app/chat', icon: MessageSquare, label: 'Chats' },
   { href: '/app/mall', icon: Store, label: 'AfuMall' },
-  { href: '/app/learn', icon: GraduationCap, label: 'AfuLearn' },
   { href: '#', icon: Bot, label: 'AI', isAi: true },
 ];
 
