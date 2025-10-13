@@ -112,7 +112,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-background p-2 border-t">
+    <div className="bg-background p-2 border-t">
        {replyTo && cancelReply && (
           <div className="px-2 pb-2">
             <div className="flex items-center justify-between rounded-lg bg-secondary p-2 pl-3">
@@ -158,7 +158,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
              </div>
            ) : (
             <>
-              {handleImageChange && (
+              {handleImageChange && handleImageFile && (
                 <>
                   <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={() => setShowCamera(true)} type="button">
                       <Camera className="h-5 w-5" />

@@ -186,7 +186,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isPending && (
           <div className="p-4 md:p-6">
@@ -210,18 +210,20 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
                 </Button>
             </div>
         )}
-      <ChatInput
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        isLoading={isPending}
-        handleImageChange={handleImageChange}
-        handleImageFile={handleImageFile}
-        imagePreview={image ? URL.createObjectURL(image) : null}
-        removeImage={() => setImage(null)}
-        replyTo={replyTo}
-        cancelReply={cancelReply}
-      />
+      <div className="shrink-0">
+        <ChatInput
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+          isLoading={isPending}
+          handleImageChange={handleImageChange}
+          handleImageFile={handleImageFile}
+          imagePreview={image ? URL.createObjectURL(image) : null}
+          removeImage={() => setImage(null)}
+          replyTo={replyTo}
+          cancelReply={cancelReply}
+        />
+      </div>
     </div>
   );
 }

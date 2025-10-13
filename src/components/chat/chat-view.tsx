@@ -199,7 +199,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   };
 
   const commonHeader = (
-    <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2 sticky top-0 z-10">
+    <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
         <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
@@ -220,32 +220,36 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   if (chat.type === 'ai') {
     return (
-        <div className="flex h-full flex-col bg-background relative">
-            {commonHeader}
-            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
+        <div className="flex h-full flex-col bg-background">
+            <div className="shrink-0">{commonHeader}</div>
+            <div className="flex-1 overflow-y-auto relative">
+                <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
+            </div>
         </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-background relative">
-      {commonHeader}
-      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
-        <ChatMessages messages={chat.messages} onReply={handleReply} />
-        {isAiReplying && (
-        <div className="p-4 md:p-6">
-            <div className="flex items-end gap-2 justify-start">
-            <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-            <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                <div className="flex items-center space-x-2 p-2">
-                    <Skeleton className="h-2 w-2 rounded-full" />
-                    <Skeleton className="h-2 w-2 rounded-full" />
-                    <Skeleton className="h-2 w-2 rounded-full" />
+    <div className="flex h-full flex-col bg-background">
+      <div className="shrink-0">{commonHeader}</div>
+      <div className="flex-1 overflow-y-auto relative">
+        <div className="h-full" ref={scrollRef}>
+            <ChatMessages messages={chat.messages} onReply={handleReply} />
+            {isAiReplying && (
+            <div className="p-4 md:p-6">
+                <div className="flex items-end gap-2 justify-start">
+                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                    <div className="flex items-center space-x-2 p-2">
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                    </div>
+                </div>
                 </div>
             </div>
-            </div>
+            )}
         </div>
-        )}
       </div>
        {showScrollButton && (
             <div className="absolute bottom-24 right-4 z-20">
@@ -254,18 +258,20 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                 </Button>
             </div>
         )}
-      <ChatInput 
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        isLoading={isAiReplying}
-        handleImageChange={handleImageChange}
-        handleImageFile={handleImageFile}
-        imagePreview={image ? URL.createObjectURL(image) : null}
-        removeImage={() => setImage(null)}
-        replyTo={replyTo}
-        cancelReply={cancelReply}
-      />
+      <div className="shrink-0">
+        <ChatInput 
+            input={input}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            isLoading={isAiReplying}
+            handleImageChange={handleImageChange}
+            handleImageFile={handleImageFile}
+            imagePreview={image ? URL.createObjectURL(image) : null}
+            removeImage={() => setImage(null)}
+            replyTo={replyTo}
+            cancelReply={cancelReply}
+        />
+      </div>
     </div>
   );
 }
