@@ -34,14 +34,14 @@ export default function ProductDetailPage() {
   const { name, description, price, imageUrl, seller } = product;
 
   return (
-    <div className="flex-1 bg-secondary">
+    <div className="flex flex-col flex-1 bg-secondary">
        <header className="flex items-center gap-2 bg-background p-2 sticky top-0 z-10 border-b">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
                 <ArrowLeft />
             </Button>
             <h2 className="font-semibold font-headline text-lg">Product Details</h2>
       </header>
-      <div className="p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         <Card className="overflow-hidden">
           <div className="grid grid-cols-1 gap-8">
             <div className="p-0">
