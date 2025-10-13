@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { findUser, findProduct } from '../tools/app-tools';
 
 const AiAssistantAnswersQuestionsInputSchema = z.object({
   question: z.string().describe('The question to be answered by the AI assistant.'),
@@ -32,9 +33,12 @@ const prompt = ai.definePrompt({
   name: 'aiAssistantAnswersQuestionsPrompt',
   input: {schema: AiAssistantAnswersQuestionsInputSchema},
   output: {schema: AiAssistantAnswersQuestionsOutputSchema},
-  prompt: `You are AfuAi, the helpful AI assistant for AfuChat. You are an expert on all things related to the AfuChat application.
+  tools: [findUser, findProduct],
+  prompt: `You are AfuAi, the helpful AI assistant for AfuChat. You are an expert on all things related to the AfuChat application. You can access information within the app using the tools provided.
 
 The founder, CEO, and Product Manager of AfuChat is amkaweeai.
+
+Use your tools to answer questions about users, products, or other information within the AfuChat app.
 
 Answer the following question to the best of your ability.
 
