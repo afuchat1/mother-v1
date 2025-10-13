@@ -18,7 +18,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
 
   useEffect(() => {
     if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        scrollRef.current.scrollTop = scrollref.current.scrollHeight;
     }
   }, [messages, isPending]);
 
@@ -75,7 +75,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
         {isPending && (
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
-              <ChatAvatar chat={chat} />
+              <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
               <div className="max-w-xs rounded-lg p-3 text-sm md:max-w-md bg-secondary shadow-sm">
                  <div className="flex items-center space-x-2">
                     <Skeleton className="h-3 w-3 rounded-full" />

@@ -12,7 +12,7 @@ type ChatInputProps = {
 
 export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading }: ChatInputProps) {
   return (
-    <div className="fixed bottom-16 left-0 right-0 border-t bg-background p-2">
+    <div className="border-t bg-background p-2 md:p-4">
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="shrink-0" disabled>
@@ -32,7 +32,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                 }
             }}
             />
-            {input.trim() ? (
+            {(input || '').trim() ? (
                 <Button type="submit" size="icon" className="shrink-0" disabled={isLoading}>
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Send</span>

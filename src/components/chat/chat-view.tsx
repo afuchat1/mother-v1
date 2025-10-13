@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import type { Chat } from "@/lib/types";
@@ -17,22 +16,6 @@ type ChatViewProps = {
 export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   const [input, setInput] = useState('');
 
-  if (chat.type === 'ai') {
-    return (
-        <div className="flex h-full flex-col">
-            <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
-                <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
-                    <ArrowLeft />
-                </Button>
-                <div className="flex-1">
-                    <h2 className="font-semibold font-headline text-sm md:text-base">AI Assistant</h2>
-                </div>
-            </header>
-            <AiChatHandler chat={chat} />
-        </div>
-    );
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
@@ -40,27 +23,41 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
-    // Handle message submission for regular chats.
     // This is not yet implemented.
     console.log("Submitting:", input);
     setInput('');
   };
 
-  return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
-        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
+  const commonHeader = (
+    <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)} className="md:hidden">
             <ArrowLeft />
         </Button>
-        <ChatAvatar chat={chat} />
+        {chat.type !== 'ai' && <ChatAvatar chat={chat} />}
         <div className="flex-1">
           <h2 className="font-semibold font-headline text-sm md:text-base">{chat.name}</h2>
-          <p className="text-xs text-muted-foreground md:text-sm">
-            {chat.type === 'dm' ? 'Direct Message' : 'Group Chat'}
-          </p>
+          {chat.type !== 'ai' && (
+            <p className="text-xs text-muted-foreground md:text-sm">
+                {chat.type === 'dm' ? 'Direct Message' : 'Group Chat'}
+            </p>
+          )}
         </div>
       </header>
-      <div className="flex-1">
+  );
+
+  if (chat.type === 'ai') {
+    return (
+        <div className="flex h-full flex-col bg-background">
+            {commonHeader}
+            <AiChatHandler chat={chat} />
+        </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-background">
+      {commonHeader}
+      <div className="flex-1 overflow-y-auto">
         <ChatMessages messages={chat.messages} />
       </div>
       <ChatInput 

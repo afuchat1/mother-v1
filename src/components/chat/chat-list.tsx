@@ -3,7 +3,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Chat } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
 
 type ChatListProps = {
   chats: Chat[];
@@ -19,7 +18,7 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background border-r">
         <header className="p-4 border-b">
             <h1 className="text-2xl font-bold font-headline">Chats</h1>
         </header>
@@ -35,10 +34,10 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
                     )}
                 >
                     <ChatAvatar chat={chat} />
-                    <div className="flex-1">
+                    <div className="flex-1 overflow-hidden">
                         <div className="flex justify-between items-center">
-                            <span className="font-semibold">{chat.name}</span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="font-semibold truncate">{chat.name}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">
                                 {chat.messages[chat.messages.length - 1].createdAt}
                             </span>
                         </div>
