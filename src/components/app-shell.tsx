@@ -26,7 +26,7 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
             {navItems.map((item) => {
-                 const isActive = activePath === item.href || (item.href !== '/app/chat' && activePath.startsWith(item.href));
+                const isActive = activePath === item.href || (item.href !== '/app/chat' && activePath.startsWith(item.href));
                 
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     e.preventDefault();
@@ -72,28 +72,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const activePath = pathname;
   
-  // An active chat is present if the context has one AND we are on a relevant chat page.
-  const isChatActive = !!activeChat && (pathname.startsWith('/app/chat/') || pathname === '/app/ai-chat' || (pathname === '/app/chat' && activeChat));
-
-  // The bottom nav should be hidden ONLY when a chat is active.
-  const showBottomNav = !isChatActive;
-  const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
+  // The bottom nav should be hidden ONLY when a specific user chat is active.
+  const showBottomNav = !activeChat;
+  
+  const showCartFab = (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
   return (
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
         <main className={cn(
           "flex-1",
           // The main content area should be scrollable by default, except when a chat is active
-          !isChatActive && "overflow-y-auto",
+          showBottomNav && "overflow-y-auto",
           // When the bottom nav is shown, add padding to avoid content being hidden behind it
           showBottomNav ? "pb-16" : "" ,
           // When a chat is active, we use a flex layout to contain the header/footer
-          isChatActive ? "flex flex-col overflow-hidden" : ""
+          !showBottomNav ? "flex flex-col overflow-hidden" : ""
         )}>
             {children}
         </main>
         {showBottomNav && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
-        {showCartFab && cartItemCount > 0 && (
+        {showBottomNav && showCartFab && cartItemCount > 0 && (
             <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
                     <ShoppingCart className="h-6 w-6" />

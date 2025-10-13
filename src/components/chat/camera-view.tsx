@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -15,14 +15,23 @@ type CameraViewProps = {
 export default function CameraView({ onCapture, onClose }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const cleanupStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef.current = stream;
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -41,13 +50,9 @@ export default function CameraView({ onCapture, onClose }: CameraViewProps) {
     getCameraPermission();
 
     return () => {
-      // Stop camera stream when component unmounts
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-      }
+      cleanupStream();
     };
-  }, [toast]);
+  }, [toast, cleanupStream]);
 
   const handleCapture = () => {
     const video = videoRef.current;
@@ -55,18 +60,32 @@ export default function CameraView({ onCapture, onClose }: CameraViewProps) {
     if (video && canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        // Set canvas dimensions to match video to avoid distortion
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
+        cleanupStream(); // Stop camera after capture
       }
     }
   };
 
   const handleRetake = () => {
     setCapturedImage(null);
+    // Restart camera
+    const getCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef.current = stream;
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        // handle error
+      }
+    };
+    getCameraPermission();
   };
 
   const handleConfirm = () => {
@@ -80,10 +99,15 @@ export default function CameraView({ onCapture, onClose }: CameraViewProps) {
     }
   };
 
+  const handleClose = () => {
+      cleanupStream();
+      onClose();
+  };
+
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
       <div className="absolute top-4 right-4">
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:text-white hover:bg-white/20 rounded-full">
+        <Button variant="ghost" size="icon" onClick={handleClose} className="text-white hover:text-white hover:bg-white/20 rounded-full">
           <X className="h-6 w-6" />
         </Button>
       </div>

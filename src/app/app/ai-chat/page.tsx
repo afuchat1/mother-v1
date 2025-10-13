@@ -1,20 +1,13 @@
 'use client';
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import { AppContext } from '@/lib/context.tsx';
 import { chats } from '@/lib/data';
-import type { Chat } from '@/lib/types';
 
 export default function AiChatPage() {
     const context = useContext(AppContext);
-    const [aiChat, setAiChat] = useState<Chat | null>(null);
 
-    useEffect(() => {
-        const foundChat = chats.find(c => c.type === 'ai');
-        if (foundChat) {
-            setAiChat(foundChat);
-        }
-    }, []);
+    const aiChat = chats.find(c => c.type === 'ai');
 
     if (!context) {
         return <p>Loading chat context...</p>;

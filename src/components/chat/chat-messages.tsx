@@ -212,7 +212,7 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                     )}
 
                     {message.voiceUrl ? (
-                        <div className='w-64'>
+                        <div className='w-64 max-w-full'>
                             <VoiceMessagePlayer url={message.voiceUrl} />
                         </div>
                     ) : (

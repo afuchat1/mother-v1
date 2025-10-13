@@ -21,12 +21,7 @@ export default function AppLayout({
   useEffect(() => {
     // This logic determines which chat should be active based on the URL.
     // And handles clearing the active chat when navigating away from chat pages.
-    if (pathname === '/app/ai-chat') {
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat && activeChat?.id !== aiChat.id) {
-            setActiveChat(aiChat);
-        }
-    } else if (pathname.startsWith('/app/chat/')) {
+    if (pathname.startsWith('/app/chat/')) {
        // This is where you would load a specific chat based on ID from URL
        // For now, we do nothing to keep the active chat if one is selected
     } else if (pathname === '/app/chat') {
@@ -36,7 +31,8 @@ export default function AppLayout({
          // Do not clear, so we can navigate back to it.
        }
     } else {
-        // If we navigate to a non-chat page, clear the active chat
+        // If we navigate to a non-chat page (that's not a specific chat room), 
+        // clear the active chat
         if (activeChat) {
             setActiveChat(null);
         }
