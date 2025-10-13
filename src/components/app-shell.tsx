@@ -46,16 +46,13 @@ function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActi
             onClick={handleClick}
             className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
                 "md:flex md:items-center md:gap-3 md:rounded-lg md:px-3 md:py-2 md:transition-all", // Desktop styles
                 "flex-1 flex-col items-center justify-center gap-1 text-xs h-full md:flex-row md:justify-start md:h-auto md:text-sm" // Mobile styles merged
             )}
         >
             <div className="relative flex flex-col items-center gap-1 md:flex-row md:gap-3">
-                <item.icon className={cn("h-6 w-6 md:h-5 md:w-5", isActive ? "text-primary md:text-inherit" : "text-muted-foreground md:text-inherit")} />
-                <span className={cn("text-xs font-medium md:text-sm", isActive ? "text-primary md:text-inherit" : "text-muted-foreground md:text-inherit")}>{item.label}</span>
+                <item.icon className={cn("h-6 w-6 md:h-5 md:w-5", isActive ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-xs font-medium md:text-sm", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
             </div>
         </Link>
     );
@@ -198,8 +195,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         // Otherwise, set the first non-AI chat as active
         const firstChat = allChats.find(c => c.type !== 'ai');
-        if (activeChat?.id !== firstChat?.id) {
-            setActiveChat(firstChat || null);
+        if (firstChat && activeChat?.id !== firstChat?.id) {
+            setActiveChat(firstChat);
         }
     }
   }, [pathname, activeChat, setActiveChat]);
