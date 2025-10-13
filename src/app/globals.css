@@ -74,4 +74,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  .dark label {
+    --tw-bg-opacity: 1;
+    background-color: hsl(222.2 84% 4.9% / var(--tw-bg-opacity));
+  }
 }

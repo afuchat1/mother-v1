@@ -50,49 +50,49 @@ export default function CheckoutPage() {
                                 <div className="grid gap-2">
                                     <h3 className="font-semibold">Shipping Address</h3>
                                     <div className="grid sm:grid-cols-2 gap-4">
-                                        <div className='space-y-1.5'>
-                                            <Label htmlFor="first-name">First Name</Label>
+                                        <div className='relative'>
                                             <Input id="first-name" placeholder="John" />
+                                            <Label htmlFor="first-name">First Name</Label>
                                         </div>
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="last-name">Last Name</Label>
+                                         <div className='relative'>
                                             <Input id="last-name" placeholder="Doe" />
+                                            <Label htmlFor="last-name">Last Name</Label>
                                         </div>
                                     </div>
-                                    <div className='space-y-1.5'>
-                                        <Label htmlFor="address">Address</Label>
+                                    <div className='relative'>
                                         <Input id="address" placeholder="123 Main St" />
+                                        <Label htmlFor="address">Address</Label>
                                     </div>
                                     <div className="grid sm:grid-cols-3 gap-4">
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="city">City</Label>
+                                         <div className='relative'>
                                             <Input id="city" placeholder="Anytown" />
+                                            <Label htmlFor="city">City</Label>
                                         </div>
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="state">State</Label>
+                                         <div className='relative'>
                                             <Input id="state" placeholder="CA" />
+                                            <Label htmlFor="state">State</Label>
                                         </div>
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="zip">Zip Code</Label>
+                                         <div className='relative'>
                                             <Input id="zip" placeholder="12345" />
+                                            <Label htmlFor="zip">Zip Code</Label>
                                         </div>
                                     </div>
                                 </div>
                                 <Separator />
                                 <div className="grid gap-2">
                                      <h3 className="font-semibold">Payment Information</h3>
-                                     <div className='space-y-1.5'>
-                                        <Label htmlFor="card-number">Card Number</Label>
+                                     <div className='relative'>
                                         <Input id="card-number" placeholder="**** **** **** 1234" />
+                                        <Label htmlFor="card-number">Card Number</Label>
                                     </div>
                                     <div className="grid sm:grid-cols-2 gap-4">
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="expiry">Expiry Date</Label>
+                                         <div className='relative'>
                                             <Input id="expiry" placeholder="MM/YY" />
+                                            <Label htmlFor="expiry">Expiry Date</Label>
                                         </div>
-                                         <div className='space-y-1.5'>
-                                            <Label htmlFor="cvc">CVC</Label>
+                                         <div className='relative'>
                                             <Input id="cvc" placeholder="123" />
+                                            <Label htmlFor="cvc">CVC</Label>
                                         </div>
                                     </div>
                                 </div>
