@@ -6,7 +6,7 @@ import { AppContext } from '@/lib/context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MinusCircle, PlusCircle, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
@@ -17,7 +17,7 @@ export default function CartPage() {
         return <p>Loading cart...</p>;
     }
 
-    const { cart, removeFromCart, addToCart, clearCart } = context;
+    const { cart, removeFromCart, clearCart } = context;
 
     const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     const tax = subtotal * 0.08; // 8% tax
