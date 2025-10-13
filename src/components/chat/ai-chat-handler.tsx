@@ -119,8 +119,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
         }
 
       } catch (error: any) {
-        console.error('AI Assistant Error:', error.message || error);
-        
         let title = 'Error';
         let description = error.message || 'Failed to get a response from the AI assistant.';
         let text = 'Sorry, I encountered an error. Please try again.';
@@ -129,6 +127,8 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
             title = 'API Quota Exceeded';
             description = 'You have exceeded your free tier limit for the AI model.';
             text = 'Sorry, I cannot respond right now due to high usage. Please try again later.';
+        } else {
+            console.error('AI Assistant Error:', error.message || error);
         }
 
         toast({
