@@ -40,7 +40,7 @@ export default function CartPage() {
         <main className="flex-1 bg-secondary">
             <div className="p-4">
                 <h1 className="text-3xl font-bold font-headline mb-6">Your Cart</h1>
-                <div className="grid grid-cols-1 gap-8">
+                <div className="flex flex-col gap-8">
                     <div>
                         <Card>
                             <CardContent className="p-0">

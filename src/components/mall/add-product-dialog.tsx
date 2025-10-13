@@ -45,7 +45,7 @@ export default function AddProductDialog({ children, onAddProduct }: AddProductD
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-[calc(100vw-2rem)] w-full">
         <DialogHeader>
           <DialogTitle className='font-headline'>List a New Product</DialogTitle>
           <DialogDescription>
@@ -78,11 +78,11 @@ export default function AddProductDialog({ children, onAddProduct }: AddProductD
             <Input id="picture" type="file" />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-row">
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" className="w-full">Cancel</Button>
           </DialogClose>
-          <Button onClick={handleSubmit}>Save Product</Button>
+          <Button onClick={handleSubmit} className="w-full">Save Product</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

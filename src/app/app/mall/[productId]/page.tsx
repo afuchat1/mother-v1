@@ -43,7 +43,7 @@ export default function ProductDetailPage() {
       </header>
       <div className="flex-1 overflow-y-auto p-4">
         <Card className="overflow-hidden">
-          <div className="grid grid-cols-1 gap-8">
+          <div className="flex flex-col gap-8">
             <div className="p-0">
               <Image
                 src={imageUrl}
@@ -70,7 +70,7 @@ export default function ProductDetailPage() {
                 <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
               </CardContent>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-col gap-4">
                 <Button size="lg" className="font-bold" onClick={() => addToCart(product)}>
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart

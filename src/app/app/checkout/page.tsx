@@ -40,7 +40,7 @@ export default function CheckoutPage() {
                 <h1 className="text-xl font-bold font-headline">Checkout</h1>
              </header>
              <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-1 gap-8">
+                <div className="flex flex-col gap-8">
                     <div>
                         <Card>
                             <CardHeader>
@@ -49,7 +49,7 @@ export default function CheckoutPage() {
                             <CardContent className="grid gap-6">
                                 <div className="grid gap-4">
                                     <h3 className="font-semibold">Shipping Address</h3>
-                                    <div className="grid grid-cols-1 gap-4">
+                                    <div className="flex flex-col gap-4">
                                         <div className='relative'>
                                             <Input id="first-name" placeholder="John" />
                                             <Label htmlFor="first-name">First Name</Label>
@@ -63,7 +63,7 @@ export default function CheckoutPage() {
                                         <Input id="address" placeholder="123 Main St" />
                                         <Label htmlFor="address">Address</Label>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-4">
+                                    <div className="flex flex-col gap-4">
                                          <div className='relative'>
                                             <Input id="city" placeholder="Anytown" />
                                             <Label htmlFor="city">City</Label>
@@ -85,7 +85,7 @@ export default function CheckoutPage() {
                                         <Input id="card-number" placeholder="**** **** **** 1234" />
                                         <Label htmlFor="card-number">Card Number</Label>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-4">
+                                    <div className="flex flex-col gap-4">
                                          <div className='relative'>
                                             <Input id="expiry" placeholder="MM/YY" />
                                             <Label htmlFor="expiry">Expiry Date</Label>
