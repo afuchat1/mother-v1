@@ -3,8 +3,9 @@ import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, X, Trash2 } from "lucide-react";
+import { Send, Paperclip, Mic, X, Trash2, Reply } from "lucide-react";
 import { cn } from '@/lib/utils';
+import type { Message } from '@/lib/types';
 
 type ChatInputProps = {
     input: string;
@@ -14,9 +15,11 @@ type ChatInputProps = {
     handleImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     imagePreview?: string | null;
     removeImage?: () => void;
+    replyTo?: Message | null;
+    cancelReply?: () => void;
 }
 
-export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, imagePreview, removeImage }: ChatInputProps) {
+export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, imagePreview, removeImage, replyTo, cancelReply }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -96,6 +99,22 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background p-2 border-t">
+       {replyTo && cancelReply && (
+          <div className="px-2 pb-2">
+            <div className="flex items-center justify-between rounded-lg bg-secondary p-2 pl-3">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <Reply className="h-4 w-4 text-primary shrink-0" />
+                <div className="overflow-hidden">
+                  <p className="font-semibold text-primary text-sm truncate">{replyTo.sender.name}</p>
+                  <p className="text-muted-foreground text-sm truncate">{replyTo.text || 'Voice message'}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={cancelReply}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
        {imagePreview && removeImage && (
         <div className="p-2 relative w-24 h-24">
           <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />

@@ -23,6 +23,7 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
 export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, handleNewMessage: (message: Message) => void }) {
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -84,11 +85,21 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
     }
   };
 
+  const handleReply = (message: Message) => {
+    setReplyTo(message);
+  };
+
+  const cancelReply = () => {
+    setReplyTo(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
     e.preventDefault();
     if (!input.trim() && !image && !options?.voiceUrl) return;
 
     let userQuestion = input;
+    const currentReplyTo = replyTo;
+
     const userMessage: Message = {
       id: `user_${Date.now()}`,
       text: input,
@@ -96,12 +107,14 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
       sender: currentUser,
       imageUrl: image ? URL.createObjectURL(image) : undefined,
       voiceUrl: options?.voiceUrl,
+      replyTo: currentReplyTo ?? undefined,
     };
 
     handleNewMessage(userMessage);
     setInput('');
-    const sentImage = image;
     setImage(null);
+    setReplyTo(null);
+    const sentImage = image;
 
     startTransition(async () => {
       try {
@@ -112,20 +125,23 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
 
             if (transcriptionResult && transcriptionResult.text) {
                 userQuestion = transcriptionResult.text;
-                // Optionally update the message with the transcribed text
-                 const transcribedMessage: Message = {
-                    ...userMessage,
-                    text: `🎤 Voice note: "${userQuestion}"`
-                };
-                // This will replace the original voice message placeholder
-                // setMessages(prev => prev.map(m => m.id === userMessage.id ? transcribedMessage : m));
+                // You could update the message with transcribed text if desired
             } else {
                  throw new Error("Failed to transcribe audio.");
             }
         }
 
         const photoDataUri = sentImage ? await toBase64(sentImage) : undefined;
-        const result = await aiAssistantAnswersQuestions({ question: userQuestion, photoDataUri });
+        
+        const aiInput: any = { question: userQuestion, photoDataUri };
+        if (currentReplyTo) {
+          aiInput.repliedToMessage = {
+            sender: currentReplyTo.sender.name,
+            text: currentReplyTo.text,
+          };
+        }
+        
+        const result = await aiAssistantAnswersQuestions(aiInput);
         
         const error = (result as any).error;
         if (error) {
@@ -164,8 +180,8 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
 
   return (
     <div className="flex h-full flex-col relative">
-      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
-        <ChatMessages messages={chat.messages} />
+      <div className="flex-1 overflow-y-auto pb-36" ref={scrollRef}>
+        <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isPending && (
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
@@ -182,7 +198,7 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
         )}
       </div>
        {showScrollButton && (
-            <div className="absolute bottom-20 right-4 z-20">
+            <div className="absolute bottom-24 right-4 z-20">
                 <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
                     <ArrowDown className="h-5 w-5" />
                 </Button>
@@ -196,6 +212,8 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
         handleImageChange={handleImageChange}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
+        replyTo={replyTo}
+        cancelReply={cancelReply}
       />
     </div>
   );

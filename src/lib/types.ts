@@ -13,6 +13,7 @@ export type Message = {
   sender: User;
   imageUrl?: string;
   voiceUrl?: string;
+  replyTo?: Message;
 };
 
 export type Chat = {

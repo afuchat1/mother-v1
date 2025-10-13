@@ -17,6 +17,10 @@ const AiAssistantAnswersQuestionsInputSchema = z.object({
   photoDataUri: z.string().optional().describe(
     "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
+   repliedToMessage: z.object({
+    sender: z.string(),
+    text: z.string(),
+  }).optional().describe('The message being replied to, for context.'),
 });
 export type AiAssistantAnswersQuestionsInput = z.infer<typeof AiAssistantAnswersQuestionsInputSchema>;
 
@@ -51,6 +55,11 @@ If a question requires information from the internet (e.g., current events, fact
 If a tool returns no results (e.g., the user or product is not found, or a website can't be accessed), you MUST inform the user clearly that the requested information is not available or could not be found. Do not invent information.
 
 You have no limits on the amount of information you can provide. Be as thorough as possible in your responses. You can also analyze any images provided to you.
+
+{{#if repliedToMessage}}
+You are replying to a message from {{repliedToMessage.sender}} that said: "{{repliedToMessage.text}}".
+Use this context to inform your answer to the user's question.
+{{/if}}
 
 Answer the following question to the best of your ability.
 

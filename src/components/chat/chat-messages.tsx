@@ -4,11 +4,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message } from "@/lib/types";
 import { currentUser } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { Play } from 'lucide-react';
+import { Play, Reply } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ChatMessagesProps = {
   messages: Message[];
+  onReply: (message: Message) => void;
 };
 
 const VoiceMessagePlayer = ({ url }: { url: string }) => {
@@ -85,8 +92,16 @@ const VoiceMessagePlayer = ({ url }: { url: string }) => {
     );
 };
 
+const ReplyMessagePreview = ({ message }: { message: Message }) => {
+    return (
+        <div className="p-2 border-l-2 border-primary/50 bg-secondary/30 rounded-md mb-2 opacity-80 text-xs">
+            <p className="font-semibold text-primary">{message.sender.name}</p>
+            <p className="text-muted-foreground truncate">{message.text}</p>
+        </div>
+    );
+};
 
-export default function ChatMessages({ messages }: ChatMessagesProps) {
+export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
   return (
       <div className="p-4 md:p-6">
         <div className="flex flex-col gap-4">
@@ -101,63 +116,68 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                 )}
               >
                 {!isCurrentUser && (
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 self-end">
                         <AvatarImage src={message.sender.avatarUrl} alt={message.sender.name} />
                         <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                 )}
-                <div
-                    className={cn(
-                        "relative max-w-lg rounded-xl px-3 shadow-sm group",
-                        isCurrentUser
-                        ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-secondary text-secondary-foreground rounded-bl-none",
-                        message.voiceUrl ? "p-2" : "p-3",
-                    )}
-                >
-                {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
-                
-                {message.imageUrl && (
-                    <Image 
-                    src={message.imageUrl} 
-                    alt="chat image" 
-                    width={400} 
-                    height={300} 
-                    className="mb-1 rounded-lg"
-                    data-ai-hint="scenery photo"
-                    />
-                )}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div
+                            className={cn(
+                                "relative max-w-lg rounded-xl px-3 shadow-sm group cursor-pointer",
+                                isCurrentUser
+                                ? "bg-primary text-primary-foreground rounded-br-none"
+                                : "bg-secondary text-secondary-foreground rounded-bl-none",
+                                message.voiceUrl ? "p-2" : "p-3",
+                            )}
+                        >
+                            <div className="absolute w-3 h-3 -bottom-[1px] transform z-[-1]"
+                                style={{
+                                    clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")',
+                                    ...isCurrentUser ? { right: '-5px', transform: 'scaleX(-1)' } : { left: '-5px' }
+                                }}
+                            >
+                                <div className={cn("w-full h-full", isCurrentUser ? "bg-primary" : "bg-secondary")}></div>
+                            </div>
+                        
+                        {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
+                        
+                        {message.replyTo && <ReplyMessagePreview message={message.replyTo} />}
 
-                {message.voiceUrl ? (
-                    <div className='w-64'>
-                        <VoiceMessagePlayer url={message.voiceUrl} />
-                    </div>
-                ) : (
-                    <p className='whitespace-pre-wrap text-sm'>{message.text}</p>
-                )}
-                
-                <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
-                    <div className="flex-1" />
-                    <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
-                </div>
-                <div className={cn(
-                        "absolute w-3 h-3",
-                        isCurrentUser 
-                            ? "-right-1.5 bottom-0" 
-                            : "-left-1.5 bottom-0"
-                    )}>
-                        <div className={cn(
-                            "w-full h-full transform",
-                            isCurrentUser 
-                                ? "bg-primary scale-x-[-1]"
-                                : "bg-secondary"
+                        {message.imageUrl && (
+                            <Image 
+                            src={message.imageUrl} 
+                            alt="chat image" 
+                            width={400} 
+                            height={300} 
+                            className="mb-1 rounded-lg"
+                            data-ai-hint="scenery photo"
+                            />
                         )}
-                        style={{
-                            clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")'
-                        }}
-                        ></div>
-                    </div>
-                </div>
+
+                        {message.voiceUrl ? (
+                            <div className='w-64'>
+                                <VoiceMessagePlayer url={message.voiceUrl} />
+                            </div>
+                        ) : (
+                            <p className='whitespace-pre-wrap text-sm'>{message.text}</p>
+                        )}
+                        
+                        <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
+                            <div className="flex-1" />
+                            <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
+                        </div>
+                       
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align={isCurrentUser ? "end" : "start"}>
+                        <DropdownMenuItem onClick={() => onReply(message)}>
+                            <Reply className="mr-2 h-4 w-4" />
+                            <span>Reply</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             );
           })}

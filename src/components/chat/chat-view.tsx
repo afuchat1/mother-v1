@@ -22,6 +22,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   const [chat, setChat] = useState(initialChat);
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isAiReplying, startAiTransition] = useTransition();
@@ -96,11 +97,21 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     }
   };
 
+  const handleReply = (message: Message) => {
+    setReplyTo(message);
+  };
+
+  const cancelReply = () => {
+    setReplyTo(null);
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
     e.preventDefault();
     if (!input.trim() && !image && !options?.voiceUrl) return;
     
     const sentInput = input;
+    const currentReplyTo = replyTo;
+
     const newMessage: Message = {
         id: `msg_${Date.now()}`,
         text: input,
@@ -108,17 +119,27 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         sender: currentUser,
         imageUrl: image ? URL.createObjectURL(image) : undefined,
         voiceUrl: options?.voiceUrl,
+        replyTo: currentReplyTo ?? undefined,
     };
 
     handleNewMessage(newMessage);
     
     setInput('');
     setImage(null);
+    setReplyTo(null);
 
     if (chat.type === 'group' && sentInput.toLowerCase().includes('@afuai')) {
         startAiTransition(async () => {
             try {
-                const result = await aiAssistantAnswersQuestions({ question: sentInput });
+                const aiInput: any = { question: sentInput };
+                if (currentReplyTo) {
+                  aiInput.repliedToMessage = {
+                    sender: currentReplyTo.sender.name,
+                    text: currentReplyTo.text,
+                  };
+                }
+
+                const result = await aiAssistantAnswersQuestions(aiInput);
                 const error = (result as any).error;
                 if (error) {
                    throw new Error(error || 'The AI assistant returned an error.');
@@ -186,8 +207,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   return (
     <div className="flex h-full flex-col bg-background relative">
       {commonHeader}
-      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
-        <ChatMessages messages={chat.messages} />
+      <div className="flex-1 overflow-y-auto pb-36" ref={scrollRef}>
+        <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isAiReplying && (
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
@@ -204,7 +225,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         )}
       </div>
        {showScrollButton && (
-            <div className="absolute bottom-20 right-4 z-20">
+            <div className="absolute bottom-24 right-4 z-20">
                 <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
                     <ArrowDown className="h-5 w-5" />
                 </Button>
@@ -218,6 +239,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         handleImageChange={handleImageChange}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
+        replyTo={replyTo}
+        cancelReply={cancelReply}
       />
     </div>
   );
