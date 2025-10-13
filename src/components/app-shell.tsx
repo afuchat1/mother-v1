@@ -26,9 +26,7 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
             {navItems.map((item) => {
-                 const isActive = (activePath === '/app' || activePath.startsWith('/app/chat')) && item.href === '/app/chat'
-                 ? true
-                 : activePath.startsWith(item.href) && item.href !== '/app/chat';
+                 const isActive = activePath.startsWith(item.href);
                 
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     e.preventDefault();
