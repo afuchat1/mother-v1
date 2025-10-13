@@ -3,9 +3,10 @@ import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, X, Trash2, Reply } from "lucide-react";
+import { Send, Paperclip, Mic, X, Trash2, Reply, Camera } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { Message } from '@/lib/types';
+import CameraView from './camera-view';
 
 type ChatInputProps = {
     input: string;
@@ -13,21 +14,30 @@ type ChatInputProps = {
     handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => void;
     isLoading?: boolean;
     handleImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleImageFile?: (file: File) => void;
     imagePreview?: string | null;
     removeImage?: () => void;
     replyTo?: Message | null;
     cancelReply?: () => void;
 }
 
-export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, imagePreview, removeImage, replyTo, cancelReply }: ChatInputProps) {
+export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, handleImageFile, imagePreview, removeImage, replyTo, cancelReply }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   const handleAttachClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const onPhotoTaken = (imageFile: File) => {
+    if (handleImageFile) {
+        handleImageFile(imageFile);
+    }
+    setShowCamera(false);
   };
   
   const formatTime = (seconds: number) => {
@@ -97,8 +107,12 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     }
   };
 
+  if (showCamera) {
+    return <CameraView onCapture={onPhotoTaken} onClose={() => setShowCamera(false)} />;
+  }
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background p-2 border-t">
+    <div className="absolute bottom-0 left-0 right-0 bg-background p-2 border-t">
        {replyTo && cancelReply && (
           <div className="px-2 pb-2">
             <div className="flex items-center justify-between rounded-lg bg-secondary p-2 pl-3">
@@ -146,6 +160,10 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
             <>
               {handleImageChange && (
                 <>
+                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={() => setShowCamera(true)} type="button">
+                      <Camera className="h-5 w-5" />
+                      <span className="sr-only">Take photo</span>
+                  </Button>
                   <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" onClick={handleAttachClick} type="button">
                       <Paperclip className="h-5 w-5" />
                       <span className="sr-only">Attach file</span>

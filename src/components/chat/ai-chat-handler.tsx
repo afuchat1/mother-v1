@@ -85,6 +85,10 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
     }
   };
 
+  const handleImageFile = (file: File) => {
+    setImage(file);
+  };
+
   const handleReply = (message: Message) => {
     setReplyTo(message);
   };
@@ -212,6 +216,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
         handleSubmit={handleSubmit}
         isLoading={isPending}
         handleImageChange={handleImageChange}
+        handleImageFile={handleImageFile}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
         replyTo={replyTo}

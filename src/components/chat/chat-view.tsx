@@ -106,6 +106,10 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     }
   };
 
+  const handleImageFile = (file: File) => {
+    setImage(file);
+  };
+
   const handleReply = (message: Message) => {
     setReplyTo(message);
   };
@@ -216,7 +220,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   if (chat.type === 'ai') {
     return (
-        <div className="flex h-full flex-col bg-background">
+        <div className="flex h-full flex-col bg-background relative">
             {commonHeader}
             <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
         </div>
@@ -224,7 +228,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   }
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background relative">
       {commonHeader}
       <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
         <ChatMessages messages={chat.messages} onReply={handleReply} />
@@ -256,6 +260,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         handleSubmit={handleSubmit}
         isLoading={isAiReplying}
         handleImageChange={handleImageChange}
+        handleImageFile={handleImageFile}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
         replyTo={replyTo}
