@@ -1,17 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import AiChatHandler from '@/components/chat/ai-chat-handler';
 import { chats } from '@/lib/data';
 import type { Chat, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Menu, PenSquare, Video, Camera, Waves } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import ChatAvatar from '@/components/chat/chat-avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { GrokLogo } from '@/components/icons';
+import { AiAssistantLogo } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import AiChatInput from '@/components/chat/ai-chat-input';
-
+import CameraView from '@/components/chat/camera-view';
 
 export default function AiChatPage() {
     const router = useRouter();
@@ -19,6 +18,10 @@ export default function AiChatPage() {
     
     const [chat, setChat] = useState<Chat | undefined>(initialAiChat);
     const [input, setInput] = useState('');
+    const [imageToSend, setImageToSend] = useState<File | null>(null);
+    const [showCamera, setShowCamera] = useState(false);
+    const [isPending, startTransition] = useTransition();
+
 
     if (!chat) {
         return <p>Loading AI Chat...</p>;
@@ -27,7 +30,6 @@ export default function AiChatPage() {
     const handleNewMessage = (newMessage: Message) => {
         setChat(prevChat => {
             if (!prevChat) return undefined;
-            // When user sends first message, remove the empty state logo
             const newMessages = prevChat.messages[0]?.sender.id === 'ai' && prevChat.messages.length === 1 && prevChat.messages[0].text.startsWith('Hello!')
                 ? [newMessage]
                 : [...prevChat.messages, newMessage];
@@ -51,18 +53,16 @@ export default function AiChatPage() {
         });
     };
     
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        // This is a placeholder for the real submit logic which is in AiChatHandler
-    }
-
     const isConversationStarted = !(chat.messages.length === 1 && chat.messages[0].sender.id === 'ai');
+
+    const onPhotoTaken = (imageFile: File) => {
+        setImageToSend(imageFile);
+        setShowCamera(false);
+    };
 
     return (
         <main className="flex h-full flex-col overflow-hidden bg-background">
+            {showCamera && <CameraView onCapture={onPhotoTaken} onClose={() => setShowCamera(false)} />}
              <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background p-2">
                 <Button variant="ghost" size="icon">
                     <Menu />
@@ -85,31 +85,20 @@ export default function AiChatPage() {
                 </Button>
             </header>
             
-            <div className="flex-1 overflow-y-auto">
-                {!isConversationStarted && (
-                     <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                        <GrokLogo className="w-20 h-20 text-muted-foreground/50 mb-12" />
-                        <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-                            <Button variant="secondary" className="h-auto flex-col gap-2 p-3">
-                                <Video className="h-6 w-6"/>
-                                <span className="text-xs">Create Videos</span>
-                            </Button>
-                             <Button variant="secondary" className="h-auto flex-col gap-2 p-3">
-                                <Camera className="h-6 w-6"/>
-                                <span className="text-xs">Open Camera</span>
-                            </Button>
-                             <Button variant="secondary" className="h-auto flex-col gap-2 p-3">
-                                <Waves className="h-6 w-6"/>
-                                <span className="text-xs">Voice Mode</span>
-                            </Button>
-                        </div>
-                    </div>
-                )}
-                <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} hideInput={true} />
-            </div>
+            <AiChatHandler 
+                chat={chat} 
+                handleNewMessage={handleNewMessage} 
+                updateMessage={updateMessage}
+                imageToSend={imageToSend}
+                clearImageToSend={() => setImageToSend(null)}
+                hideInput={true}
+             />
 
             <div className="shrink-0 p-2 border-t">
-                 <AiChatInput />
+                 <AiChatInput 
+                    imagePreview={imageToSend ? URL.createObjectURL(imageToSend) : null}
+                    removeImage={() => setImageToSend(null)}
+                 />
             </div>
         </main>
     );

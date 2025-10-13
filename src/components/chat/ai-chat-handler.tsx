@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
 import { ArrowDown } from 'lucide-react';
+import { AiAssistantLogo } from '../icons';
 
 // Helper to convert file or blob to base64
 const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -20,9 +21,16 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
     reader.onerror = error => reject(error);
 });
 
-export default function AiChatHandler({ chat, handleNewMessage, updateMessage, hideInput }: { chat: Chat, handleNewMessage: (message: Message) => void, updateMessage: (messageId: string, updates: Partial<Message>) => void, hideInput?: boolean }) {
-  const [input, setInput] = useState('');
-  const [image, setImage] = useState<File | null>(null);
+type AiChatHandlerProps = {
+    chat: Chat;
+    handleNewMessage: (message: Message) => void;
+    updateMessage: (messageId: string, updates: Partial<Message>) => void;
+    hideInput?: boolean;
+    imageToSend?: File | null;
+    clearImageToSend?: () => void;
+};
+
+export default function AiChatHandler({ chat, handleNewMessage, updateMessage, hideInput, imageToSend, clearImageToSend }: AiChatHandlerProps) {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -45,19 +53,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
     scrollToBottom('smooth');
   }, [chat.messages, isPending]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-        setImage(e.target.files[0]);
-    }
-  };
-
-  const handleImageFile = (file: File) => {
-    setImage(file);
-  };
 
   const handleReply = (message: Message) => {
     setReplyTo(message);
@@ -67,29 +62,30 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
     setReplyTo(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
-    e.preventDefault();
-    if (!input.trim() && !image && !options?.voiceUrl) return;
+  const handleSubmit = async (text: string, options?: { voiceUrl?: string }) => {
+    if (!text.trim() && !imageToSend && !options?.voiceUrl) return;
 
-    let userQuestion = input;
+    let userQuestion = text;
     const currentReplyTo = replyTo;
     const userMessageId = `user_${Date.now()}`;
+    const currentImageToSend = imageToSend;
+
+    if (clearImageToSend) {
+        clearImageToSend();
+    }
 
     const userMessage: Message = {
       id: userMessageId,
-      text: input,
+      text: text,
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sender: currentUser,
-      imageUrl: image ? URL.createObjectURL(image) : undefined,
+      imageUrl: currentImageToSend ? URL.createObjectURL(currentImageToSend) : undefined,
       voiceUrl: options?.voiceUrl,
       replyTo: currentReplyTo ?? undefined,
     };
 
     handleNewMessage(userMessage);
-    setInput('');
-    setImage(null);
     setReplyTo(null);
-    const sentImage = image;
 
     startTransition(async () => {
       try {
@@ -100,14 +96,15 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
 
             if (transcriptionResult && transcriptionResult.text) {
                 userQuestion = transcriptionResult.text;
-                // Update the original message with the transcribed text
                 updateMessage(userMessageId, { text: transcriptionResult.text });
             } else {
                  throw new Error("Failed to transcribe audio.");
             }
+        } else {
+            updateMessage(userMessageId, { text: userQuestion });
         }
 
-        const photoDataUri = sentImage ? await toBase64(sentImage) : undefined;
+        const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
         
         const aiInput: any = { question: userQuestion, photoDataUri };
         if (currentReplyTo) {
@@ -159,7 +156,11 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
   return (
     <>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        {isConversationStarted && (
+        {!isConversationStarted ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-4">
+               <AiAssistantLogo className="w-20 h-20 text-muted-foreground/50 mb-12" />
+           </div>
+        ) : (
             <div className="relative">
                 <ChatMessages messages={chat.messages} onReply={handleReply} />
                 {isPending && (
@@ -182,8 +183,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
       {!hideInput && (
           <div className="shrink-0">
             <AiChatInput
-              input={input}
-              handleInputChange={handleInputChange}
               handleSubmit={handleSubmit}
               isLoading={isPending}
             />
