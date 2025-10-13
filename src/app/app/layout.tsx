@@ -19,8 +19,10 @@ export default function AppLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // On initial load of a chat-related page, default to the first non-AI chat.
-    if (pathname.startsWith('/app/chat') && !activeChat) {
+    // This effect ensures that on desktop, a chat is selected by default.
+    // On mobile, activeChat can remain null to show the list.
+    const isMobile = window.innerWidth < 768;
+    if (pathname.startsWith('/app/chat') && !activeChat && !isMobile) {
         const defaultChat = allChats.find(c => c.type !== 'ai');
         if (defaultChat) {
             setActiveChat(defaultChat);

@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { AppContext } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import {
@@ -13,7 +13,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { AfuChatLogo } from '@/components/icons';
-import { currentUser, chats as allChats } from '@/lib/data';
+import { currentUser } from '@/lib/data';
 import {
   Avatar,
   AvatarFallback,
@@ -30,9 +30,6 @@ const navItems = [
 ];
 
 function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActive: boolean, onClick: (href: string) => void }) {
-    const isAiChat = item.href === '/app/ai-chat';
-    const effectiveHref = isAiChat ? '/app/chat' : item.href;
-
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         onClick(item.href);
@@ -40,7 +37,7 @@ function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActi
     
     return (
          <Link
-            href={effectiveHref}
+            href={item.href}
             onClick={handleClick}
             className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
@@ -54,16 +51,10 @@ function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActi
 }
 
 function BottomNavbar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
-    const context = useContext(AppContext);
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden h-16 flex items-center justify-around">
             {navItems.map((item) => {
-                 const isAiChatActive = item.href === '/app/ai-chat' && activePath === '/app/chat' && context?.activeChat?.type === 'ai';
-                 const isHomeActive = item.href === '/app/chat' && activePath === '/app/chat' && context?.activeChat?.type !== 'ai';
-                 const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && activePath.startsWith(item.href);
-                 const isActive = isAiChatActive || isHomeActive || isOtherActive;
-
-                const effectiveHref = item.href === '/app/ai-chat' ? '/app/chat' : item.href;
+                 const isActive = activePath.startsWith(item.href);
                 
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     e.preventDefault();
@@ -73,7 +64,7 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
                 return (
                     <Link
                         key={item.href}
-                        href={effectiveHref}
+                        href={item.href}
                         onClick={handleClick}
                         className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
                     >
@@ -89,7 +80,6 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
 }
 
 function DesktopSidebar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
-    const context = useContext(AppContext);
     return (
         <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-sidebar">
             <div className="flex h-16 items-center border-b px-6">
@@ -100,11 +90,7 @@ function DesktopSidebar({ activePath, handleNavClick }: { activePath: string, ha
             </div>
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map((item) => {
-                    const isAiChatActive = item.href === '/app/ai-chat' && activePath === '/app/chat' && context?.activeChat?.type === 'ai';
-                    const isHomeActive = item.href === '/app/chat' && activePath === '/app/chat' && context?.activeChat?.type !== 'ai';
-                    const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && activePath.startsWith(item.href);
-                    const isActive = isAiChatActive || isHomeActive || isOtherActive;
-
+                    const isActive = activePath.startsWith(item.href);
                     return (
                         <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} />
                     );
@@ -134,52 +120,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
   
   if (!context) return null; // Or a loading skeleton
   
-  const { cart, setActiveChat, activeChat } = context;
+  const { cart } = context;
 
   const handleNavClick = (href: string) => {
+    // Treat the AI chat tab as a special route that directs to the chat page
     if (href === '/app/ai-chat') {
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat) {
-            setActiveChat(aiChat);
-            router.push('/app/chat');
-        }
-    } else if (href === '/app/chat') {
-        const firstChat = allChats.find(c => c.type !== 'ai');
-        // Only switch if not already on a regular chat
-        if (activeChat?.type === 'ai' || !activeChat) {
-             if (firstChat) setActiveChat(firstChat);
-        }
-        router.push('/app/chat');
+        router.push('/app/chat'); // Placeholder, actual logic will be in the chat page
     } else {
-        // For any other link, just navigate.
         router.push(href);
     }
   };
 
-  useEffect(() => {
-    // This effect ensures the correct chat is active when landing on the chat page.
-    if (pathname === '/app/chat') {
-        // If no chat is active, or if AI chat is active but we didn't intend to, default to first normal chat
-        if (!activeChat || activeChat.type === 'ai') {
-             const intendedChat = activeChat && activeChat.type === 'ai' ? activeChat : allChats.find(c => c.type !== 'ai');
-             if (intendedChat && activeChat?.id !== intendedChat.id) {
-                setActiveChat(intendedChat);
-             }
-        }
-    }
-  }, [pathname, activeChat, setActiveChat]);
-
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // Adjust active path for AI chat
+  const activePath = pathname === '/app/chat' && context.activeChat?.type === 'ai' ? '/app/ai-chat' : pathname;
   const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
-
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
-        <DesktopSidebar activePath={pathname} handleNavClick={handleNavClick} />
+        <DesktopSidebar activePath={activePath} handleNavClick={handleNavClick} />
         <main className="flex-1 pb-16 md:pb-0">
             {children}
         </main>
-        <BottomNavbar activePath={pathname} handleNavClick={handleNavClick} />
+        <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />
         {showCartFab && cartItemCount > 0 && (
             <Link href="/app/cart" className="md:hidden fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">

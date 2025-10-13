@@ -1,28 +1,51 @@
 'use client';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import ChatView from '@/components/chat/chat-view';
 import ChatList from '@/components/chat/chat-list';
 import { AppContext } from '@/lib/context';
 import { chats as allChats } from '@/lib/data';
-import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
+    const pathname = usePathname();
 
     if (!context) {
-        // This can be a loading state or an error message
         return <p>Loading chat context...</p>;
     }
 
     const { activeChat, setActiveChat } = context;
 
+    useEffect(() => {
+        // This logic now correctly differentiates between the user's intent
+        // for AI chat versus regular chat.
+        const aiChat = allChats.find(c => c.type === 'ai');
+        const firstRegularChat = allChats.find(c => c.type !== 'ai');
+
+        if (pathname === '/app/ai-chat' || (activeChat?.type === 'ai' && pathname.startsWith('/app/chat'))) {
+            if (aiChat && activeChat?.id !== aiChat.id) {
+                setActiveChat(aiChat);
+            }
+        } else if (pathname.startsWith('/app/chat')) {
+            // If we are on the main chat page, and an AI chat is active,
+            // switch to the first regular chat.
+            if (activeChat?.type === 'ai') {
+                setActiveChat(firstRegularChat || null);
+            }
+        }
+    }, [pathname, activeChat, setActiveChat]);
+
+    // On mobile, if no chat is active, show the list.
+    // If a chat is active, show the chat view.
+    const showChatListOnMobile = !activeChat;
+
     return (
         <main className="flex h-screen md:h-full flex-col overflow-hidden">
              <div className="md:hidden flex-1">
-                {activeChat ? (
-                    <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
-                ) : (
+                {showChatListOnMobile ? (
                     <ChatList chats={allChats} activeChat={activeChat} setActiveChat={setActiveChat} />
+                ) : (
+                    activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
                 )}
              </div>
              <div className="hidden md:grid md:grid-cols-[300px_1fr] h-full">
