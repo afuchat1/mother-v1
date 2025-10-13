@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Chat } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import { cn } from "@/lib/utils";
+import { Check } from 'lucide-react';
 
 type ChatListProps = {
   chats: Chat[];
@@ -18,7 +19,7 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
   }
 
   return (
-    <div className="flex flex-col h-full bg-background border-r">
+    <div className="flex flex-col h-full bg-background">
         <header className="p-4 border-b">
             <h1 className="text-2xl font-bold font-headline">Chats</h1>
         </header>
@@ -29,8 +30,8 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
                     key={chat.id}
                     onClick={() => handleChatSelection(chat)}
                     className={cn(
-                        "flex items-center gap-3 px-4 py-3 text-left transition-colors",
-                        activeChat?.id === chat.id ? "bg-accent" : "hover:bg-accent/50"
+                        "flex items-center gap-3 px-4 py-3 text-left transition-colors border-b",
+                        activeChat?.id === chat.id ? "bg-primary/10" : "hover:bg-accent/50"
                     )}
                 >
                     <ChatAvatar chat={chat} />
@@ -41,12 +42,17 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
                                 {chat.messages[chat.messages.length - 1].createdAt}
                             </span>
                         </div>
-                        <p className={cn(
-                            "truncate text-sm",
-                            activeChat?.id === chat.id ? "text-accent-foreground/90" : "text-muted-foreground"
-                        )}>
-                        {chat.messages[chat.messages.length - 1].text}
-                        </p>
+                        <div className="flex items-start justify-between">
+                            <p className={cn(
+                                "truncate text-sm w-11/12",
+                                activeChat?.id === chat.id ? "text-accent-foreground/90" : "text-muted-foreground"
+                            )}>
+                                {chat.messages[chat.messages.length - 1].text}
+                            </p>
+                             <div className="flex flex-col items-end">
+                                <Check className="h-4 w-4 text-primary" />
+                            </div>
+                        </div>
                     </div>
                 </button>
                 ))}

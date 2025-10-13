@@ -6,7 +6,7 @@ import ChatMessages from "./chat-messages";
 import ChatInput from "./chat-input";
 import AiChatHandler from "./ai-chat-handler";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MoreVertical } from 'lucide-react';
 
 type ChatViewProps = {
   chat: Chat;
@@ -38,10 +38,13 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
           <h2 className="font-semibold font-headline text-base">{chat.name}</h2>
           {chat.type !== 'ai' && (
             <p className="text-sm text-muted-foreground">
-                {chat.type === 'dm' ? 'Direct Message' : 'Group Chat'}
+                {chat.type === 'dm' ? 'Online' : `${chat.members?.length} members`}
             </p>
           )}
         </div>
+        <Button variant="ghost" size="icon">
+          <MoreVertical />
+        </Button>
       </header>
   );
 

@@ -76,11 +76,11 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
               <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-              <div className="max-w-xs rounded-lg p-3 text-sm md:max-w-md bg-secondary shadow-sm">
-                 <div className="flex items-center space-x-2">
-                    <Skeleton className="h-3 w-3 rounded-full" />
-                    <Skeleton className="h-3 w-3 rounded-full" />
-                    <Skeleton className="h-3 w-3 rounded-full" />
+              <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                 <div className="flex items-center space-x-2 p-2">
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
                  </div>
               </div>
             </div>
