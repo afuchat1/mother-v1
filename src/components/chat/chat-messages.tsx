@@ -89,76 +89,74 @@ const VoiceMessagePlayer = ({ url }: { url: string }) => {
 export default function ChatMessages({ messages }: ChatMessagesProps) {
   return (
       <div className="p-4 md:p-6">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           {messages.map((message) => {
             const isCurrentUser = message.sender.id === currentUser.id;
             return (
               <div
                 key={message.id}
                 className={cn(
-                  "flex items-start gap-2",
+                  "flex items-end gap-2",
                   isCurrentUser ? "justify-end" : "justify-start"
                 )}
               >
-                <div className={cn("flex flex-col gap-1 w-full", isCurrentUser ? "items-end" : "items-start")}>
-                    <div
-                        className={cn(
-                            "relative max-w-lg rounded-xl px-3 shadow-sm group",
-                            isCurrentUser
-                            ? "bg-primary text-primary-foreground rounded-br-none"
-                            : "bg-secondary text-secondary-foreground rounded-bl-none",
-                            message.voiceUrl ? "p-2" : "p-3",
-                        )}
-                    >
-                    {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
-                    
-                    {message.imageUrl && (
-                        <Image 
-                        src={message.imageUrl} 
-                        alt="chat image" 
-                        width={400} 
-                        height={300} 
-                        className="mb-1 rounded-lg"
-                        data-ai-hint="scenery photo"
-                        />
+                {!isCurrentUser && (
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={message.sender.avatarUrl} alt={message.sender.name} />
+                        <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                )}
+                <div
+                    className={cn(
+                        "relative max-w-lg rounded-xl px-3 shadow-sm group",
+                        isCurrentUser
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-secondary text-secondary-foreground rounded-bl-none",
+                        message.voiceUrl ? "p-2" : "p-3",
                     )}
+                >
+                {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
+                
+                {message.imageUrl && (
+                    <Image 
+                    src={message.imageUrl} 
+                    alt="chat image" 
+                    width={400} 
+                    height={300} 
+                    className="mb-1 rounded-lg"
+                    data-ai-hint="scenery photo"
+                    />
+                )}
 
-                    {message.voiceUrl ? (
-                        <div className='w-64'>
-                            <VoiceMessagePlayer url={message.voiceUrl} />
-                        </div>
-                    ) : (
-                        <p className='whitespace-pre-wrap text-sm'>{message.text}</p>
-                    )}
-                    
-                    <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
-                        <div className="flex-1" />
-                        <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
+                {message.voiceUrl ? (
+                    <div className='w-64'>
+                        <VoiceMessagePlayer url={message.voiceUrl} />
                     </div>
-                    <div className={cn(
-                            "absolute w-3 h-3",
+                ) : (
+                    <p className='whitespace-pre-wrap text-sm'>{message.text}</p>
+                )}
+                
+                <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
+                    <div className="flex-1" />
+                    <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
+                </div>
+                <div className={cn(
+                        "absolute w-3 h-3",
+                        isCurrentUser 
+                            ? "-right-1.5 bottom-0" 
+                            : "-left-1.5 bottom-0"
+                    )}>
+                        <div className={cn(
+                            "w-full h-full transform",
                             isCurrentUser 
-                                ? "-right-1.5 bottom-0" 
-                                : "-left-1.5 bottom-0"
-                        )}>
-                            <div className={cn(
-                                "w-full h-full transform",
-                                isCurrentUser 
-                                    ? "bg-primary scale-x-[-1]"
-                                    : "bg-secondary"
-                            )}
-                            style={{
-                                clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")'
-                            }}
-                            ></div>
-                        </div>
+                                ? "bg-primary scale-x-[-1]"
+                                : "bg-secondary"
+                        )}
+                        style={{
+                            clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")'
+                        }}
+                        ></div>
                     </div>
-                     {!isCurrentUser && (
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={message.sender.avatarUrl} alt={message.sender.name} />
-                            <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                    )}
                 </div>
               </div>
             );
