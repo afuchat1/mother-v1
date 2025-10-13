@@ -6,7 +6,7 @@ import { PlusCircle } from "lucide-react";
 
 export default function MallPage() {
   return (
-    <main className="flex-1">
+    <main className="flex-1 bg-secondary">
       <div className="p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>

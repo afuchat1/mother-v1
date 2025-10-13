@@ -63,7 +63,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-4 border-b bg-card p-4">
+      <header className="flex items-center gap-4 border-b bg-background p-4">
         <ChatAvatar chat={chat} />
         <div className="flex-1">
           <h2 className="font-semibold font-headline">{chat.name}</h2>
@@ -76,7 +76,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
               <ChatAvatar chat={chat} />
-              <div className="max-w-xs rounded-lg p-3 text-sm md:max-w-md bg-card shadow-sm">
+              <div className="max-w-xs rounded-lg p-3 text-sm md:max-w-md bg-secondary shadow-sm">
                  <div className="flex items-center space-x-2">
                     <Skeleton className="h-3 w-3 rounded-full" />
                     <Skeleton className="h-3 w-3 rounded-full" />

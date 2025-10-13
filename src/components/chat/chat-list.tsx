@@ -31,7 +31,7 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
                 >
                 <ChatAvatar chat={chat} />
                 <div className="flex flex-col items-start text-left">
-                    <span className="font-medium">{chat.name}</span>
+                    <span className="font-semibold">{chat.name}</span>
                     <span className={cn(
                         "truncate text-xs",
                         activeChat?.id === chat.id ? "text-accent-foreground/80" : "text-muted-foreground"

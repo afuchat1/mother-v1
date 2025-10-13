@@ -35,7 +35,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                     "max-w-xs rounded-lg p-3 text-sm md:max-w-md",
                     isCurrentUser
                       ? "bg-primary text-primary-foreground"
-                      : "bg-card shadow-sm"
+                      : "bg-secondary"
                   )}
                 >
                   {!isCurrentUser && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}

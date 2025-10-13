@@ -11,7 +11,7 @@ type ChatInputProps = {
 
 export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading }: ChatInputProps) {
   return (
-    <div className="border-t bg-card p-4">
+    <div className="border-t bg-background p-4">
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-end gap-2">
             <Button variant="ghost" size="icon" className="shrink-0" disabled>
@@ -20,7 +20,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
             </Button>
             <Textarea
             placeholder="Type a message..."
-            className="flex-1 resize-none"
+            className="flex-1 resize-none bg-secondary border-0"
             rows={1}
             value={input}
             onChange={handleInputChange}

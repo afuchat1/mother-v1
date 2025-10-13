@@ -36,7 +36,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-2 border-b bg-card p-2 md:p-4">
+      <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>

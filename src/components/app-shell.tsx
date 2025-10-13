@@ -156,7 +156,7 @@ function AppShellContent({ children }: { children: ReactNode }) {
 
       <SidebarInset>
           <header className={cn(
-              "flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6",
+              "flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6",
               !isChatPage && "md:hidden"
           )}>
               <SidebarTrigger className="md:hidden" />
