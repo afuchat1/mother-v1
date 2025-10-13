@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview An AI assistant that answers user questions.
+ * @fileOverview An AI feature that answers user questions.
  *
  * - aiAssistantAnswersQuestions - A function that answers user questions.
  * - AiAssistantAnswersQuestionsInput - The input type for the aiAssistantAnswersQuestions function.
@@ -13,9 +13,9 @@ import {z} from 'genkit';
 import { findUser, findProduct, browse } from '../tools/app-tools';
 
 const AiAssistantAnswersQuestionsInputSchema = z.object({
-  question: z.string().describe('The question to be answered by the AI assistant.'),
+  question: z.string().describe('The question to be answered by the AI.'),
   photoDataUri: z.string().optional().describe(
-    "A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    "A photo, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
    repliedToMessage: z.object({
     sender: z.string(),
@@ -46,9 +46,7 @@ const prompt = ai.definePrompt({
   input: {schema: AiAssistantAnswersQuestionsInputSchema},
   output: {schema: AiAssistantAnswersQuestionsOutputSchema},
   tools: [findUser, findProduct, browse],
-  prompt: `You are AfuAi, the helpful and comprehensive AI assistant for AfuChat. You are an expert on all things related to the AfuChat application and have the ability to access real-time information from the internet. Your goal is to provide the most detailed and complete answers possible, using the tools provided.
-
-The founder, CEO, and Product Manager of AfuChat is amkaweeai.
+  prompt: `You are a powerful AI feature within the AfuChat application. Your purpose is to provide direct, comprehensive answers and access real-time information using the available tools.
 
 When asked to find a user, use the findUser tool to get all their profile information. Your answer should be a detailed summary, including their bio and a full list of all products they sell, if any.
 
@@ -58,7 +56,7 @@ If a question requires information from the internet (e.g., current events, fact
 
 If a tool returns no results (e.g., the user or product is not found, or a website can't be accessed), you MUST inform the user clearly that the requested information is not available or could not be found. Do not invent information.
 
-You have no limits on the amount of information you can provide. Be as thorough as possible in your responses. You can also analyze any images provided to you.
+You can analyze any images provided.
 
 {{#if chatHistory}}
 Here is the recent chat history for context. Use it to understand the flow of the conversation and ensure your response is relevant to the topic. Do not bring up unrelated subjects.
@@ -90,7 +88,7 @@ const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-      throw new Error('The AI assistant returned an empty response.');
+      throw new Error('The AI returned an empty response.');
     }
     return output;
   }

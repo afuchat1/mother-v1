@@ -16,7 +16,10 @@ export default function AiChatPage() {
     const router = useRouter();
     const initialAiChat = chats.find(c => c.type === 'ai');
     
-    const [chat, setChat] = useState<Chat | undefined>(initialAiChat);
+    // Create a version of the initial chat with no messages
+    const blankAiChat = initialAiChat ? { ...initialAiChat, messages: [] } : undefined;
+
+    const [chat, setChat] = useState<Chat | undefined>(blankAiChat);
     const [input, setInput] = useState('');
     const [imageToSend, setImageToSend] = useState<File | null>(null);
     const [showCamera, setShowCamera] = useState(false);
@@ -30,13 +33,9 @@ export default function AiChatPage() {
     const handleNewMessage = (newMessage: Message) => {
         setChat(prevChat => {
             if (!prevChat) return undefined;
-            const newMessages = prevChat.messages[0]?.sender.id === 'ai' && prevChat.messages.length === 1 && prevChat.messages[0].text.startsWith('Hello!')
-                ? [newMessage]
-                : [...prevChat.messages, newMessage];
-
             return {
                 ...prevChat,
-                messages: newMessages
+                messages: [...prevChat.messages, newMessage]
             };
         });
     };
@@ -53,7 +52,7 @@ export default function AiChatPage() {
         });
     };
     
-    const isConversationStarted = !(chat.messages.length === 1 && chat.messages[0].sender.id === 'ai');
+    const isConversationStarted = chat.messages.length > 0;
 
     const onPhotoTaken = (imageFile: File) => {
         setImageToSend(imageFile);
@@ -98,6 +97,16 @@ export default function AiChatPage() {
                  <AiChatInput 
                     imagePreview={imageToSend ? URL.createObjectURL(imageToSend) : null}
                     removeImage={() => setImageToSend(null)}
+                    handleSubmit={(text: string) => {
+                        const userMessage: Message = {
+                          id: `user_${Date.now()}`,
+                          text: text,
+                          createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          sender: { id: 'user1', name: 'You', avatarUrl: ''}, // Placeholder for current user
+                          imageUrl: imageToSend ? URL.createObjectURL(imageToSend) : undefined,
+                        };
+                        handleNewMessage(userMessage);
+                    }}
                  />
             </div>
         </main>

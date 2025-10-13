@@ -53,7 +53,7 @@ export const chats: Chat[] = [
     name: 'AfuAi',
     avatarUrl: aiUser.avatarUrl,
     messages: [
-      { id: 'ai_m1', text: 'Hello! I am AfuAi. How can I help you today?', createdAt: 'Just now', sender: aiUser },
+      // The initial greeting message is removed to make it feel more like a feature.
     ],
   },
   {
