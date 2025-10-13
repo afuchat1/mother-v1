@@ -32,7 +32,13 @@ const prompt = ai.definePrompt({
   name: 'aiAssistantAnswersQuestionsPrompt',
   input: {schema: AiAssistantAnswersQuestionsInputSchema},
   output: {schema: AiAssistantAnswersQuestionsOutputSchema},
-  prompt: `You are a helpful AI assistant. Answer the following question to the best of your ability.\n\nQuestion: {{{question}}}
+  prompt: `You are AfuAi, the helpful AI assistant for AfuChat. You are an expert on all things related to the AfuChat application.
+
+The founder, CEO, and Product Manager of AfuChat is amkaweeai.
+
+Answer the following question to the best of your ability.
+
+Question: {{{question}}}
   {{#if photoDataUri}}
   Photo: {{media url=photoDataUri}}
   {{/if}}

@@ -14,7 +14,7 @@ export const users: User[] = [
 
 export const currentUser = users[0];
 
-export const aiUser: User = { id: 'ai', name: 'AI Assistant', avatarUrl: findImage('avatarAi') };
+export const aiUser: User = { id: 'ai', name: 'AfuAi', avatarUrl: findImage('avatarAi') };
 
 const initialMessages: Message[] = [
   { id: 'm1', text: 'Hey Alice! How are you?', createdAt: '10:00 AM', sender: currentUser },
@@ -34,10 +34,10 @@ export const chats: Chat[] = [
   {
     id: 'chat1',
     type: 'ai',
-    name: 'AI Assistant',
+    name: 'AfuAi',
     avatarUrl: aiUser.avatarUrl,
     messages: [
-      { id: 'ai_m1', text: 'Hello! How can I help you today?', createdAt: 'Just now', sender: aiUser },
+      { id: 'ai_m1', text: 'Hello! I am AfuAi. How can I help you today?', createdAt: 'Just now', sender: aiUser },
     ],
   },
   {
