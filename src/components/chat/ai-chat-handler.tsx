@@ -9,6 +9,8 @@ import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-que
 import { speechToText } from '@/ai/flows/speech-to-text';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
+import { ArrowDown } from 'lucide-react';
 
 // Helper to convert file or blob to base64
 const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -24,10 +26,51 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: behavior,
+        });
+    }
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+
+    // Auto-scroll if we are already at the bottom
+    if (isScrolledToBottom) {
+        scrollToBottom('auto');
+    }
+
+     const handleScroll = () => {
+        if (scrollContainer) {
+            const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+            if (isAtBottom) {
+                setShowScrollButton(false);
+            }
+        }
+    };
+    
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+
+   useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (scrollContainer) {
+      const isScrolledUp = scrollContainer.scrollHeight - scrollContainer.clientHeight > scrollContainer.scrollTop + 150;
+      
+      if (!isScrolledUp) {
+        scrollToBottom('smooth');
+      } else {
+        setShowScrollButton(true);
+      }
     }
   }, [chat.messages, isPending]);
 
@@ -120,8 +163,8 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto pb-20" ref={scrollRef}>
+    <div className="flex h-full flex-col relative">
+      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
         <ChatMessages messages={chat.messages} />
         {isPending && (
           <div className="p-4 md:p-6">
@@ -138,6 +181,13 @@ export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, 
           </div>
         )}
       </div>
+       {showScrollButton && (
+            <div className="absolute bottom-20 right-4 z-20">
+                <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
+                    <ArrowDown className="h-5 w-5" />
+                </Button>
+            </div>
+        )}
       <ChatInput
         input={input}
         handleInputChange={handleInputChange}

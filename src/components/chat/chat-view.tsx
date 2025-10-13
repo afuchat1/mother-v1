@@ -6,7 +6,7 @@ import ChatMessages from "./chat-messages";
 import ChatInput from "./chat-input";
 import AiChatHandler from "./ai-chat-handler";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MoreVertical } from 'lucide-react';
+import { ArrowLeft, MoreVertical, ArrowDown } from 'lucide-react';
 import { currentUser } from '@/lib/data';
 
 type ChatViewProps = {
@@ -19,15 +19,47 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+
+  const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+            top: scrollRef.current.scrollHeight,
+            behavior: behavior,
+        });
+    }
+  };
 
   useEffect(() => {
     setChat(initialChat);
+    scrollToBottom('auto');
   }, [initialChat]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+
+    // Auto-scroll if we are already at the bottom
+    if (isScrolledToBottom) {
+        scrollToBottom('auto');
+    } else {
+        setShowScrollButton(true);
     }
+    
+    const handleScroll = () => {
+        if (scrollContainer) {
+            const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+            if (isAtBottom) {
+                setShowScrollButton(false);
+            }
+        }
+    };
+    
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [chat.messages]);
 
   const handleNewMessage = (newMessage: Message) => {
@@ -96,11 +128,18 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   }
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background relative">
       {commonHeader}
-      <div className="flex-1 overflow-y-auto pb-20" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
         <ChatMessages messages={chat.messages} />
       </div>
+       {showScrollButton && (
+            <div className="absolute bottom-20 right-4 z-20">
+                <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
+                    <ArrowDown className="h-5 w-5" />
+                </Button>
+            </div>
+        )}
       <ChatInput 
         input={input}
         handleInputChange={handleInputChange}
