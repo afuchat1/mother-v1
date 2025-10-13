@@ -11,6 +11,7 @@ import { AiAssistantLogo } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import AiChatInput from '@/components/chat/ai-chat-input';
 import CameraView from '@/components/chat/camera-view';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function AiChatPage() {
     const router = useRouter();
@@ -84,14 +85,28 @@ export default function AiChatPage() {
                 </Button>
             </header>
             
-            <AiChatHandler 
-                chat={chat} 
-                handleNewMessage={handleNewMessage} 
-                updateMessage={updateMessage}
-                imageToSend={imageToSend}
-                clearImageToSend={() => setImageToSend(null)}
-                hideInput={true}
-             />
+            <div className='flex-1 overflow-y-auto'>
+                {!isConversationStarted ? (
+                    <div className="p-4 flex flex-col gap-4 items-center justify-center h-full">
+                        <Card className="w-full">
+                            <CardContent className="p-4">
+                                <Button variant="outline" className="w-full" onClick={() => setShowCamera(true)}>
+                                    <Camera className="mr-2 h-4 w-4" /> Open Camera
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                ) : (
+                    <AiChatHandler 
+                        chat={chat} 
+                        handleNewMessage={handleNewMessage} 
+                        updateMessage={updateMessage}
+                        imageToSend={imageToSend}
+                        clearImageToSend={() => setImageToSend(null)}
+                     />
+                )}
+            </div>
+            
 
             <div className="shrink-0 p-2 border-t">
                  <AiChatInput 

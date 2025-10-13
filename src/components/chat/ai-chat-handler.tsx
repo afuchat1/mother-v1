@@ -25,12 +25,11 @@ type AiChatHandlerProps = {
     chat: Chat;
     handleNewMessage: (message: Message) => void;
     updateMessage: (messageId: string, updates: Partial<Message>) => void;
-    hideInput?: boolean;
     imageToSend?: File | null;
     clearImageToSend?: () => void;
 };
 
-export default function AiChatHandler({ chat, handleNewMessage, updateMessage, hideInput, imageToSend, clearImageToSend }: AiChatHandlerProps) {
+export default function AiChatHandler({ chat, handleNewMessage, updateMessage, imageToSend, clearImageToSend }: AiChatHandlerProps) {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -69,6 +68,8 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
     const currentReplyTo = replyTo;
     const userMessageId = `user_${Date.now()}`;
     const currentImageToSend = imageToSend;
+    const currentChatHistory = chat.messages;
+
 
     if (clearImageToSend) {
         clearImageToSend();
@@ -106,7 +107,11 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
 
         const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
         
-        const aiInput: any = { question: userQuestion, photoDataUri };
+        const aiInput: any = { 
+            question: userQuestion, 
+            photoDataUri,
+            chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
+        };
         if (currentReplyTo) {
           aiInput.repliedToMessage = {
             sender: currentReplyTo.sender.name,
@@ -151,14 +156,14 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
     });
   };
   
-  const isConversationStarted = !(chat.messages.length === 1 && chat.messages[0].sender.id === 'ai');
+  const isConversationStarted = chat.messages.length > 0;
 
   return (
     <>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         {!isConversationStarted ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-4">
-               <AiAssistantLogo className="w-20 h-20 text-muted-foreground/50 mb-12" />
+               {/* Empty state is now handled in the parent page */}
            </div>
         ) : (
             <div className="relative">
@@ -180,14 +185,12 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, h
             </div>
         )}
       </div>
-      {!hideInput && (
-          <div className="shrink-0">
-            <AiChatInput
-              handleSubmit={handleSubmit}
-              isLoading={isPending}
-            />
-          </div>
-      )}
+      <div className="shrink-0">
+        <AiChatInput
+            handleSubmit={handleSubmit}
+            isLoading={isPending}
+        />
+      </div>
     </>
   );
 }
