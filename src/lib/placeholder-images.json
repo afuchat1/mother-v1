@@ -1,3 +1,100 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "avatar1",
+      "description": "User avatar 1",
+      "imageUrl": "https://picsum.photos/seed/avatar1/40/40",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "avatar2",
+      "description": "User avatar 2",
+      "imageUrl": "https://picsum.photos/seed/avatar2/40/40",
+      "imageHint": "woman smiling"
+    },
+    {
+      "id": "avatar3",
+      "description": "User avatar 3",
+      "imageUrl": "https://picsum.photos/seed/avatar3/40/40",
+      "imageHint": "man glasses"
+    },
+    {
+      "id": "avatar4",
+      "description": "User avatar 4",
+      "imageUrl": "https://picsum.photos/seed/avatar4/40/40",
+      "imageHint": "person nature"
+    },
+    {
+      "id": "avatar5",
+      "description": "User avatar 5",
+      "imageUrl": "https://picsum.photos/seed/avatar5/40/40",
+      "imageHint": "woman city"
+    },
+    {
+      "id": "avatar6",
+      "description": "User avatar 6",
+      "imageUrl": "https://picsum.photos/seed/avatar6/40/40",
+      "imageHint": "man coffee"
+    },
+    {
+      "id": "avatarAi",
+      "description": "AI Assistant avatar",
+      "imageUrl": "https://picsum.photos/seed/ai/40/40",
+      "imageHint": "robot abstract"
+    },
+    {
+      "id": "groupAvatar1",
+      "description": "Group chat avatar 1",
+      "imageUrl": "https://picsum.photos/seed/group1/40/40",
+      "imageHint": "team work"
+    },
+    {
+      "id": "groupAvatar2",
+      "description": "Group chat avatar 2",
+      "imageUrl": "https://picsum.photos/seed/group2/40/40",
+      "imageHint": "business meeting"
+    },
+    {
+      "id": "product1",
+      "description": "Product image 1",
+      "imageUrl": "https://picsum.photos/seed/product1/300/200",
+      "imageHint": "handmade jewelry"
+    },
+    {
+      "id": "product2",
+      "description": "Product image 2",
+      "imageUrl": "https://picsum.photos/seed/product2/300/200",
+      "imageHint": "leather wallet"
+    },
+    {
+      "id": "product3",
+      "description": "Product image 3",
+      "imageUrl": "https://picsum.photos/seed/product3/300/200",
+      "imageHint": "vintage camera"
+    },
+    {
+      "id": "product4",
+      "description": "Product image 4",
+      "imageUrl": "https://picsum.photos/seed/product4/300/200",
+      "imageHint": "sports shoes"
+    },
+    {
+      "id": "product5",
+      "description": "Product image 5",
+      "imageUrl": "https://picsum.photos/seed/product5/300/200",
+      "imageHint": "modern watch"
+    },
+    {
+      "id": "chatImage1",
+      "description": "Image shared in chat",
+      "imageUrl": "https://picsum.photos/seed/chatimg1/400/300",
+      "imageHint": "city landscape"
+    },
+    {
+      "id": "loginHero",
+      "description": "Login page hero image",
+      "imageUrl": "https://picsum.photos/seed/loginhero/1200/800",
+      "imageHint": "communication technology"
+    }
+  ]
 }
