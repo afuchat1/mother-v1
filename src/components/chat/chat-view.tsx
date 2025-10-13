@@ -57,9 +57,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
      const handleScroll = () => {
         if (scrollContainer) {
             const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
-            if (isAtBottom) {
-                setShowScrollButton(false);
-            }
+            setShowScrollButton(!isAtBottom);
         }
     };
     
@@ -221,43 +219,39 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   if (chat.type === 'ai') {
     return (
         <div className="flex h-full flex-col bg-background">
-            <div className="shrink-0">{commonHeader}</div>
-            <div className="flex-1 overflow-y-auto relative">
-                <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
-            </div>
+            {commonHeader}
+            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
         </div>
     );
   }
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <div className="shrink-0">{commonHeader}</div>
-      <div className="flex-1 overflow-y-auto relative">
-        <div className="h-full" ref={scrollRef}>
-            <ChatMessages messages={chat.messages} onReply={handleReply} />
-            {isAiReplying && (
-            <div className="p-4 md:p-6">
-                <div className="flex items-end gap-2 justify-start">
-                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                    <div className="flex items-center space-x-2 p-2">
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                    </div>
-                </div>
+      {commonHeader}
+      <div className="flex-1 overflow-y-auto relative" ref={scrollRef}>
+        <ChatMessages messages={chat.messages} onReply={handleReply} />
+        {isAiReplying && (
+        <div className="p-4 md:p-6">
+            <div className="flex items-end gap-2 justify-start">
+            <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+            <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                <div className="flex items-center space-x-2 p-2">
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
                 </div>
             </div>
-            )}
+            </div>
         </div>
-      </div>
-       {showScrollButton && (
-            <div className="absolute bottom-24 right-4 z-20">
+        )}
+        {showScrollButton && (
+            <div className="absolute bottom-4 right-4 z-20">
                 <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
                     <ArrowDown className="h-5 w-5" />
                 </Button>
             </div>
         )}
+      </div>
       <div className="shrink-0">
         <ChatInput 
             input={input}

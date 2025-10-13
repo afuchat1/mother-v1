@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { chats } from '@/lib/data';
 
 const navItems = [
   { href: '/app/chat', icon: Home, label: 'Home' },
@@ -25,7 +24,7 @@ const navItems = [
 
 function BottomNavbar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around">
+        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
             {navItems.map((item) => {
                  const isActive = (activePath === '/app/chat' || activePath === '/app') && item.href === '/app/chat'
                  ? true
@@ -77,12 +76,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const showBottomNav = !activeChat;
   const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
+  // When a chat is active, we use a different layout structure to enforce fixed header/footer
+  const isChatActive = !!activeChat;
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-        <main className={cn("flex-1", showBottomNav && "pb-16")}>
+    <div className={cn("min-h-screen w-full bg-background", isChatActive ? 'flex flex-col' : 'block')}>
+        <main className={cn(
+          "flex-1", 
+          showBottomNav && !isChatActive && "pb-16",
+          isChatActive && "flex flex-col overflow-hidden"
+        )}>
             {children}
         </main>
-        {showBottomNav && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
+        {showBottomNav && !isChatActive && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
         {showCartFab && cartItemCount > 0 && (
             <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">

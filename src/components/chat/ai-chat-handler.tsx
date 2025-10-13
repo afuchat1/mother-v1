@@ -52,9 +52,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
      const handleScroll = () => {
         if (scrollContainer) {
             const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
-            if (isAtBottom) {
-                setShowScrollButton(false);
-            }
+            setShowScrollButton(!isAtBottom);
         }
     };
     
@@ -186,7 +184,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto relative" ref={scrollRef}>
         <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isPending && (
           <div className="p-4 md:p-6">
@@ -202,14 +200,14 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
             </div>
           </div>
         )}
-      </div>
-       {showScrollButton && (
-            <div className="absolute bottom-24 right-4 z-20">
+         {showScrollButton && (
+            <div className="absolute bottom-4 right-4 z-20">
                 <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
                     <ArrowDown className="h-5 w-5" />
                 </Button>
             </div>
         )}
+      </div>
       <div className="shrink-0">
         <ChatInput
           input={input}
