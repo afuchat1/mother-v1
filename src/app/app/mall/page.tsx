@@ -5,6 +5,7 @@ import ProductCard from "@/components/mall/product-card";
 import AddProductDialog from "@/components/mall/add-product-dialog";
 import { PlusCircle } from "lucide-react";
 import type { Product } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 
 export default function MallPage() {
   const [products, setProducts] = useState<Product[]>(initialProducts);
