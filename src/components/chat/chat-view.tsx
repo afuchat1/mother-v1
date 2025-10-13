@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Chat, Message } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import ChatMessages from "./chat-messages";
@@ -18,6 +18,13 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(chat.messages);
   const [image, setImage] = useState<File | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -55,7 +62,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
         <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
-        {chat.type !== 'ai' && <ChatAvatar chat={chat} />}
+        <ChatAvatar chat={chat} />
         <div className="flex-1">
           <h2 className="font-semibold font-headline text-base">{chat.name}</h2>
           {chat.type !== 'ai' && (
@@ -82,7 +89,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   return (
     <div className="flex h-full flex-col bg-background">
       {commonHeader}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <ChatMessages messages={messages} />
       </div>
       <ChatInput 

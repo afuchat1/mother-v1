@@ -9,9 +9,18 @@ import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-que
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
+// Helper to convert file to base64
+const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+});
+
 export default function AiChatHandler({ chat }: { chat: Chat }) {
   const [messages, setMessages] = useState<Message[]>(chat.messages);
   const [input, setInput] = useState('');
+  const [image, setImage] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -25,24 +34,34 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        setImage(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && !image) return;
 
     const userMessage: Message = {
       id: `user_${Date.now()}`,
       text: input,
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sender: currentUser,
+      imageUrl: image ? URL.createObjectURL(image) : undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    const sentImage = image;
+    setImage(null);
 
     startTransition(async () => {
       try {
-        const result = await aiAssistantAnswersQuestions({ question: input });
+        const photoDataUri = sentImage ? await toBase64(sentImage) : undefined;
+        const result = await aiAssistantAnswersQuestions({ question: input, photoDataUri });
         const aiMessage: Message = {
           id: `ai_${Date.now()}`,
           text: result.answer,
@@ -92,6 +111,9 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isPending}
+        handleImageChange={handleImageChange}
+        imagePreview={image ? URL.createObjectURL(image) : null}
+        removeImage={() => setImage(null)}
       />
     </div>
   );

@@ -10,9 +10,9 @@ type ChatInputProps = {
     handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => void;
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     isLoading?: boolean;
-    handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    imagePreview: string | null;
-    removeImage: () => void;
+    handleImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    imagePreview?: string | null;
+    removeImage?: () => void;
 }
 
 export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, imagePreview, removeImage }: ChatInputProps) {
@@ -24,7 +24,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
 
   return (
     <div className="border-t bg-background p-2 md:p-4">
-       {imagePreview && (
+       {imagePreview && removeImage && (
         <div className="p-2 relative w-24 h-24">
           <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
           <Button
@@ -39,11 +39,15 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       )}
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={handleAttachClick} type="button">
-                <Paperclip className="h-6 w-6" />
-                <span className="sr-only">Attach file</span>
-            </Button>
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+            {handleImageChange && (
+              <>
+                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={handleAttachClick} type="button">
+                    <Paperclip className="h-6 w-6" />
+                    <span className="sr-only">Attach file</span>
+                </Button>
+                <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+              </>
+            )}
             <Textarea
                 placeholder="Message"
                 className="flex-1 resize-none bg-secondary border-0 rounded-full py-2 px-4 h-10 text-base"
