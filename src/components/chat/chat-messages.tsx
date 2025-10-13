@@ -1,5 +1,5 @@
+'use client';
 import Image from 'next/image';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message } from "@/lib/types";
 import { currentUser } from "@/lib/data";
@@ -11,7 +11,6 @@ type ChatMessagesProps = {
 
 export default function ChatMessages({ messages }: ChatMessagesProps) {
   return (
-    <ScrollArea className="flex-1">
       <div className="p-4 md:p-6">
         <div className="flex flex-col gap-4">
           {messages.map((message) => {
@@ -32,14 +31,14 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                 )}
                 <div
                   className={cn(
-                    "max-w-xs rounded-lg p-3 text-sm md:max-w-md",
+                    "max-w-xs rounded-lg p-3 text-sm md:max-w-md shadow-sm",
                     isCurrentUser
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary"
                   )}
                 >
                   {!isCurrentUser && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
-                  {message.text}
+                  <p className='whitespace-pre-wrap'>{message.text}</p>
                   {message.imageUrl && (
                     <Image 
                       src={message.imageUrl} 
@@ -50,7 +49,7 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                       data-ai-hint="scenery photo"
                     />
                   )}
-                  <p className={cn("mt-2 text-xs", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground")}>{message.createdAt}</p>
+                  <p className={cn("mt-2 text-xs text-right", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground")}>{message.createdAt}</p>
                 </div>
                 {isCurrentUser && (
                   <Avatar className="h-8 w-8">
@@ -63,6 +62,5 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
           })}
         </div>
       </div>
-    </ScrollArea>
   );
 }

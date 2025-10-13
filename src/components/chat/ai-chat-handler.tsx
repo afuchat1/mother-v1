@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import type { Chat, Message } from '@/lib/types';
 import { aiUser, currentUser } from '@/lib/data';
 import ChatAvatar from './chat-avatar';
@@ -14,6 +14,13 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
   const [input, setInput] = useState('');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isPending]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -63,14 +70,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-4 border-b bg-background p-4">
-        <ChatAvatar chat={chat} />
-        <div className="flex-1">
-          <h2 className="font-semibold font-headline">{chat.name}</h2>
-          <p className="text-sm text-muted-foreground">Online</p>
-        </div>
-      </header>
-      <div className="flex-1 relative">
+      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <ChatMessages messages={messages} />
         {isPending && (
           <div className="p-4 md:p-6">

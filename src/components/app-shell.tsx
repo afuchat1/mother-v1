@@ -1,180 +1,116 @@
 'use client';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useContext } from 'react';
-
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AfuChatLogo } from '@/components/icons';
-import {
-  Bot,
-  GraduationCap,
-  MessageSquare,
-  Settings,
-  Store,
-  LogOut,
-} from 'lucide-react';
-import { currentUser, chats as allChats } from '@/lib/data';
 import { AppContext } from '@/lib/context';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { chats as allChats } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import {
+  MessageSquare,
+  Store,
+  GraduationCap,
+  Bot,
+} from 'lucide-react';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import { currentUser } from '@/lib/data';
 
+const navItems = [
+  { href: '/app/chat', icon: MessageSquare, label: 'Chats' },
+  { href: '/app/mall', icon: Store, label: 'AfuMall' },
+  { href: '/app/learn', icon: GraduationCap, label: 'AfuLearn', disabled: true },
+  { href: '#', icon: Bot, label: 'AI', isAi: true },
+  { href: '/app/profile', isAvatar: true },
+];
 
-function AppShellContent({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const context = useContext(AppContext);
-  const { setOpenMobile } = useSidebar();
-  const isMobile = useIsMobile();
+function BottomNavbar() {
+    const pathname = usePathname();
+    const context = useContext(AppContext);
 
-  if (!context) {
-    return <p>App shell context not found.</p>;
-  }
-  
-  const { activeChat, setActiveChat } = context;
+    if (!context) return null;
 
-  const handleAiChatClick = () => {
-    const aiChat = allChats.find(c => c.type === 'ai');
-    if (aiChat) {
-      setActiveChat(aiChat);
+    const { activeChat, setActiveChat } = context;
+
+    const handleAiChatClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const aiChat = allChats.find(c => c.type === 'ai');
+        if (aiChat) {
+            setActiveChat(aiChat);
+            // If not on chat page, maybe navigate? For now, just setting active.
+            // router.push('/app/chat');
+        }
     }
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  }
-  
-  const isChatPage = pathname.startsWith('/app/chat');
-  const showSidebar = !isMobile || (isChatPage && !activeChat);
 
-  return (
-    <div className={cn("md:grid", isChatPage ? "md:grid-cols-[auto_1fr]" : "")}>
-      {isChatPage && showSidebar ? (
-          <Sidebar>
-              <SidebarHeader>
-              <div className="flex items-center gap-2">
-                  <AfuChatLogo className="size-7 text-primary" />
-                  <h1 className="text-xl font-semibold font-headline">AfuChat</h1>
-              </div>
-              </SidebarHeader>
-              <SidebarContent>
-              <SidebarMenu>
-                  <SidebarMenuItem>
-                  <SidebarMenuButton
-                      asChild
-                      isActive={pathname.startsWith('/app/chat')}
-                      tooltip="Chats"
-                  >
-                      <Link href="/app/chat">
-                      <MessageSquare />
-                      <span>Chats</span>
-                      </Link>
-                  </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                  <SidebarMenuButton
-                      asChild
-                      isActive={pathname.startsWith('/app/mall')}
-                      tooltip="AfuMall"
-                  >
-                      <Link href="/app/mall">
-                      <Store />
-                      <span>AfuMall</span>
-                      </Link>
-                  </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                  <SidebarMenuButton
-                      asChild
-                      disabled
-                      tooltip="AfuLearn"
-                  >
-                      <Link href="#">
-                      <GraduationCap />
-                      <span>AfuLearn</span>
-                      </Link>
-                  </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                  <SidebarMenuButton
-                      onClick={handleAiChatClick}
-                      isActive={activeChat?.type === 'ai'}
-                      tooltip="AI Assistant"
-                  >
-                      <Bot />
-                      <span>AI Assistant</span>
-                  </SidebarMenuButton>
-                  </SidebarMenuItem>
-              </SidebarMenu>
+    return (
+        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background">
+            <div className="flex h-16 items-center justify-around">
+                {navItems.map((item) => {
+                    const isActive = item.isAi 
+                        ? activeChat?.type === 'ai' 
+                        : !item.isAi && pathname.startsWith(item.href) && item.href !== '#';
 
-              </SidebarContent>
-              <SidebarFooter>
-              <SidebarMenu>
-                  <SidebarMenuItem>
-                  <SidebarMenuButton disabled tooltip="Settings">
-                      <Settings />
-                      <span>Settings</span>
-                  </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                          <Link href="/login">
-                              <LogOut />
-                              <span>Logout</span>
-                          </Link>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                  <div className="flex items-center gap-3 px-2 py-2">
-                      <Avatar className="h-9 w-9">
-                      <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                      <AvatarFallback>
-                          {currentUser.name.charAt(0)}
-                      </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col text-sm">
-                      <span className="font-semibold">{currentUser.name}</span>
-                      <span className="text-muted-foreground">Online</span>
-                      </div>
-                  </div>
-                  </SidebarMenuItem>
-              </SidebarMenu>
-              </SidebarFooter>
-          </Sidebar>
-      ) : null}
+                    if (item.isAvatar) {
+                        return (
+                             <Link href="#" key={item.label}>
+                                <Avatar className="h-8 w-8">
+                                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                                <AvatarFallback>
+                                    {currentUser.name.charAt(0)}
+                                </AvatarFallback>
+                                </Avatar>
+                            </Link>
+                        )
+                    }
 
-      <SidebarInset>
-          <header className={cn(
-              "flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6",
-              !isChatPage && "md:hidden"
-          )}>
-              <SidebarTrigger className="md:hidden" />
-              <div className="flex-1">
-                  {/* Potentially a search bar or header content */}
-              </div>
-          </header>
-          {children}
-      </SidebarInset>
-  </div>
-  );
+                    const linkContent = (
+                        <>
+                            <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
+                            <span className="sr-only">{item.label}</span>
+                        </>
+                    );
+
+                    if (item.isAi) {
+                        return (
+                            <button 
+                                key={item.label}
+                                onClick={handleAiChatClick}
+                                className="flex flex-col items-center justify-center gap-1 text-xs"
+                                disabled={item.disabled}
+                            >
+                                {linkContent}
+                            </button>
+                        );
+                    }
+                    
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.disabled ? "#" : item.href}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-1 text-xs",
+                                item.disabled && "pointer-events-none opacity-50"
+                            )}
+                        >
+                            {linkContent}
+                        </Link>
+                    );
+                })}
+            </div>
+        </nav>
+    );
 }
-
 
 export default function AppShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppShellContent>{children}</AppShellContent>
-    </SidebarProvider>
+    <div className="flex min-h-screen flex-col bg-background">
+        <main className="flex-1 pb-16">
+            {children}
+        </main>
+        <BottomNavbar />
+    </div>
   );
 }

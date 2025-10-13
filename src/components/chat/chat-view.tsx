@@ -18,7 +18,19 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   const [input, setInput] = useState('');
 
   if (chat.type === 'ai') {
-    return <AiChatHandler chat={chat} />;
+    return (
+        <div className="flex h-full flex-col">
+            <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
+                <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
+                    <ArrowLeft />
+                </Button>
+                <div className="flex-1">
+                    <h2 className="font-semibold font-headline text-sm md:text-base">AI Assistant</h2>
+                </div>
+            </header>
+            <AiChatHandler chat={chat} />
+        </div>
+    );
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
@@ -36,8 +48,8 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4">
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveChat(null)}>
+      <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
         <ChatAvatar chat={chat} />
@@ -48,7 +60,9 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
           </p>
         </div>
       </header>
-      <ChatMessages messages={chat.messages} />
+      <div className="flex-1">
+        <ChatMessages messages={chat.messages} />
+      </div>
       <ChatInput 
         input={input}
         handleInputChange={handleInputChange}

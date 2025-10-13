@@ -1,8 +1,9 @@
+'use client';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import type { Chat } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 type ChatListProps = {
   chats: Chat[];
@@ -11,38 +12,47 @@ type ChatListProps = {
 };
 
 export default function ChatList({ chats, activeChat, setActiveChat }: ChatListProps) {
-  const { setOpenMobile } = useSidebar();
   const regularChats = chats.filter(c => c.type !== 'ai');
   
   const handleChatSelection = (chat: Chat) => {
     setActiveChat(chat);
-    setOpenMobile(false);
   }
 
   return (
-    <ScrollArea className="h-full">
-        <SidebarMenu>
-            {regularChats.map((chat) => (
-            <SidebarMenuItem key={chat.id}>
-                <SidebarMenuButton
-                onClick={() => handleChatSelection(chat)}
-                isActive={activeChat?.id === chat.id}
-                className="h-auto justify-start gap-3 px-2 py-2"
+    <div className="flex flex-col h-full">
+        <header className="p-4 border-b">
+            <h1 className="text-2xl font-bold font-headline">Chats</h1>
+        </header>
+        <ScrollArea className="flex-1">
+            <div className="flex flex-col">
+                {regularChats.map((chat) => (
+                <button
+                    key={chat.id}
+                    onClick={() => handleChatSelection(chat)}
+                    className={cn(
+                        "flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                        activeChat?.id === chat.id ? "bg-accent" : "hover:bg-accent/50"
+                    )}
                 >
-                <ChatAvatar chat={chat} />
-                <div className="flex flex-col items-start text-left">
-                    <span className="font-semibold">{chat.name}</span>
-                    <span className={cn(
-                        "truncate text-xs",
-                        activeChat?.id === chat.id ? "text-accent-foreground/80" : "text-muted-foreground"
-                    )}>
-                    {chat.messages[chat.messages.length - 1].text}
-                    </span>
-                </div>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            ))}
-      </SidebarMenu>
-    </ScrollArea>
+                    <ChatAvatar chat={chat} />
+                    <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                            <span className="font-semibold">{chat.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                                {chat.messages[chat.messages.length - 1].createdAt}
+                            </span>
+                        </div>
+                        <p className={cn(
+                            "truncate text-sm",
+                            activeChat?.id === chat.id ? "text-accent-foreground/90" : "text-muted-foreground"
+                        )}>
+                        {chat.messages[chat.messages.length - 1].text}
+                        </p>
+                    </div>
+                </button>
+                ))}
+            </div>
+        </ScrollArea>
+    </div>
   );
 }
