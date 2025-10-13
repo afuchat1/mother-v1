@@ -195,7 +195,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   };
 
   const commonHeader = (
-    <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
+    <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2 sticky top-0 z-10">
         <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
