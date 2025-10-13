@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import {
@@ -36,7 +36,12 @@ function BottomNavbar() {
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden">
             <div className="flex h-16 items-center justify-around">
                 {navItems.map((item) => {
-                    const isActive = (item.href === '/app/ai-chat' && pathname.startsWith('/app/chat')) || (item.href !== '/app/ai-chat' && pathname.startsWith(item.href));
+                    // Special handling for AI chat to be active on /app/chat
+                    const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat';
+                    // Regular active check for other items
+                    const isRegularActive = item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
+                    
+                    const isActive = isAiChatActive || isRegularActive;
 
                     return (
                         <Link
@@ -69,7 +74,10 @@ function DesktopSidebar() {
             </div>
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map((item) => {
-                    const isActive = (item.href === '/app/ai-chat' && pathname.startsWith('/app/chat')) || (item.href !== '/app/ai-chat' && pathname.startsWith(item.href));
+                    const isAiChatActive = item.href === '/app/ai-chat' && pathname === '/app/chat';
+                    const isRegularActive = item.href !== '/app/ai-chat' && pathname.startsWith(item.href);
+
+                    const isActive = isAiChatActive || isRegularActive;
                     
                     return (
                         <Link
@@ -119,15 +127,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   );
   
   const { cart, activeChat, setActiveChat } = context;
-
-  // This effect will handle the AI chat selection when navigating to /app/chat
-  if (pathname === '/app/chat' && activeChat?.type !== 'ai') {
-    const aiChat = context.cart.length > 0 ? null : (allChats.find(c => c.type === 'ai'));
-    if(aiChat) setActiveChat(aiChat);
-  } else if (pathname !== '/app/chat' && activeChat?.type === 'ai') {
-    setActiveChat(null);
-  }
-
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
