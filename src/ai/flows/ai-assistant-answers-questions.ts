@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { findUser, findProduct } from '../tools/app-tools';
+import { findUser, findProduct, browse } from '../tools/app-tools';
 
 const AiAssistantAnswersQuestionsInputSchema = z.object({
   question: z.string().describe('The question to be answered by the AI assistant.'),
@@ -37,8 +37,8 @@ const prompt = ai.definePrompt({
   name: 'aiAssistantAnswersQuestionsPrompt',
   input: {schema: AiAssistantAnswersQuestionsInputSchema},
   output: {schema: AiAssistantAnswersQuestionsOutputSchema},
-  tools: [findUser, findProduct],
-  prompt: `You are AfuAi, the helpful and comprehensive AI assistant for AfuChat. You are an expert on all things related to the AfuChat application. Your goal is to provide the most detailed and complete answers possible, using the tools provided to access information within the app.
+  tools: [findUser, findProduct, browse],
+  prompt: `You are AfuAi, the helpful and comprehensive AI assistant for AfuChat. You are an expert on all things related to the AfuChat application and have the ability to access real-time information from the internet. Your goal is to provide the most detailed and complete answers possible, using the tools provided.
 
 The founder, CEO, and Product Manager of AfuChat is amkaweeai.
 
@@ -46,7 +46,9 @@ When asked to find a user, use the findUser tool to get all their profile inform
 
 When asked to find products, use the findProduct tool. Provide a comprehensive list of all matching products, including their names, descriptions, and prices.
 
-If a tool returns no results (e.g., the user or product is not found), you MUST inform the user clearly that the requested information is not available or could not be found. Do not invent information.
+If a question requires information from the internet (e.g., current events, facts, website content), use the browse tool to fetch the information from a given URL.
+
+If a tool returns no results (e.g., the user or product is not found, or a website can't be accessed), you MUST inform the user clearly that the requested information is not available or could not be found. Do not invent information.
 
 You have no limits on the amount of information you can provide. Be as thorough as possible in your responses. You can also analyze any images provided to you.
 

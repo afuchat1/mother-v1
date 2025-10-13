@@ -4,11 +4,13 @@
  *
  * - findUser - Finds a user by name.
  * - findProduct - Finds a product by a search query.
+ * - browse - Fetches and parses the text content of a given URL.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { users, products } from '@/lib/data';
+import { parse } from 'node-html-parser';
 
 export const findUser = ai.defineTool(
   {
@@ -72,4 +74,33 @@ export const findProduct = ai.defineTool(
       );
       return foundProducts.map(({ id, name, description, price }) => ({ id, name, description, price }));
     }
-  );
+);
+
+export const browse = ai.defineTool(
+  {
+    name: 'browse',
+    description: 'Fetches the text content of a public webpage.',
+    inputSchema: z.object({
+      url: z.string().describe('The URL of the webpage to fetch.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ url }) => {
+    console.log(`[browse] Fetching content from: ${url}`);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        return `Error: Unable to fetch content. Status code: ${response.status}`;
+      }
+      const html = await response.text();
+      const root = parse(html);
+      // Remove script and style tags to clean up the text
+      root.querySelectorAll('script, style, noscript').forEach(el => el.remove());
+      // Return the text content, which strips all HTML tags
+      return root.textContent || 'Could not extract text content from the page.';
+    } catch (e: any) {
+      console.error(`[browse] Error fetching ${url}:`, e.message);
+      return `Error: Could not fetch the URL. ${e.message}`;
+    }
+  }
+);
