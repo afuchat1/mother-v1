@@ -11,6 +11,7 @@ import {
   Store,
   GraduationCap,
   Bot,
+  User,
 } from 'lucide-react';
 import {
   Avatar,
@@ -22,9 +23,9 @@ import { currentUser } from '@/lib/data';
 const navItems = [
   { href: '/app/chat', icon: MessageSquare, label: 'Chats' },
   { href: '/app/mall', icon: Store, label: 'AfuMall' },
-  { href: '/app/learn', icon: GraduationCap, label: 'AfuLearn', disabled: true },
+  { href: '/app/learn', icon: GraduationCap, label: 'AfuLearn' },
   { href: '#', icon: Bot, label: 'AI', isAi: true },
-  { href: '/app/profile', isAvatar: true },
+  { href: '/app/profile', icon: User, label: 'Profile' },
 ];
 
 function BottomNavbar() {
@@ -51,20 +52,7 @@ function BottomNavbar() {
                 {navItems.map((item) => {
                     const isActive = item.isAi 
                         ? activeChat?.type === 'ai' 
-                        : !item.isAi && pathname.startsWith(item.href) && item.href !== '#';
-
-                    if (item.isAvatar) {
-                        return (
-                             <Link href="#" key={item.label}>
-                                <Avatar className="h-8 w-8">
-                                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                                <AvatarFallback>
-                                    {currentUser.name.charAt(0)}
-                                </AvatarFallback>
-                                </Avatar>
-                            </Link>
-                        )
-                    }
+                        : item.href !== '#' && pathname.startsWith(item.href);
 
                     const linkContent = (
                         <>
@@ -79,7 +67,6 @@ function BottomNavbar() {
                                 key={item.label}
                                 onClick={handleAiChatClick}
                                 className="flex flex-col items-center justify-center gap-1 text-xs"
-                                disabled={item.disabled}
                             >
                                 {linkContent}
                             </button>
@@ -89,10 +76,9 @@ function BottomNavbar() {
                     return (
                         <Link
                             key={item.href}
-                            href={item.disabled ? "#" : item.href}
+                            href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 text-xs",
-                                item.disabled && "pointer-events-none opacity-50"
+                                "flex flex-col items-center justify-center gap-1 text-xs"
                             )}
                         >
                             {linkContent}
