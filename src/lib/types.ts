@@ -2,6 +2,8 @@ export type User = {
   id: string;
   name: string;
   avatarUrl: string;
+  bio?: string;
+  productsSold?: Product[];
 };
 
 export type Message = {

@@ -26,7 +26,11 @@ const AiAssistantAnswersQuestionsOutputSchema = z.object({
 export type AiAssistantAnswersQuestionsOutput = z.infer<typeof AiAssistantAnswersQuestionsOutputSchema>;
 
 export async function aiAssistantAnswersQuestions(input: AiAssistantAnswersQuestionsInput): Promise<AiAssistantAnswersQuestionsOutput> {
-  return aiAssistantAnswersQuestionsFlow(input);
+  const result = await aiAssistantAnswersQuestionsFlow(input);
+  if ((result as any).error) {
+    throw new Error((result as any).error);
+  }
+  return result;
 }
 
 const prompt = ai.definePrompt({
@@ -37,6 +41,8 @@ const prompt = ai.definePrompt({
   prompt: `You are AfuAi, the helpful AI assistant for AfuChat. You are an expert on all things related to the AfuChat application. You can access information within the app using the tools provided.
 
 The founder, CEO, and Product Manager of AfuChat is amkaweeai.
+
+When asked to find a user, use the findUser tool to get their profile information, including their bio and what products they sell. Summarize this information for the user in a helpful and friendly way.
 
 Use your tools to answer questions about users, products, or other information within the AfuChat app.
 

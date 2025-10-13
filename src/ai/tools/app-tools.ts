@@ -13,7 +13,7 @@ import { users, products } from '@/lib/data';
 export const findUser = ai.defineTool(
   {
     name: 'findUser',
-    description: 'Finds a user in the application by their name.',
+    description: 'Finds a user in the application by their name to retrieve their profile and activities.',
     inputSchema: z.object({
       name: z.string().describe('The name of the user to find.'),
     }),
@@ -21,6 +21,12 @@ export const findUser = ai.defineTool(
       id: z.string(),
       name: z.string(),
       avatarUrl: z.string(),
+      bio: z.string().optional(),
+      productsSold: z.array(z.object({
+          id: z.string(),
+          name: z.string(),
+          price: z.number(),
+      })).optional(),
     }).nullable(),
   },
   async ({ name }) => {
@@ -31,6 +37,8 @@ export const findUser = ai.defineTool(
             id: user.id,
             name: user.name,
             avatarUrl: user.avatarUrl,
+            bio: user.bio,
+            productsSold: user.productsSold?.map(p => ({ id: p.id, name: p.name, price: p.price }))
         };
     }
     return null;
