@@ -14,17 +14,28 @@ type ChatViewProps = {
   setActiveChat: (chat: Chat | null) => void;
 };
 
-export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
+export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewProps) {
+  const [chat, setChat] = useState(initialChat);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState(chat.messages);
   const [image, setImage] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setChat(initialChat);
+  }, [initialChat]);
 
   useEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [chat.messages]);
+
+  const handleNewMessage = (newMessage: Message) => {
+    setChat(prevChat => ({
+        ...prevChat,
+        messages: [...prevChat.messages, newMessage]
+    }));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -49,17 +60,14 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
         voiceUrl: options?.voiceUrl,
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    handleNewMessage(newMessage);
     
-    // In a real app, you would upload the image to a server and get a URL.
-    // For this demo, we're just using the local object URL.
-
     setInput('');
     setImage(null);
   };
 
   const commonHeader = (
-    <header className="flex items-center gap-2 border-b bg-background p-2 sticky top-0 z-10">
+    <header className="flex items-center gap-2 border-b bg-background/80 backdrop-blur-sm p-2 sticky top-0 z-10">
         <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
@@ -82,7 +90,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
     return (
         <div className="flex h-full flex-col bg-background">
             {commonHeader}
-            <AiChatHandler chat={chat} />
+            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} />
         </div>
     );
   }
@@ -91,7 +99,7 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
     <div className="flex h-full flex-col bg-background">
       {commonHeader}
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        <ChatMessages messages={messages} />
+        <ChatMessages messages={chat.messages} />
       </div>
       <ChatInput 
         input={input}

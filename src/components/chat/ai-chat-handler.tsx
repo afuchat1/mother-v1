@@ -6,19 +6,19 @@ import ChatAvatar from './chat-avatar';
 import ChatMessages from './chat-messages';
 import ChatInput from './chat-input';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
+import { speechToText } from '@/ai/flows/speech-to-text';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
-// Helper to convert file to base64
-const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+// Helper to convert file or blob to base64
+const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = error => reject(error);
 });
 
-export default function AiChatHandler({ chat }: { chat: Chat }) {
-  const [messages, setMessages] = useState<Message[]>(chat.messages);
+export default function AiChatHandler({ chat, handleNewMessage }: { chat: Chat, handleNewMessage: (message: Message) => void }) {
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -29,7 +29,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
     if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isPending]);
+  }, [chat.messages, isPending]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -41,28 +41,54 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
     e.preventDefault();
-    if (!input.trim() && !image) return;
+    if (!input.trim() && !image && !options?.voiceUrl) return;
 
+    let userQuestion = input;
     const userMessage: Message = {
       id: `user_${Date.now()}`,
       text: input,
       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sender: currentUser,
       imageUrl: image ? URL.createObjectURL(image) : undefined,
+      voiceUrl: options?.voiceUrl,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    handleNewMessage(userMessage);
     setInput('');
     const sentImage = image;
     setImage(null);
 
     startTransition(async () => {
       try {
+        if (options?.voiceUrl) {
+            const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
+            const audioDataUri = await toBase64(audioBlob);
+            const transcriptionResult = await speechToText(audioDataUri);
+
+            if (transcriptionResult && transcriptionResult.text) {
+                userQuestion = transcriptionResult.text;
+                // Optionally update the message with the transcribed text
+                 const transcribedMessage: Message = {
+                    ...userMessage,
+                    text: `🎤 Voice note: "${userQuestion}"`
+                };
+                // This will replace the original voice message placeholder
+                // setMessages(prev => prev.map(m => m.id === userMessage.id ? transcribedMessage : m));
+            } else {
+                 throw new Error("Failed to transcribe audio.");
+            }
+        }
+
         const photoDataUri = sentImage ? await toBase64(sentImage) : undefined;
-        const result = await aiAssistantAnswersQuestions({ question: input, photoDataUri });
+        const result = await aiAssistantAnswersQuestions({ question: userQuestion, photoDataUri });
         
+        const error = (result as any).error;
+        if (error) {
+           throw new Error(error || 'The AI assistant returned an error.');
+        }
+
         if (result.answer) {
             const aiMessage: Message = {
               id: `ai_${Date.now()}`,
@@ -70,12 +96,9 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
               createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               sender: aiUser,
             };
-            setMessages(prev => [...prev, aiMessage]);
+            handleNewMessage(aiMessage);
         } else {
-            // This handles cases where the flow might return an error object
-            // This is a temporary way to handle Genkit flow errors on the client
-            const error = (result as any).error;
-            throw new Error(error || 'The AI assistant returned an empty response.');
+            throw new Error('The AI assistant returned an empty response.');
         }
 
       } catch (error: any) {
@@ -91,7 +114,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
             createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             sender: aiUser,
         };
-        setMessages(prev => [...prev, errorMessage]);
+        handleNewMessage(errorMessage);
       }
     });
   };
@@ -99,7 +122,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        <ChatMessages messages={messages} />
+        <ChatMessages messages={chat.messages} />
         {isPending && (
           <div className="p-4 md:p-6">
             <div className="flex items-end gap-2 justify-start">
