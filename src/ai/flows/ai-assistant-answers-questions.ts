@@ -21,6 +21,10 @@ const AiAssistantAnswersQuestionsInputSchema = z.object({
     sender: z.string(),
     text: z.string(),
   }).optional().describe('The message being replied to, for context.'),
+  chatHistory: z.array(z.object({
+    sender: z.string(),
+    text: z.string(),
+  })).optional().describe('The last few messages in the chat for context.'),
 });
 export type AiAssistantAnswersQuestionsInput = z.infer<typeof AiAssistantAnswersQuestionsInputSchema>;
 
@@ -55,6 +59,13 @@ If a question requires information from the internet (e.g., current events, fact
 If a tool returns no results (e.g., the user or product is not found, or a website can't be accessed), you MUST inform the user clearly that the requested information is not available or could not be found. Do not invent information.
 
 You have no limits on the amount of information you can provide. Be as thorough as possible in your responses. You can also analyze any images provided to you.
+
+{{#if chatHistory}}
+Here is the recent chat history for context. Use it to understand the flow of the conversation:
+{{#each chatHistory}}
+- {{this.sender}}: {{this.text}}
+{{/each}}
+{{/if}}
 
 {{#if repliedToMessage}}
 You are replying to a message from {{repliedToMessage.sender}} that said: "{{repliedToMessage.text}}".

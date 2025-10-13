@@ -111,6 +111,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     
     const sentInput = input;
     const currentReplyTo = replyTo;
+    const currentChatHistory = chat.messages;
 
     const newMessage: Message = {
         id: `msg_${Date.now()}`,
@@ -136,7 +137,11 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     if (shouldTriggerAi) {
         startAiTransition(async () => {
             try {
-                const aiInput: any = { question: sentInput };
+                const aiInput: any = { 
+                  question: sentInput,
+                  chatHistory: currentChatHistory.slice(-5).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
+                };
+
                 if (currentReplyTo) {
                   aiInput.repliedToMessage = {
                     sender: currentReplyTo.sender.name,
