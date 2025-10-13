@@ -195,7 +195,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   };
 
   const commonHeader = (
-    <header className="flex items-center gap-2 border-b bg-background/80 backdrop-blur-sm p-2 z-10">
+    <header className="flex shrink-0 items-center gap-2 border-b bg-background/80 p-2 backdrop-blur-sm">
         <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
@@ -226,22 +226,24 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   return (
     <div className="flex h-full flex-col bg-background relative">
       {commonHeader}
-      <div className="flex-1 overflow-y-auto pb-36" ref={scrollRef}>
-        <ChatMessages messages={chat.messages} onReply={handleReply} />
-        {isAiReplying && (
-          <div className="p-4 md:p-6">
-            <div className="flex items-end gap-2 justify-start">
-              <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-              <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                 <div className="flex items-center space-x-2 p-2">
-                    <Skeleton className="h-2 w-2 rounded-full" />
-                    <Skeleton className="h-2 w-2 rounded-full" />
-                    <Skeleton className="h-2 w-2 rounded-full" />
-                 </div>
-              </div>
+      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+        <div className="pb-36">
+            <ChatMessages messages={chat.messages} onReply={handleReply} />
+            {isAiReplying && (
+            <div className="p-4 md:p-6">
+                <div className="flex items-end gap-2 justify-start">
+                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                    <div className="flex items-center space-x-2 p-2">
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                    </div>
+                </div>
+                </div>
             </div>
-          </div>
-        )}
+            )}
+        </div>
       </div>
        {showScrollButton && (
             <div className="absolute bottom-24 right-4 z-20">
