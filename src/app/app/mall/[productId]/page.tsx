@@ -2,7 +2,7 @@
 import { useContext } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { products, users } from '@/lib/data';
+import { products } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, MessageSquare, ShoppingCart } from 'lucide-react';
@@ -35,27 +35,27 @@ export default function ProductDetailPage() {
 
   return (
     <div className="flex-1 bg-secondary">
-       <header className="flex items-center gap-2 bg-background p-2 md:p-4 sticky top-0 z-10 border-b md:hidden">
+       <header className="flex items-center gap-2 bg-background p-2 sticky top-0 z-10 border-b">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
                 <ArrowLeft />
             </Button>
             <h2 className="font-semibold font-headline text-lg">Product Details</h2>
       </header>
-      <div className="p-4 md:p-6 lg:p-8">
+      <div className="p-4">
         <Card className="overflow-hidden">
-          <div className="md:grid md:grid-cols-2 md:gap-8">
-            <div className="p-4 md:p-0">
+          <div className="grid grid-cols-1 gap-8">
+            <div className="p-0">
               <Image
                 src={imageUrl}
                 alt={name}
                 width={600}
                 height={400}
-                className="w-full h-auto object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+                className="w-full h-auto object-cover rounded-t-lg"
                 data-ai-hint="product image"
               />
             </div>
-            <div className="p-4 md:p-6 lg:p-8 flex flex-col">
-              <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">{name}</h1>
+            <div className="p-4 flex flex-col">
+              <h1 className="text-3xl font-bold font-headline mb-2">{name}</h1>
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={seller.avatarUrl} alt={seller.name} />
@@ -70,7 +70,7 @@ export default function ProductDetailPage() {
                 <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
               </CardContent>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Button size="lg" className="font-bold" onClick={() => addToCart(product)}>
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart

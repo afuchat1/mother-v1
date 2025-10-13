@@ -29,15 +29,15 @@ export default function ChatView({ chat, setActiveChat }: ChatViewProps) {
   };
 
   const commonHeader = (
-    <header className="flex items-center gap-2 border-b bg-background p-2 md:p-4 sticky top-0 z-10">
-        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)} className="md:hidden">
+    <header className="flex items-center gap-2 border-b bg-background p-2 sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
             <ArrowLeft />
         </Button>
         {chat.type !== 'ai' && <ChatAvatar chat={chat} />}
         <div className="flex-1">
-          <h2 className="font-semibold font-headline text-sm md:text-base">{chat.name}</h2>
+          <h2 className="font-semibold font-headline text-base">{chat.name}</h2>
           {chat.type !== 'ai' && (
-            <p className="text-xs text-muted-foreground md:text-sm">
+            <p className="text-sm text-muted-foreground">
                 {chat.type === 'dm' ? 'Direct Message' : 'Group Chat'}
             </p>
           )}

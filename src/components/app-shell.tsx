@@ -12,13 +12,6 @@ import {
   User,
   ShoppingCart,
 } from 'lucide-react';
-import { AfuChatLogo } from '@/components/icons';
-import { currentUser } from '@/lib/data';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -29,30 +22,9 @@ const navItems = [
   { href: '/app/profile', icon: User, label: 'Account' },
 ];
 
-function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActive: boolean, onClick: (href: string) => void }) {
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault();
-        onClick(item.href);
-    };
-    
-    return (
-         <Link
-            href={item.href}
-            onClick={handleClick}
-            className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/80"
-            )}
-        >
-           <item.icon className="h-5 w-5" />
-           <span>{item.label}</span>
-        </Link>
-    )
-}
-
 function BottomNavbar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden h-16 flex items-center justify-around">
+        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around">
             {navItems.map((item) => {
                  const isActive = activePath.startsWith(item.href);
                 
@@ -79,40 +51,6 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     );
 }
 
-function DesktopSidebar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
-    return (
-        <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-sidebar">
-            <div className="flex h-16 items-center border-b px-6">
-                 <Link href="/app/chat" className="flex items-center gap-2 font-semibold">
-                    <AfuChatLogo className="h-6 w-6" />
-                    <span className="font-headline">AfuChat</span>
-                </Link>
-            </div>
-            <nav className="flex-1 space-y-2 p-4">
-                {navItems.map((item) => {
-                    const isActive = activePath.startsWith(item.href);
-                    return (
-                        <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} />
-                    );
-                })}
-            </nav>
-            <div className="mt-auto p-4 border-t border-sidebar-border">
-                 <div
-                    className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground"
-                    )}
-                >
-                    <Avatar className="h-8 w-8 border">
-                        <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span>{currentUser.name}</span>
-                </div>
-            </div>
-        </aside>
-    );
-}
-
 export default function AppShell({ children }: { children: ReactNode }) {
   const context = useContext(AppContext);
   const pathname = usePathname();
@@ -120,31 +58,37 @@ export default function AppShell({ children }: { children: ReactNode }) {
   
   if (!context) return null; // Or a loading skeleton
   
-  const { cart } = context;
+  const { cart, activeChat, setActiveChat } = context;
 
   const handleNavClick = (href: string) => {
-    // Treat the AI chat tab as a special route that directs to the chat page
     if (href === '/app/ai-chat') {
-        router.push('/app/chat'); // Placeholder, actual logic will be in the chat page
-    } else {
+        const aiChat = context.cart.length > 0 ? null : allChats.find(c => c.type === 'ai');
+        router.push('/app/chat');
+        if (aiChat) setActiveChat(aiChat);
+    } else if (href === '/app/chat') {
+        if(activeChat?.type === 'ai') setActiveChat(null);
+        router.push(href);
+    }
+    else {
         router.push(href);
     }
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  // Adjust active path for AI chat
-  const activePath = pathname === '/app/chat' && context.activeChat?.type === 'ai' ? '/app/ai-chat' : pathname;
-  const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
+
+  // Determine active path, treating AI chat as a special case for highlighting
+  const activePath = pathname === '/app/chat' && activeChat?.type === 'ai' ? '/app/ai-chat' : pathname;
+
+  const showCartFab = activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout');
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
-        <DesktopSidebar activePath={activePath} handleNavClick={handleNavClick} />
-        <main className="flex-1 pb-16 md:pb-0">
+    <div className="flex min-h-screen w-full flex-col bg-background">
+        <main className="flex-1 pb-16">
             {children}
         </main>
         <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />
         {showCartFab && cartItemCount > 0 && (
-            <Link href="/app/cart" className="md:hidden fixed bottom-20 right-4 z-20">
+            <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
                     <ShoppingCart className="h-6 w-6" />
                     <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center rounded-full bg-destructive text-destructive-foreground p-0">{cartItemCount}</Badge>

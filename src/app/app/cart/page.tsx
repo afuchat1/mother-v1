@@ -38,10 +38,10 @@ export default function CartPage() {
     
     return (
         <main className="flex-1 bg-secondary">
-            <div className="p-4 md:p-6">
+            <div className="p-4">
                 <h1 className="text-3xl font-bold font-headline mb-6">Your Cart</h1>
-                <div className="grid md:grid-cols-3 gap-8">
-                    <div className="md:col-span-2">
+                <div className="grid grid-cols-1 gap-8">
+                    <div>
                         <Card>
                             <CardContent className="p-0">
                                 <ul className="divide-y">

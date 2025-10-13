@@ -33,15 +33,15 @@ export default function CheckoutPage() {
 
     return (
         <main className="flex-1 bg-secondary">
-             <header className="flex items-center gap-2 bg-background p-2 md:p-4 sticky top-0 z-10 border-b">
+             <header className="flex items-center gap-2 bg-background p-2 sticky top-0 z-10 border-b">
                 <Button variant="ghost" size="icon" onClick={() => router.back()} className="">
                     <ArrowLeft />
                 </Button>
                 <h1 className="text-xl font-bold font-headline">Checkout</h1>
              </header>
-             <div className="p-4 md:p-6 lg:p-8">
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    <div className="md:col-span-2">
+             <div className="p-4">
+                <div className="grid grid-cols-1 gap-8 max-w-6xl mx-auto">
+                    <div>
                         <Card>
                             <CardHeader>
                                 <CardTitle>Shipping & Payment</CardTitle>
