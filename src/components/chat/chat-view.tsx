@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import type { Chat, Message } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import ChatMessages from "./chat-messages";
@@ -7,7 +7,11 @@ import ChatInput from "./chat-input";
 import AiChatHandler from "./ai-chat-handler";
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MoreVertical, ArrowDown } from 'lucide-react';
-import { currentUser } from '@/lib/data';
+import { currentUser, aiUser } from '@/lib/data';
+import { Skeleton } from '../ui/skeleton';
+import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
+import { useToast } from '@/hooks/use-toast';
+
 
 type ChatViewProps = {
   chat: Chat;
@@ -20,6 +24,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   const [image, setImage] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isAiReplying, startAiTransition] = useTransition();
+  const { toast } = useToast();
 
 
   const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
@@ -45,7 +51,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     // Auto-scroll if we are already at the bottom
     if (isScrolledToBottom) {
         scrollToBottom('auto');
-    } else {
+    } else if (chat.messages.length > 0) {
         setShowScrollButton(true);
     }
     
@@ -61,6 +67,19 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [chat.messages]);
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (scrollContainer) {
+      const isScrolledUp = scrollContainer.scrollHeight - scrollContainer.clientHeight > scrollContainer.scrollTop + 150;
+      
+      if (!isScrolledUp) {
+        scrollToBottom('smooth');
+      } else {
+        setShowScrollButton(true);
+      }
+    }
+  }, [chat.messages, isAiReplying]);
 
   const handleNewMessage = (newMessage: Message) => {
     setChat(prevChat => ({
@@ -83,6 +102,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     e.preventDefault();
     if (!input.trim() && !image && !options?.voiceUrl) return;
     
+    const sentInput = input;
     const newMessage: Message = {
         id: `msg_${Date.now()}`,
         text: input,
@@ -96,6 +116,44 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     
     setInput('');
     setImage(null);
+
+    if (chat.type === 'group' && sentInput.includes('@AfuAi')) {
+        startAiTransition(async () => {
+            try {
+                const result = await aiAssistantAnswersQuestions({ question: sentInput });
+                const error = (result as any).error;
+                if (error) {
+                   throw new Error(error || 'The AI assistant returned an error.');
+                }
+        
+                if (result.answer) {
+                    const aiMessage: Message = {
+                      id: `ai_${Date.now()}`,
+                      text: result.answer,
+                      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      sender: aiUser,
+                    };
+                    handleNewMessage(aiMessage);
+                } else {
+                    throw new Error('The AI assistant returned an empty response.');
+                }
+            } catch (error: any) {
+                console.error('AI Assistant Error:', error.message || error);
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: error.message || 'Failed to get a response from the AI assistant.',
+                });
+                const errorMessage: Message = {
+                    id: `err_${Date.now()}`,
+                    text: 'Sorry, I encountered an error. Please try again.',
+                    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    sender: aiUser,
+                };
+                handleNewMessage(errorMessage);
+            }
+        });
+    }
   };
 
   const commonHeader = (
@@ -132,6 +190,20 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
       {commonHeader}
       <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
         <ChatMessages messages={chat.messages} />
+        {isAiReplying && (
+          <div className="p-4 md:p-6">
+            <div className="flex items-end gap-2 justify-start">
+              <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+              <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                 <div className="flex items-center space-x-2 p-2">
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                    <Skeleton className="h-2 w-2 rounded-full" />
+                 </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
        {showScrollButton && (
             <div className="absolute bottom-20 right-4 z-20">
@@ -144,6 +216,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
+        isLoading={isAiReplying}
         handleImageChange={handleImageChange}
         imagePreview={image ? URL.createObjectURL(image) : null}
         removeImage={() => setImage(null)}
