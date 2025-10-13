@@ -1,6 +1,6 @@
 'use client';
 import type { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useContext } from 'react';
 import { AppContext } from '@/lib/context';
@@ -30,6 +30,7 @@ const navItems = [
 
 function BottomNavbar() {
     const pathname = usePathname();
+    const router = useRouter();
     const context = useContext(AppContext);
 
     if (!context) return null;
@@ -41,7 +42,9 @@ function BottomNavbar() {
         const aiChat = allChats.find(c => c.type === 'ai');
         if (aiChat) {
             setActiveChat(aiChat);
-            // This could navigate to /app/chat if not already there
+            if (pathname !== '/app/chat') {
+                router.push('/app/chat');
+            }
         }
     }
 
@@ -49,9 +52,9 @@ function BottomNavbar() {
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden">
             <div className="flex h-16 items-center justify-around">
                 {navItems.map((item) => {
-                    const isActive = item.isAi
-                        ? activeChat?.type === 'ai'
-                        : item.href !== '#' && pathname.startsWith(item.href);
+                    const isAiActive = item.isAi && activeChat?.type === 'ai' && pathname.startsWith('/app/chat');
+                    const isLinkActive = !item.isAi && item.href !== '#' && pathname.startsWith(item.href);
+                    const isActive = isAiActive || isLinkActive;
 
                     const linkContent = (
                         <>
@@ -96,6 +99,7 @@ function BottomNavbar() {
 
 function DesktopSidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const context = useContext(AppContext);
 
     if (!context) return null;
@@ -107,6 +111,9 @@ function DesktopSidebar() {
         const aiChat = allChats.find(c => c.type === 'ai');
         if (aiChat) {
             setActiveChat(aiChat);
+             if (pathname !== '/app/chat') {
+                router.push('/app/chat');
+            }
         }
     }
 
@@ -120,9 +127,9 @@ function DesktopSidebar() {
             </div>
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map((item) => {
-                    const isActive = item.isAi
-                        ? activeChat?.type === 'ai'
-                        : item.href !== '#' && pathname.startsWith(item.href);
+                    const isAiActive = item.isAi && activeChat?.type === 'ai' && pathname.startsWith('/app/chat');
+                    const isLinkActive = !item.isAi && item.href !== '#' && pathname.startsWith(item.href);
+                    const isActive = isAiActive || isLinkActive;
 
                      const linkContent = (
                         <>
