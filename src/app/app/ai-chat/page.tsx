@@ -42,14 +42,8 @@ export default function AiChatPage() {
 
     return (
         <main className="flex h-full flex-col overflow-hidden">
-             <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft />
-                </Button>
-                <ChatAvatar chat={chat} />
-                <div className="flex-1">
-                <h2 className="font-semibold font-headline text-base">{chat.name}</h2>
-                </div>
+             <header className="flex shrink-0 items-center justify-center p-4">
+                <h2 className="text-xl font-bold font-headline">AfuAi</h2>
             </header>
             <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
         </main>
