@@ -113,8 +113,8 @@ const VideoMessagePlayer = ({ url }: { url: string }) => {
 
 
     return (
-        <div className="relative w-64 h-64 rounded-lg overflow-hidden cursor-pointer" onClick={togglePlay}>
-            <video ref={videoRef} src={url} className="w-full h-full object-cover" playsInline />
+        <div className="relative w-48 h-48 rounded-full overflow-hidden cursor-pointer" onClick={togglePlay}>
+            <video ref={videoRef} src={url} className="w-full h-full object-cover" playsInline loop />
             {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-white/30 backdrop-blur-sm">
@@ -221,11 +221,12 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                             isCurrentUser
                             ? "bg-primary text-primary-foreground rounded-br-none"
                             : "bg-secondary text-secondary-foreground rounded-bl-none",
-                            message.voiceUrl || message.videoUrl ? "p-2" : "p-3",
+                            message.voiceUrl ? "p-2" : "p-3",
+                            message.videoUrl ? "p-0 overflow-hidden rounded-full" : "",
                              message.imageUrl ? "p-0 overflow-hidden" : ""
                         )}
                     >
-                        <div className={cn("absolute w-3 h-3 -bottom-[1px] transform z-[-1]", message.imageUrl && "hidden")}
+                        <div className={cn("absolute w-3 h-3 -bottom-[1px] transform z-[-1]", message.imageUrl && "hidden", message.videoUrl && "hidden")}
                             style={{
                                 clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")',
                                 ...isCurrentUser ? { right: '-5px', transform: 'scaleX(-1)' } : { left: '-5px' }
@@ -262,7 +263,7 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                         message.text && <p className={cn('whitespace-pre-wrap break-words text-sm', message.imageUrl && 'p-3')}>{message.text}</p>
                     )}
                     
-                    <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1', message.imageUrl && 'p-3' )}>
+                    <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1', (message.imageUrl || message.videoUrl) && 'p-3' )}>
                         <div className="flex-1" />
                         <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>{message.createdAt}</p>
                     </div>

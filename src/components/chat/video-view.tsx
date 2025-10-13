@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { X, Send, Video, Square } from 'lucide-react';
+import { X, Send, Video, Square, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,8 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
+  const [isFlashOn, setIsFlashOn] = useState(false);
+  const [isFlashSupported, setIsFlashSupported] = useState(false);
   const { toast } = useToast();
 
   const cleanupStream = useCallback(() => {
@@ -37,6 +39,16 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
         });
         streamRef.current = stream;
         setHasPermission(true);
+
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+          const capabilities = videoTrack.getCapabilities();
+          // @ts-ignore
+          if (capabilities.torch) {
+            setIsFlashSupported(true);
+          }
+        }
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -97,6 +109,7 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
   const handleRetake = () => {
     setRecordedVideo(null);
     setIsRecording(false);
+    setIsFlashOn(false);
   };
 
   const handleSend = () => {
@@ -115,6 +128,26 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
       onClose();
   };
 
+  const toggleFlash = async () => {
+    if (!streamRef.current || !isFlashSupported) return;
+
+    const videoTrack = streamRef.current.getVideoTracks()[0];
+    try {
+        await videoTrack.applyConstraints({
+            // @ts-ignore
+            advanced: [{ torch: !isFlashOn }]
+        });
+        setIsFlashOn(!isFlashOn);
+    } catch (err) {
+        console.error('Failed to toggle flash:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Flash Error',
+          description: 'Could not control the flashlight.',
+        });
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
       <div className="absolute top-4 right-4 z-20">
@@ -123,7 +156,7 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
         </Button>
       </div>
 
-      <div className="relative w-full h-full">
+      <div className="absolute w-full h-full flex items-center justify-center">
         {hasPermission === false && (
            <div className="w-full h-full flex items-center justify-center p-4">
              <Alert variant="destructive" className="max-w-sm">
@@ -137,19 +170,22 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
         
         <video
           ref={videoRef}
-          className={cn("w-full h-full object-cover", recordedVideo ? "hidden" : "block")}
+          className={cn(
+            "aspect-square w-full h-auto max-h-full object-cover rounded-full",
+            recordedVideo ? "hidden" : "block"
+          )}
           autoPlay
           playsInline
           muted
         />
 
         {recordedVideo && (
-            <video src={recordedVideo} className="w-full h-full object-cover" autoPlay loop playsInline />
+            <video src={recordedVideo} className="aspect-square w-full h-auto max-h-full object-cover rounded-full" autoPlay loop playsInline />
         )}
       </div>
 
       {hasPermission && (
-         <div className="absolute bottom-8 flex items-center justify-center gap-12 z-20">
+         <div className="absolute bottom-8 flex w-full items-center justify-around px-8 z-20">
             {recordedVideo ? (
                 <>
                     <Button
@@ -169,6 +205,8 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
                     </Button>
               </>
             ) : (
+              <>
+                <div className="w-16 h-16" /> 
                 <Button
                     size="lg"
                     className={cn(
@@ -180,6 +218,12 @@ export default function VideoView({ onRecord, onClose }: VideoViewProps) {
                 >
                     {isRecording ? <Square className="h-8 w-8 text-white" /> : <Video className="h-10 w-10 text-white" />}
                 </Button>
+                {isFlashSupported ? (
+                  <Button variant="ghost" size="icon" onClick={toggleFlash} className={cn("rounded-full h-16 w-16 p-0 text-white", isFlashOn && 'text-yellow-400 bg-white/20')}>
+                    <Zap className="h-8 w-8" />
+                  </Button>
+                ) : <div className="w-16 h-16" /> }
+              </>
             )}
          </div>
       )}
