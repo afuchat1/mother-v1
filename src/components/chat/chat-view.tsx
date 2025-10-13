@@ -127,8 +127,13 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     setInput('');
     setImage(null);
     setReplyTo(null);
+    
+    const shouldTriggerAi = chat.type === 'group' && (
+        sentInput.toLowerCase().includes('@afuai') || 
+        (currentReplyTo && currentReplyTo.sender.id === aiUser.id)
+    );
 
-    if (chat.type === 'group' && sentInput.toLowerCase().includes('@afuai')) {
+    if (shouldTriggerAi) {
         startAiTransition(async () => {
             try {
                 const aiInput: any = { question: sentInput };
