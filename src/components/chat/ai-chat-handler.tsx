@@ -18,7 +18,7 @@ export default function AiChatHandler({ chat }: { chat: Chat }) {
 
   useEffect(() => {
     if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollref.current.scrollHeight;
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isPending]);
 
