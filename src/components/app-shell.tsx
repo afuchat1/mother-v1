@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { chats } from '@/lib/data';
 
 const navItems = [
   { href: '/app/chat', icon: Home, label: 'Home' },
@@ -62,7 +63,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const handleNavClick = (href: string) => {
     if (href === '/app/ai-chat') {
-        const aiChat = context.cart.length > 0 ? null : allChats.find(c => c.type === 'ai');
+        const aiChat = chats.find(c => c.type === 'ai');
         router.push('/app/chat');
         if (aiChat) setActiveChat(aiChat);
     } else if (href === '/app/chat') {
