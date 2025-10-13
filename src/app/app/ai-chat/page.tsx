@@ -30,11 +30,21 @@ function ImagineTab() {
                     setGeneratedImage(result.imageUrl);
                 }
             } catch (error: any) {
-                console.error("Image generation error:", error);
+                let title = 'Image Generation Failed';
+                let description = error.message || 'Could not generate image.';
+
+                if (error.message && error.message.includes('billed users')) {
+                    title = 'Billing Required';
+                    description = 'The Imagen API is only accessible to billed users at this time.';
+                } else if (error.message && error.message.includes('429')) {
+                    title = 'API Quota Exceeded';
+                    description = 'You have exceeded your free tier limit for the AI model.';
+                }
+                
                  toast({
                     variant: 'destructive',
-                    title: 'Image Generation Failed',
-                    description: error.message || 'Could not generate image.',
+                    title: title,
+                    description: description,
                 });
             }
         });
@@ -82,13 +92,15 @@ export default function AiChatPage() {
     const handleNewMessage = (newMessage: Message) => {
         setChat(prevChat => {
             if (!prevChat) return undefined;
+            // Pass the full previous chat history to the handler
+            const updatedMessages = [...prevChat.messages, newMessage];
             return {
                 ...prevChat,
-                messages: [...prevChat.messages, newMessage]
+                messages: updatedMessages
             };
         });
     };
-
+    
     const updateMessage = (messageId: string, updates: Partial<Message>) => {
         setChat(prevChat => {
             if (!prevChat) return undefined;
