@@ -4,7 +4,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useContext } from 'react';
 import { AppContext } from '@/lib/context';
-import { chats as allChats } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import {
   Home,
@@ -26,64 +25,29 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { href: '/app/chat', icon: Home, label: 'Home' },
   { href: '/app/mall', icon: Store, label: 'Shop' },
-  { href: '#', icon: Bot, label: 'AI', isAi: true },
+  { href: '/app/ai-chat', icon: Bot, label: 'AI' },
   { href: '/app/profile', icon: User, label: 'Account' },
 ];
 
 function BottomNavbar() {
     const pathname = usePathname();
-    const router = useRouter();
-    const context = useContext(AppContext);
-
-    if (!context) return null;
-
-    const { activeChat, setActiveChat } = context;
-
-    const handleAiChatClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat) {
-            setActiveChat(aiChat);
-            if (pathname !== '/app/chat') {
-                router.push('/app/chat');
-            }
-        }
-    }
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden">
             <div className="flex h-16 items-center justify-around">
                 {navItems.map((item) => {
-                    const isAiActive = item.isAi && activeChat?.type === 'ai' && pathname.startsWith('/app/chat');
-                    const isLinkActive = !item.isAi && item.href !== '#' && pathname.startsWith(item.href);
-                    const isActive = isAiActive || isLinkActive;
+                    const isActive = (item.href === '/app/ai-chat' && pathname.startsWith('/app/chat')) || (item.href !== '/app/ai-chat' && pathname.startsWith(item.href));
 
-                    const linkContent = (
-                        <div className="relative flex flex-col items-center gap-1">
-                            <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                            <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
-                        </div>
-                    );
-
-                    if (item.isAi) {
-                        return (
-                            <button
-                                key={item.label}
-                                onClick={handleAiChatClick}
-                                className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
-                            >
-                                {linkContent}
-                            </button>
-                        );
-                    }
-                    
                     return (
                         <Link
                             key={item.href}
-                            href={item.href}
+                            href={item.href === '/app/ai-chat' ? '/app/chat' : item.href}
                             className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
                         >
-                            {linkContent}
+                            <div className="relative flex flex-col items-center gap-1">
+                                <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
+                                <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
+                            </div>
                         </Link>
                     );
                 })}
@@ -94,23 +58,6 @@ function BottomNavbar() {
 
 function DesktopSidebar() {
     const pathname = usePathname();
-    const router = useRouter();
-    const context = useContext(AppContext);
-
-    if (!context) return null;
-
-    const { activeChat, setActiveChat } = context;
-
-    const handleAiChatClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat) {
-            setActiveChat(aiChat);
-             if (pathname !== '/app/chat') {
-                router.push('/app/chat');
-            }
-        }
-    }
 
     return (
         <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-sidebar">
@@ -122,42 +69,19 @@ function DesktopSidebar() {
             </div>
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map((item) => {
-                    const isAiActive = item.isAi && activeChat?.type === 'ai' && pathname.startsWith('/app/chat');
-                    const isLinkActive = !item.isAi && item.href !== '#' && pathname.startsWith(item.href);
-                    const isActive = isAiActive || isLinkActive;
-
-                     const linkContent = (
-                        <>
-                            <item.icon className="h-5 w-5" />
-                            <span>{item.label}</span>
-                        </>
-                    );
-
-                    if (item.isAi) {
-                         return (
-                            <button 
-                                key={item.label}
-                                onClick={handleAiChatClick}
-                                className={cn(
-                                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-all",
-                                    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-                                )}
-                            >
-                                {linkContent}
-                            </button>
-                        );
-                    }
-
+                    const isActive = (item.href === '/app/ai-chat' && pathname.startsWith('/app/chat')) || (item.href !== '/app/ai-chat' && pathname.startsWith(item.href));
+                    
                     return (
                         <Link
                             key={item.href}
-                            href={item.href}
+                            href={item.href === '/app/ai-chat' ? '/app/chat' : item.href}
                             className={cn(
                                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
                                 isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
                             )}
                         >
-                           {linkContent}
+                           <item.icon className="h-5 w-5" />
+                           <span>{item.label}</span>
                         </Link>
                     );
                 })}
@@ -182,6 +106,7 @@ function DesktopSidebar() {
 export default function AppShell({ children }: { children: ReactNode }) {
   const context = useContext(AppContext);
   const pathname = usePathname();
+  const router = useRouter();
 
   if (!context) return (
     <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
@@ -192,8 +117,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <BottomNavbar />
     </div>
   );
+  
+  const { cart, activeChat, setActiveChat } = context;
 
-  const { cart } = context;
+  // This effect will handle the AI chat selection when navigating to /app/chat
+  if (pathname === '/app/chat' && activeChat?.type !== 'ai') {
+    const aiChat = context.cart.length > 0 ? null : (allChats.find(c => c.type === 'ai'));
+    if(aiChat) setActiveChat(aiChat);
+  } else if (pathname !== '/app/chat' && activeChat?.type === 'ai') {
+    setActiveChat(null);
+  }
+
+
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
 
@@ -216,3 +151,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+// Since we are using a client component, we need to add this to get the chats from the context
+import { chats as allChats } from '@/lib/data';
