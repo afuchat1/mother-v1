@@ -29,7 +29,7 @@ const navItems = [
   { href: '/app/profile', icon: User, label: 'Account' },
 ];
 
-function NavItem({ item, isActive, onClick, isDesktop }: { item: typeof navItems[0], isActive: boolean, onClick: (href: string) => void, isDesktop: boolean }) {
+function NavItem({ item, isActive, onClick }: { item: typeof navItems[0], isActive: boolean, onClick: (href: string) => void }) {
     const isAiChat = item.href === '/app/ai-chat';
     const effectiveHref = isAiChat ? '/app/chat' : item.href;
 
@@ -37,51 +37,53 @@ function NavItem({ item, isActive, onClick, isDesktop }: { item: typeof navItems
         e.preventDefault();
         onClick(item.href);
     };
-
-    if (isDesktop) {
-        return (
-             <Link
-                href={effectiveHref}
-                onClick={handleClick}
-                className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/80"
-                )}
-            >
-               <item.icon className="h-5 w-5" />
-               <span>{item.label}</span>
-            </Link>
-        )
-    }
-
+    
     return (
-        <Link
+         <Link
             href={effectiveHref}
             onClick={handleClick}
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
+            className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
+                isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/80"
+            )}
         >
-            <div className="relative flex flex-col items-center gap-1">
-                <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
-            </div>
+           <item.icon className="h-5 w-5" />
+           <span>{item.label}</span>
         </Link>
-    );
+    )
 }
 
 function BottomNavbar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
     const context = useContext(AppContext);
     return (
-        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden">
-            <div className="flex h-16 items-center justify-around">
-                {navItems.map((item) => {
-                     const isAiChatActive = item.href === '/app/ai-chat' && activePath === '/app/chat' && context?.activeChat?.type === 'ai';
-                     const isHomeActive = item.href === '/app/chat' && activePath === '/app/chat' && context?.activeChat?.type !== 'ai';
-                     const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && activePath.startsWith(item.href);
-                     const isActive = isAiChatActive || isHomeActive || isOtherActive;
+        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background md:hidden h-16 flex items-center justify-around">
+            {navItems.map((item) => {
+                 const isAiChatActive = item.href === '/app/ai-chat' && activePath === '/app/chat' && context?.activeChat?.type === 'ai';
+                 const isHomeActive = item.href === '/app/chat' && activePath === '/app/chat' && context?.activeChat?.type !== 'ai';
+                 const isOtherActive = item.href !== '/app/chat' && item.href !== '/app/ai-chat' && activePath.startsWith(item.href);
+                 const isActive = isAiChatActive || isHomeActive || isOtherActive;
 
-                    return <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} isDesktop={false} />;
-                })}
-            </div>
+                const effectiveHref = item.href === '/app/ai-chat' ? '/app/chat' : item.href;
+                
+                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                };
+
+                return (
+                    <Link
+                        key={item.href}
+                        href={effectiveHref}
+                        onClick={handleClick}
+                        className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
+                    >
+                        <div className="relative flex flex-col items-center gap-1">
+                            <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
+                            <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
+                        </div>
+                    </Link>
+                );
+            })}
         </nav>
     );
 }
@@ -104,7 +106,7 @@ function DesktopSidebar({ activePath, handleNavClick }: { activePath: string, ha
                     const isActive = isAiChatActive || isHomeActive || isOtherActive;
 
                     return (
-                        <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} isDesktop={true} />
+                        <NavItem key={item.href} item={item} isActive={isActive} onClick={handleNavClick} />
                     );
                 })}
             </nav>
@@ -143,20 +145,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
         }
     } else if (href === '/app/chat') {
         const firstChat = allChats.find(c => c.type !== 'ai');
-        if (firstChat && activeChat?.id !== firstChat.id) {
-            setActiveChat(firstChat);
+        // Only switch if not already on a regular chat
+        if (activeChat?.type === 'ai' || !activeChat) {
+             if (firstChat) setActiveChat(firstChat);
         }
         router.push('/app/chat');
     } else {
+        // For any other link, just navigate.
         router.push(href);
     }
   };
 
   useEffect(() => {
-    if (pathname === '/app/chat' && !activeChat) {
-        const defaultChat = allChats.find(c => c.type !== 'ai');
-        if (defaultChat) {
-            setActiveChat(defaultChat);
+    // This effect ensures the correct chat is active when landing on the chat page.
+    if (pathname === '/app/chat') {
+        // If no chat is active, or if AI chat is active but we didn't intend to, default to first normal chat
+        if (!activeChat || activeChat.type === 'ai') {
+             const intendedChat = activeChat && activeChat.type === 'ai' ? activeChat : allChats.find(c => c.type !== 'ai');
+             if (intendedChat && activeChat?.id !== intendedChat.id) {
+                setActiveChat(intendedChat);
+             }
         }
     }
   }, [pathname, activeChat, setActiveChat]);
