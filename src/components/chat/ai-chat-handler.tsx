@@ -9,9 +9,6 @@ import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-que
 import { speechToText } from '@/ai/flows/speech-to-text';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
-import { Button } from '../ui/button';
-import { ArrowDown } from 'lucide-react';
-import { AiAssistantLogo } from '../icons';
 
 // Helper to convert file or blob to base64
 const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -30,7 +27,6 @@ type AiChatHandlerProps = {
 };
 
 export default function AiChatHandler({ chat, handleNewMessage, updateMessage, imageToSend, clearImageToSend }: AiChatHandlerProps) {
-  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,23 +49,15 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
   }, [chat.messages, isPending]);
 
 
-  const handleReply = (message: Message) => {
-    setReplyTo(message);
-  };
-
-  const cancelReply = () => {
-    setReplyTo(null);
-  };
-
   const handleSubmit = async (text: string, options?: { voiceUrl?: string }) => {
     if (!text.trim() && !imageToSend && !options?.voiceUrl) return;
 
     let userQuestion = text;
-    const currentReplyTo = replyTo;
     const userMessageId = `user_${Date.now()}`;
     const currentImageToSend = imageToSend;
+    
+    // Use a callback with setChat to get the most up-to-date history
     const currentChatHistory = chat.messages;
-
 
     if (clearImageToSend) {
         clearImageToSend();
@@ -82,42 +70,34 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
       sender: currentUser,
       imageUrl: currentImageToSend ? URL.createObjectURL(currentImageToSend) : undefined,
       voiceUrl: options?.voiceUrl,
-      replyTo: currentReplyTo ?? undefined,
     };
 
     handleNewMessage(userMessage);
-    setReplyTo(null);
-
+    
     startTransition(async () => {
       try {
+        let finalUserQuestion = userQuestion;
+
         if (options?.voiceUrl) {
             const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
             const audioDataUri = await toBase64(audioBlob);
             const transcriptionResult = await speechToText(audioDataUri);
 
             if (transcriptionResult && transcriptionResult.text) {
-                userQuestion = transcriptionResult.text;
-                updateMessage(userMessageId, { text: transcriptionResult.text });
+                finalUserQuestion = transcriptionResult.text;
+                updateMessage(userMessageId, { text: finalUserQuestion });
             } else {
                  throw new Error("Failed to transcribe audio.");
             }
-        } else {
-            updateMessage(userMessageId, { text: userQuestion });
         }
-
+        
         const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
         
-        const aiInput: any = { 
-            question: userQuestion, 
+        const aiInput = { 
+            question: finalUserQuestion, 
             photoDataUri,
             chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
         };
-        if (currentReplyTo) {
-          aiInput.repliedToMessage = {
-            sender: currentReplyTo.sender.name,
-            text: currentReplyTo.text,
-          };
-        }
         
         const result = await aiAssistantAnswersQuestions(aiInput);
         
@@ -156,36 +136,26 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
     });
   };
   
-  const isConversationStarted = chat.messages.length > 0;
-
   return (
     <>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        {!isConversationStarted ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-               {/* Empty state is now handled in the parent page */}
-           </div>
-        ) : (
-            <div className="relative">
-                <ChatMessages messages={chat.messages} onReply={handleReply} />
-                {isPending && (
-                <div className="p-4">
-                    <div className="flex items-end gap-2 justify-start">
-                    <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-                    <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                        <div className="flex items-center space-x-2 p-2">
-                            <Skeleton className="h-2 w-2 rounded-full" />
-                            <Skeleton className="h-2 w-2 rounded-full" />
-                            <Skeleton className="h-2 w-2 rounded-full" />
-                        </div>
-                    </div>
+        <div className="relative p-4">
+            <ChatMessages messages={chat.messages} onReply={() => {}} />
+            {isPending && (
+            <div className="flex items-end gap-2 justify-start mt-4">
+                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                    <div className="flex items-center space-x-2 p-2">
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full" />
                     </div>
                 </div>
-                )}
             </div>
-        )}
+            )}
+        </div>
       </div>
-      <div className="shrink-0">
+      <div className="shrink-0 p-2 border-t">
         <AiChatInput
             handleSubmit={handleSubmit}
             isLoading={isPending}
