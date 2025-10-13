@@ -182,7 +182,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto pb-24" ref={scrollRef}>
         <ChatMessages messages={chat.messages} onReply={handleReply} />
         {isPending && (
           <div className="p-4 md:p-6">
