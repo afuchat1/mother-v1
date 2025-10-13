@@ -19,14 +19,14 @@ export default function AppLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // On initial load of the chat page, default to the first non-AI chat.
-    if (pathname === '/app/chat' && !activeChat) {
+    // On initial load of a chat-related page, default to the first non-AI chat.
+    if (pathname.startsWith('/app/chat') && !activeChat) {
         const defaultChat = allChats.find(c => c.type !== 'ai');
         if (defaultChat) {
             setActiveChat(defaultChat);
         }
     }
-  }, [pathname]);
+  }, [pathname, activeChat]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {
