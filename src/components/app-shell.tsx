@@ -191,13 +191,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   // This effect handles the logic that was causing the "rendering another component" error.
   useEffect(() => {
-    if (pathname === '/app/chat' && activeChat?.type === 'ai') {
-        // If we are on the chat page but came from somewhere else, and AI chat is active, do nothing.
-    } else if (pathname === '/app/ai-chat') {
-        const aiChat = allChats.find(c => c.type === 'ai');
-        if (aiChat) setActiveChat(aiChat);
-    } else if (pathname === '/app/chat' && activeChat?.type !== 'ai') {
-        // When on /app/chat, ensure a non-AI chat is active
+    // When on /app/chat, ensure the correct chat (AI or regular) is active
+    if (pathname === '/app/chat') {
+        // If coming to /app/chat and an AI chat should be active, do nothing to prevent flicker
+        if (activeChat?.type === 'ai') return;
+
+        // Otherwise, set the first non-AI chat as active
         const firstChat = allChats.find(c => c.type !== 'ai');
         if (activeChat?.id !== firstChat?.id) {
             setActiveChat(firstChat || null);
