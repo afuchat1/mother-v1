@@ -1,10 +1,25 @@
+'use client';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { products } from "@/lib/data";
+import { products as initialProducts, currentUser } from "@/lib/data";
 import ProductCard from "@/components/mall/product-card";
 import AddProductDialog from "@/components/mall/add-product-dialog";
 import { PlusCircle } from "lucide-react";
+import type { Product } from "@/lib/types";
 
 export default function MallPage() {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  const addProduct = (newProductData: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => {
+    const newProduct: Product = {
+      id: `p${products.length + 1}`,
+      ...newProductData,
+      imageUrl: 'https://picsum.photos/seed/newproduct/300/200',
+      seller: currentUser,
+    };
+    setProducts(prevProducts => [newProduct, ...prevProducts]);
+  };
+
   return (
     <main className="flex-1 bg-secondary">
       <div className="p-4 md:p-6">
@@ -15,7 +30,7 @@ export default function MallPage() {
               Discover products from your community.
             </p>
           </div>
-          <AddProductDialog>
+          <AddProductDialog onAddProduct={addProduct}>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> New Product
             </Button>
