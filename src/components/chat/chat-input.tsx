@@ -29,6 +29,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [recordingMode, setRecordingMode] = useState<'audio' | 'video'>('audio');
@@ -114,24 +115,27 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   }
 
   const handleMicClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      // Allow tapping to switch modes, but not if there's text
-      if (!input && !imagePreview) {
-        setRecordingMode(prev => prev === 'audio' ? 'video' : 'audio');
-      }
+    // A simple tap toggles mode, but only if not recording
+    if (!isRecording) {
+        if (!input && !imagePreview) {
+            setRecordingMode(prev => prev === 'audio' ? 'video' : 'audio');
+        }
     }
   };
 
-  // Using onMouseDown and onMouseUp for hold-to-record behavior
   const handleRecordButtonPress = () => {
-    // Don't start recording if there's text or an image
     if (input || imagePreview) return;
-    startRecording();
+    
+    holdTimeoutRef.current = setTimeout(() => {
+        startRecording();
+    }, 3000); // 3-second delay
   };
 
   const handleRecordButtonRelease = () => {
+    if (holdTimeoutRef.current) {
+        clearTimeout(holdTimeoutRef.current);
+        holdTimeoutRef.current = null;
+    }
     if (isRecording) {
       stopRecording();
     }
@@ -186,7 +190,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                  <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
                </div>
                <div className="flex-1 text-center text-sm text-muted-foreground">
-                 Release to stop
+                 Release to send
                </div>
                 <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" type="button" onClick={cancelRecording}>
                     <Trash2 className="h-5 w-5" />
@@ -256,7 +260,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                   onTouchEnd={handleRecordButtonRelease}
                   >
                     {recordingMode === 'audio' ? <Mic className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                    <span className="sr-only">{recordingMode === 'audio' ? 'Record voice' : 'Record video'}</span>
+                    <span className="sr-only">{recordingMode === 'audio' ? 'Hold to record voice, tap to switch' : 'Hold to record video, tap to switch'}</span>
                 </Button>
             ) : null }
         </div>
