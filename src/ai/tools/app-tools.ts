@@ -26,7 +26,14 @@ export const findUser = ai.defineTool(
   async ({ name }) => {
     console.log(`[findUser] Searching for: ${name}`);
     const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
-    return user || null;
+    if (user) {
+        return {
+            id: user.id,
+            name: user.name,
+            avatarUrl: user.avatarUrl,
+        };
+    }
+    return null;
   }
 );
 
