@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '@/lib/context';
 import { cn } from '@/lib/utils';
 import {
@@ -142,9 +142,7 @@ function DesktopSidebar() {
                             key={item.href}
                             href={item.href === '/app/ai-chat' ? '/app/chat' : item.href}
                              onClick={(e) => {
-                                if (item.href === '/app/ai-chat' || item.href === '/app/chat') {
-                                    e.preventDefault();
-                                }
+                                e.preventDefault();
                                 handleNavClick(item.href)
                             }}
                             className={cn(
@@ -189,7 +187,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
   
-  const { cart } = context;
+  const { cart, setActiveChat, activeChat } = context;
+
+  // This effect handles the logic that was causing the "rendering another component" error.
+  useEffect(() => {
+    if (pathname === '/app/chat' && activeChat?.type === 'ai') {
+        // If we are on the chat page but came from somewhere else, and AI chat is active, do nothing.
+    } else if (pathname === '/app/ai-chat') {
+        const aiChat = allChats.find(c => c.type === 'ai');
+        if (aiChat) setActiveChat(aiChat);
+    } else if (pathname === '/app/chat' && activeChat?.type !== 'ai') {
+        // When on /app/chat, ensure a non-AI chat is active
+        const firstChat = allChats.find(c => c.type !== 'ai');
+        if (activeChat?.id !== firstChat?.id) {
+            setActiveChat(firstChat || null);
+        }
+    }
+  }, [pathname, activeChat, setActiveChat]);
+
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const showCartFab = pathname.startsWith('/app/mall') || pathname.startsWith('/app/cart') || pathname.startsWith('/app/checkout');
