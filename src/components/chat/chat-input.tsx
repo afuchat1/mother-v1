@@ -128,7 +128,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     
     holdTimeoutRef.current = setTimeout(() => {
         startRecording();
-    }, 3000); // 3-second delay
+    }, 300); // 0.3-second delay
   };
 
   const handleRecordButtonRelease = () => {
