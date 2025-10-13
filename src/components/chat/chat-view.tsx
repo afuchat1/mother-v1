@@ -47,14 +47,10 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
-    let isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+    // Auto-scroll on initial load
+    scrollToBottom('auto');
 
-    // Auto-scroll if we are already at the bottom
-    if (isScrolledToBottom) {
-        scrollToBottom('auto');
-    }
-
-     const handleScroll = () => {
+    const handleScroll = () => {
         if (scrollContainer) {
             const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
             setShowScrollButton(!isAtBottom);

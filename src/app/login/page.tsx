@@ -28,7 +28,7 @@ export default function LoginPage() {
     <div className="w-full min-h-screen">
       <div className="flex items-center justify-center py-12 h-full">
         <div className="mx-auto grid w-[350px] gap-6">
-          <Card className="p-4 sm:p-6 border-0 shadow-none">
+          <Card className="p-4 border-0 shadow-none">
             <CardHeader className="text-center">
               <div className="mb-4 flex justify-center">
                 <AfuChatLogo className="h-12 w-12 text-primary" />

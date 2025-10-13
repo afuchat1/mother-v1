@@ -42,14 +42,10 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
-    let isScrolledToBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
+    // Auto-scroll on initial load
+    scrollToBottom('auto');
 
-    // Auto-scroll if we are already at the bottom
-    if (isScrolledToBottom) {
-        scrollToBottom('auto');
-    }
-
-     const handleScroll = () => {
+    const handleScroll = () => {
         if (scrollContainer) {
             const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
             setShowScrollButton(!isAtBottom);
@@ -63,6 +59,7 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
    useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (scrollContainer) {
+      // A generous threshold to decide if the user has scrolled up
       const isScrolledUp = scrollContainer.scrollHeight - scrollContainer.clientHeight > scrollContainer.scrollTop + 150;
       
       if (!isScrolledUp) {

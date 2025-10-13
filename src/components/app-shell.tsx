@@ -73,8 +73,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const activePath = pathname;
   
-  const isChatActive = activePath.startsWith('/app/chat') && activeChat;
+  // An active chat is present if the context has one AND we are on a relevant chat page.
+  const isChatPage = activePath.startsWith('/app/chat') || activePath.startsWith('/app/ai-chat');
+  const isChatActive = isChatPage && activeChat;
 
+  // The bottom nav should be hidden ONLY when a chat is active.
   const showBottomNav = !isChatActive;
   const showCartFab = showBottomNav && (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
@@ -82,8 +85,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
         <main className={cn(
           "flex-1",
+          // The main content area should be scrollable by default
+          "overflow-y-auto",
+          // When the bottom nav is shown, add padding to avoid content being hidden behind it
           showBottomNav ? "pb-16" : "" ,
-          isChatActive ? "flex flex-col overflow-hidden" : "overflow-y-auto"
+          // When a chat is active, we use a flex layout to contain the header/footer
+          isChatActive ? "flex flex-col overflow-hidden" : ""
         )}>
             {children}
         </main>

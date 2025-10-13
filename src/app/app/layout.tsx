@@ -27,7 +27,7 @@ export default function AppLayout({
     } else if (pathname.startsWith('/app/chat')) {
         // On mobile, show the chat list by default
         if (activeChat) {
-          setActiveChat(null);
+          // Do not clear active chat to allow navigating back
         }
     }
   }, [pathname, activeChat]);

@@ -117,9 +117,14 @@ const SwipeToReply = ({
     const diff = currentX - touchStartX;
     
     // Only allow swiping right for current user, left for other users
+    if ((!isCurrentUser && diff < 0) || (isCurrentUser && diff > 0)) {
+        return;
+    }
+    const newTranslateX = Math.min(Math.abs(diff), swipeThreshold + 20) * (isCurrentUser ? 1 : -1);
+    // Corrected the direction
     if ((isCurrentUser && diff < 0) || (!isCurrentUser && diff > 0)) {
-       const newTranslateX = Math.min(Math.abs(diff), swipeThreshold + 20) * (isCurrentUser ? -1 : 1);
-       setTranslateX(newTranslateX);
+        const newTranslateX = Math.min(Math.abs(diff), swipeThreshold + 20) * (isCurrentUser ? -1 : 1);
+        setTranslateX(newTranslateX);
     }
   };
 
@@ -134,7 +139,7 @@ const SwipeToReply = ({
 
   return (
     <div className="relative w-full">
-      <div className="absolute top-0 bottom-0 h-full flex items-center" style={isCurrentUser ? { right: '100%' } : { left: '100%' }}>
+      <div className="absolute top-0 bottom-0 h-full flex items-center" style={isCurrentUser ? { left: '100%' } : { right: '100%' }}>
          <Reply className={cn("h-5 w-5 text-muted-foreground transition-opacity", Math.abs(translateX) > swipeThreshold / 2 ? 'opacity-100' : 'opacity-0')} />
       </div>
       <div
@@ -153,7 +158,7 @@ const SwipeToReply = ({
 
 export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
   return (
-      <div className="p-4 md:p-6">
+      <div className="p-4">
         <div className="flex flex-col gap-4">
           {messages.map((message) => {
             const isCurrentUser = message.sender.id === currentUser.id;
@@ -171,7 +176,7 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                         <AvatarFallback>{message.sender.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                 )}
-                <div className={cn("max-w-lg", isCurrentUser ? "ml-auto" : "mr-auto")}>
+                <div className={cn("max-w-[80%]", isCurrentUser ? "ml-auto" : "mr-auto")}>
                  <SwipeToReply onReply={() => onReply(message)} isCurrentUser={isCurrentUser}>
                     <div
                         className={cn(
@@ -211,7 +216,7 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                             <VoiceMessagePlayer url={message.voiceUrl} />
                         </div>
                     ) : (
-                        <p className='whitespace-pre-wrap text-sm'>{message.text}</p>
+                        <p className='whitespace-pre-wrap break-words text-sm'>{message.text}</p>
                     )}
                     
                     <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
