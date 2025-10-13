@@ -1,13 +1,28 @@
+'use client';
+import { useContext } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AfuChatLogo } from "@/components/icons";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Moon, Sun } from "lucide-react";
+import { ThemeContext } from "@/lib/context.tsx";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+
 
 export default function LoginPage() {
-  const loginHeroImage = PlaceHolderImages.find(img => img.id === 'loginHero');
+  const themeContext = useContext(ThemeContext);
+
+  if (!themeContext) {
+    return null; // or a loading spinner
+  }
+
+  const { theme, setTheme } = themeContext;
+
+  const handleThemeChange = (isDark: boolean) => {
+    setTheme(isDark ? 'dark' : 'light');
+  };
 
   return (
     <div className="w-full min-h-screen">
@@ -35,6 +50,20 @@ export default function LoginPage() {
                 </Link>
               </div>
             </CardContent>
+            <CardFooter className="flex-col gap-4 pt-6">
+                <Separator />
+                <div className="flex items-center justify-between w-full">
+                    <Label htmlFor="theme-switch" className="flex items-center gap-2 relative !-translate-y-0 !scale-100 peer-placeholder-shown:!translate-y-0 !top-0 peer-focus:!left-auto !p-0">
+                       {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                       <span>Dark Mode</span>
+                    </Label>
+                    <Switch
+                      id="theme-switch"
+                      checked={theme === 'dark'}
+                      onCheckedChange={handleThemeChange}
+                    />
+                </div>
+            </CardFooter>
           </Card>
         </div>
       </div>
