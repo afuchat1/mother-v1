@@ -51,11 +51,9 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     // Auto-scroll if we are already at the bottom
     if (isScrolledToBottom) {
         scrollToBottom('auto');
-    } else if (chat.messages.length > 0) {
-        setShowScrollButton(true);
     }
-    
-    const handleScroll = () => {
+
+     const handleScroll = () => {
         if (scrollContainer) {
             const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
             if (isAtBottom) {
@@ -66,9 +64,9 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [chat.messages]);
+  }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (scrollContainer) {
       const isScrolledUp = scrollContainer.scrollHeight - scrollContainer.clientHeight > scrollContainer.scrollTop + 150;
@@ -117,7 +115,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     setInput('');
     setImage(null);
 
-    if (chat.type === 'group' && sentInput.includes('@AfuAi')) {
+    if (chat.type === 'group' && sentInput.toLowerCase().includes('@afuai')) {
         startAiTransition(async () => {
             try {
                 const result = await aiAssistantAnswersQuestions({ question: sentInput });
