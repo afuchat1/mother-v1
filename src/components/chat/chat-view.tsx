@@ -212,58 +212,61 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
       </header>
   );
 
-  if (chat.type === 'ai') {
+  const renderContent = () => {
+    if (chat.type === 'ai') {
+        return <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />;
+    }
+
     return (
         <>
-            {commonHeader}
-            <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />
+            <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+                <div className="relative">
+                    <ChatMessages messages={chat.messages} onReply={handleReply} />
+                    {isAiReplying && (
+                        <div className="p-4">
+                            <div className="flex items-end gap-2 justify-start">
+                            <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                            <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                                <div className="flex items-center space-x-2 p-2">
+                                    <Skeleton className="h-2 w-2 rounded-full" />
+                                    <Skeleton className="h-2 w-2 rounded-full" />
+                                    <Skeleton className="h-2 w-2 rounded-full" />
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {showScrollButton && (
+                <div className="absolute bottom-24 right-4 z-20">
+                    <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
+                        <ArrowDown className="h-5 w-5" />
+                    </Button>
+                </div>
+            )}
+            <div className="shrink-0">
+                <ChatInput 
+                    input={input}
+                    handleInputChange={handleInputChange}
+                    handleSubmit={handleSubmit}
+                    isLoading={isAiReplying}
+                    handleImageChange={handleImageChange}
+                    handleImageFile={handleImageFile}
+                    imagePreview={image ? URL.createObjectURL(image) : null}
+                    removeImage={() => setImage(null)}
+                    replyTo={replyTo}
+                    cancelReply={cancelReply}
+                />
+            </div>
         </>
     );
-  }
+  };
 
   return (
     <>
-      {commonHeader}
-      <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-        <div className="relative">
-            <ChatMessages messages={chat.messages} onReply={handleReply} />
-            {isAiReplying && (
-            <div className="p-4">
-                <div className="flex items-end gap-2 justify-start">
-                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
-                <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                    <div className="flex items-center space-x-2 p-2">
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                    </div>
-                </div>
-                </div>
-            </div>
-            )}
-        </div>
-      </div>
-      {showScrollButton && (
-        <div className="absolute bottom-24 right-4 z-20">
-            <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
-                <ArrowDown className="h-5 w-5" />
-            </Button>
-        </div>
-        )}
-      <div className="shrink-0">
-        <ChatInput 
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            isLoading={isAiReplying}
-            handleImageChange={handleImageChange}
-            handleImageFile={handleImageFile}
-            imagePreview={image ? URL.createObjectURL(image) : null}
-            removeImage={() => setImage(null)}
-            replyTo={replyTo}
-            cancelReply={cancelReply}
-        />
-      </div>
+        {commonHeader}
+        {renderContent()}
     </>
   );
 }

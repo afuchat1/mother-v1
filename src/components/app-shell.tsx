@@ -73,7 +73,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const activePath = pathname;
   
   // An active chat is present if the context has one AND we are on a relevant chat page.
-  const isChatActive = !!activeChat;
+  const isChatActive = !!activeChat && (pathname.startsWith('/app/chat/') || pathname === '/app/ai-chat' || (pathname === '/app/chat' && activeChat));
 
   // The bottom nav should be hidden ONLY when a chat is active.
   const showBottomNav = !isChatActive;
