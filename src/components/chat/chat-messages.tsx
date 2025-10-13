@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message } from "@/lib/types";
 import { currentUser } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { Play, Reply } from 'lucide-react';
+import { Play, Reply, Video } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 
 type ChatMessagesProps = {
@@ -86,11 +86,55 @@ const VoiceMessagePlayer = ({ url }: { url: string }) => {
     );
 };
 
+const VideoMessagePlayer = ({ url }: { url: string }) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const togglePlay = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause();
+            } else {
+                videoRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const handleEnded = () => setIsPlaying(false);
+        video.addEventListener('ended', handleEnded);
+
+        return () => video.removeEventListener('ended', handleEnded);
+    }, []);
+
+
+    return (
+        <div className="relative w-64 h-64 rounded-lg overflow-hidden cursor-pointer" onClick={togglePlay}>
+            <video ref={videoRef} src={url} className="w-full h-full object-cover" playsInline />
+            {!isPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-white/30 backdrop-blur-sm">
+                       <Play className="h-6 w-6 text-white" />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const ReplyMessagePreview = ({ message }: { message: Message }) => {
+    let previewText = message.text;
+    if (message.voiceUrl) previewText = 'Voice message';
+    if (message.videoUrl) previewText = 'Video message';
+
     return (
         <div className="p-2 border-l-2 border-primary/50 bg-secondary/30 rounded-md mb-2 opacity-80 text-xs">
             <p className="font-semibold text-primary">{message.sender.name}</p>
-            <p className="text-muted-foreground truncate">{message.text || 'Voice message'}</p>
+            <p className="text-muted-foreground truncate">{previewText}</p>
         </div>
     );
 };
@@ -116,12 +160,6 @@ const SwipeToReply = ({
     const currentX = e.targetTouches[0].clientX;
     const diff = currentX - touchStartX;
     
-    // Only allow swiping right for current user, left for other users
-    if ((!isCurrentUser && diff < 0) || (isCurrentUser && diff > 0)) {
-        return;
-    }
-    const newTranslateX = Math.min(Math.abs(diff), swipeThreshold + 20) * (isCurrentUser ? 1 : -1);
-    // Corrected the direction
     if ((isCurrentUser && diff < 0) || (!isCurrentUser && diff > 0)) {
         const newTranslateX = Math.min(Math.abs(diff), swipeThreshold + 20) * (isCurrentUser ? -1 : 1);
         setTranslateX(newTranslateX);
@@ -132,14 +170,13 @@ const SwipeToReply = ({
     if (Math.abs(translateX) > swipeThreshold) {
       onReply();
     }
-    // Animate back
     setTranslateX(0);
     setTouchStartX(0);
   };
 
   return (
     <div className="relative w-full">
-      <div className="absolute top-0 bottom-0 h-full flex items-center" style={isCurrentUser ? { left: '100%' } : { right: '100%' }}>
+      <div className="absolute top-0 bottom-0 h-full flex items-center" style={isCurrentUser ? { right: '100%' } : { left: '100%' }}>
          <Reply className={cn("h-5 w-5 text-muted-foreground transition-opacity", Math.abs(translateX) > swipeThreshold / 2 ? 'opacity-100' : 'opacity-0')} />
       </div>
       <div
@@ -180,14 +217,15 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                  <SwipeToReply onReply={() => onReply(message)} isCurrentUser={isCurrentUser}>
                     <div
                         className={cn(
-                            "relative rounded-xl px-3 shadow-sm group cursor-pointer",
+                            "relative rounded-xl shadow-sm group cursor-pointer",
                             isCurrentUser
                             ? "bg-primary text-primary-foreground rounded-br-none"
                             : "bg-secondary text-secondary-foreground rounded-bl-none",
-                            message.voiceUrl ? "p-2" : "p-3",
+                            message.voiceUrl || message.videoUrl ? "p-2" : "p-3",
+                             message.imageUrl ? "p-0 overflow-hidden" : ""
                         )}
                     >
-                        <div className="absolute w-3 h-3 -bottom-[1px] transform z-[-1]"
+                        <div className={cn("absolute w-3 h-3 -bottom-[1px] transform z-[-1]", message.imageUrl && "hidden")}
                             style={{
                                 clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")',
                                 ...isCurrentUser ? { right: '-5px', transform: 'scaleX(-1)' } : { left: '-5px' }
@@ -196,9 +234,10 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                             <div className={cn("w-full h-full", isCurrentUser ? "bg-primary" : "bg-secondary")}></div>
                         </div>
                     
-                    {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
-                    
-                    {message.replyTo && <ReplyMessagePreview message={message.replyTo} />}
+                    <div className={cn(message.imageUrl && "p-3")}>
+                        {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
+                        {message.replyTo && <ReplyMessagePreview message={message.replyTo} />}
+                    </div>
 
                     {message.imageUrl && (
                         <Image 
@@ -206,9 +245,13 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                         alt="chat image" 
                         width={400} 
                         height={300} 
-                        className="mb-1 rounded-lg"
+                        className="mb-1"
                         data-ai-hint="scenery photo"
                         />
+                    )}
+
+                    {message.videoUrl && (
+                        <VideoMessagePlayer url={message.videoUrl} />
                     )}
 
                     {message.voiceUrl ? (
@@ -216,12 +259,12 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
                             <VoiceMessagePlayer url={message.voiceUrl} />
                         </div>
                     ) : (
-                        <p className='whitespace-pre-wrap break-words text-sm'>{message.text}</p>
+                        message.text && <p className={cn('whitespace-pre-wrap break-words text-sm', message.imageUrl && 'p-3')}>{message.text}</p>
                     )}
                     
-                    <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1' )}>
+                    <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1', message.imageUrl && 'p-3' )}>
                         <div className="flex-1" />
-                        <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
+                        <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>{message.createdAt}</p>
                     </div>
                    
                     </div>

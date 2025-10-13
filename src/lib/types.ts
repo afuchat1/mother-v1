@@ -13,6 +13,7 @@ export type Message = {
   sender: User;
   imageUrl?: string;
   voiceUrl?: string;
+  videoUrl?: string;
   replyTo?: Message;
 };
 

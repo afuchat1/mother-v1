@@ -112,9 +112,9 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     setReplyTo(null);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string }) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string, videoUrl?: string }) => {
     e.preventDefault();
-    if (!input.trim() && !image && !options?.voiceUrl) return;
+    if (!input.trim() && !image && !options?.voiceUrl && !options?.videoUrl) return;
     
     const sentInput = input;
     const currentReplyTo = replyTo;
@@ -127,6 +127,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         sender: currentUser,
         imageUrl: image ? URL.createObjectURL(image) : undefined,
         voiceUrl: options?.voiceUrl,
+        videoUrl: options?.videoUrl,
         replyTo: currentReplyTo ?? undefined,
     };
 
