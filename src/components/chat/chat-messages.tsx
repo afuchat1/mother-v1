@@ -68,7 +68,7 @@ const VoiceMessagePlayer = ({ url }: { url: string }) => {
     }
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-primary-foreground">
             <audio ref={audioRef} src={url} preload="metadata" />
             <button onClick={togglePlay} className="flex items-center justify-center h-8 w-8 rounded-full bg-primary-foreground/20 text-primary-foreground">
                 <Play className={cn("h-4 w-4", isPlaying ? 'hidden' : 'block')} />
@@ -80,7 +80,7 @@ const VoiceMessagePlayer = ({ url }: { url: string }) => {
                     style={{ width: `${progress}%` }}
                 ></div>
             </div>
-            <span className="text-xs w-10">{formatDuration(duration)}</span>
+            <span className="text-xs w-10 text-primary-foreground/80">{formatDuration(duration)}</span>
         </div>
     );
 };
@@ -108,13 +108,14 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                 )}
                 <div
                   className={cn(
-                    "relative max-w-lg rounded-xl p-2 px-3 shadow-sm",
+                    "relative max-w-lg rounded-xl px-3 shadow-sm group",
                      isCurrentUser
                       ? "bg-primary text-primary-foreground rounded-br-none"
-                      : "bg-secondary text-secondary-foreground rounded-bl-none"
+                      : "bg-secondary text-secondary-foreground rounded-bl-none",
+                    message.voiceUrl ? "p-2" : "p-3",
                   )}
                 >
-                  {!isCurrentUser && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
+                   {!isCurrentUser && message.sender.name && <p className="mb-1 text-xs font-semibold text-primary">{message.sender.name}</p>}
                   
                   {message.imageUrl && (
                     <Image 
@@ -139,6 +140,23 @@ export default function ChatMessages({ messages }: ChatMessagesProps) {
                      <div className="flex-1" />
                      <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground/70")}>{message.createdAt}</p>
                   </div>
+                   <div className={cn(
+                        "absolute w-3 h-3",
+                        isCurrentUser 
+                            ? "-right-1.5 bottom-0" 
+                            : "-left-1.5 bottom-0"
+                    )}>
+                        <div className={cn(
+                            "w-full h-full transform",
+                            isCurrentUser 
+                                ? "bg-primary scale-x-[-1]"
+                                : "bg-secondary"
+                        )}
+                        style={{
+                            clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")'
+                        }}
+                        ></div>
+                    </div>
                 </div>
               </div>
             );

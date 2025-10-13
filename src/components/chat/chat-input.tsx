@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,7 +112,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-center gap-2">
            {isRecording ? (
-             <div className="flex-1 flex items-center bg-secondary rounded-full h-10 px-4">
+             <div className="flex-1 flex items-center bg-input rounded-full h-10 px-4">
                <div className="flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                  <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
@@ -136,7 +136,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               )}
               <Textarea
                   placeholder="Message"
-                  className="flex-1 resize-none bg-secondary border-0 rounded-full py-2 px-4 h-10 text-base"
+                  className="flex-1 resize-none bg-input border-0 rounded-full py-2 px-4 h-10 text-base"
                   rows={1}
                   value={input}
                   onChange={handleInputChange}
