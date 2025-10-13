@@ -20,22 +20,24 @@ export const findUser = ai.defineTool(
       name: z.string().describe('The name of the user to find.'),
     }),
     outputSchema: z.object({
-      id: z.string(),
-      name: z.string(),
-      avatarUrl: z.string(),
+      found: z.boolean(),
+      id: z.string().optional(),
+      name: z.string().optional(),
+      avatarUrl: z.string().optional(),
       bio: z.string().optional(),
       productsSold: z.array(z.object({
           id: z.string(),
           name: z.string(),
           price: z.number(),
       })).optional(),
-    }).nullable(),
+    }),
   },
   async ({ name }) => {
     console.log(`[findUser] Searching for: ${name}`);
     const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
     if (user) {
         return {
+            found: true,
             id: user.id,
             name: user.name,
             avatarUrl: user.avatarUrl,
@@ -43,7 +45,7 @@ export const findUser = ai.defineTool(
             productsSold: user.productsSold?.map(p => ({ id: p.id, name: p.name, price: p.price }))
         };
     }
-    return null;
+    return { found: false };
   }
 );
 
