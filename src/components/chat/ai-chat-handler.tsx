@@ -27,7 +27,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
     if (scrollRef.current) {
@@ -39,35 +38,11 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
   };
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    // Auto-scroll on initial load
     scrollToBottom('auto');
-
-    const handleScroll = () => {
-        if (scrollContainer) {
-            const isAtBottom = scrollContainer.scrollHeight - scrollContainer.clientHeight <= scrollContainer.scrollTop + 1;
-            setShowScrollButton(!isAtBottom);
-        }
-    };
-    
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
    useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (scrollContainer) {
-      // A generous threshold to decide if the user has scrolled up
-      const isScrolledUp = scrollContainer.scrollHeight - scrollContainer.clientHeight > scrollContainer.scrollTop + 150;
-      
-      if (!isScrolledUp) {
-        scrollToBottom('smooth');
-      } else {
-        setShowScrollButton(true);
-      }
-    }
+    scrollToBottom('smooth');
   }, [chat.messages, isPending]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
@@ -200,13 +175,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage }:
             )}
         </div>
       </div>
-      {showScrollButton && (
-        <div className="absolute bottom-24 right-4 z-20">
-            <Button onClick={() => scrollToBottom()} size="icon" className="rounded-full shadow-lg">
-                <ArrowDown className="h-5 w-5" />
-            </Button>
-        </div>
-        )}
       <div className="shrink-0">
         <ChatInput
           input={input}
