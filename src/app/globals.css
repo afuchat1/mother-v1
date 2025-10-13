@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 225 14% 95%; /* Telegram-like light grey */
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -12,7 +12,7 @@
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 204 90% 55%; /* Telegram Blue */
     --primary-foreground: 210 40% 98%;
-    --secondary: 0 0% 100%; /* Incoming messages */
+    --secondary: 225 14% 95%; /* Light grey for incoming messages */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -36,23 +36,23 @@
   }
 
   .dark {
-    --background: 225 12% 14%; /* Telegram Dark BG */
+    --background: 224 21% 15%; /* Darker Telegram BG */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 224 21% 15%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     --primary: 204 90% 55%; /* Telegram Blue */
     --primary-foreground: 210 40% 98%;
-    --secondary: 225 11% 20%; /* Dark incoming messages */
+    --secondary: 225 11% 25%; /* Darker incoming messages */
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 225 11% 25%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
+    --border: 225 11% 25%;
     --input: 225 11% 20%;
     --ring: 204 90% 55%;
 

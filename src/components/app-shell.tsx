@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { chats } from '@/lib/data';
 
 const navItems = [
   { href: '/app/chat', icon: Home, label: 'Home' },
@@ -26,7 +27,9 @@ function BottomNavbar({ activePath, handleNavClick }: { activePath: string, hand
     return (
         <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around">
             {navItems.map((item) => {
-                 const isActive = activePath.startsWith(item.href);
+                 const isActive = (activePath === '/app/chat' || activePath === '/app') && item.href === '/app/chat'
+                 ? true
+                 : activePath.startsWith(item.href) && item.href !== '/app/chat';
                 
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                     e.preventDefault();
@@ -58,7 +61,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   
   if (!context) return null;
   
-  const { cart } = context;
+  const { cart, setActiveChat } = context;
 
   const handleNavClick = (href: string) => {
     router.push(href);
