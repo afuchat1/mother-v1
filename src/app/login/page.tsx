@@ -53,6 +53,10 @@ export default function LoginPage() {
         title = "Weak Password";
         description = "Password should be at least 6 characters long.";
         break;
+      case "auth/invalid-credential":
+        title = "Invalid Credentials";
+        description = "The email or password you entered is incorrect. Please try again.";
+        break;
       default:
         console.error(error);
         break;
