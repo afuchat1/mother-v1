@@ -1,14 +1,15 @@
 'use client';
 import Image from 'next/image';
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Play, Reply, Video } from 'lucide-react';
+import { Play, Reply, Video, Check, CheckCheck } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { useFirebase, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { ChatAvatar } from './chat-avatar';
+import { format } from 'date-fns';
+
 
 const VoiceMessagePlayer = ({ url }: { url: string }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -111,8 +112,8 @@ const VideoMessagePlayer = ({ url }: { url: string }) => {
 
 
     return (
-        <div className="relative w-48 h-48 rounded-full overflow-hidden cursor-pointer" onClick={togglePlay}>
-            <video ref={videoRef} src={url} className="w-full h-full object-cover" playsInline loop />
+        <div className="relative w-48 h-48 rounded-lg overflow-hidden cursor-pointer" onClick={togglePlay}>
+            <video ref={videoRef} src={url} className="w-full h-full object-cover" playsInline />
             {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-white/30 backdrop-blur-sm">
@@ -130,9 +131,9 @@ const ReplyMessagePreview = ({ message }: { message: Message }) => {
     const { data: sender } = useDoc<UserProfile>(senderRef);
 
     let previewText = message.text;
-    if (message.voiceUrl) previewText = 'Voice message';
-    if (message.videoUrl) previewText = 'Video message';
-    if (message.imageUrl) previewText = 'Image';
+    if (message.voiceUrl) previewText = '🎤 Voice message';
+    if (message.videoUrl) previewText = '📹 Video message';
+    if (message.imageUrl) previewText = '📷 Image';
 
 
     return (
@@ -154,7 +155,7 @@ const SwipeToReply = ({
 }) => {
   const [touchStartX, setTouchStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
-  const swipeThreshold = 60; // How far user needs to swipe
+  const swipeThreshold = 60;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.targetTouches[0].clientX);
@@ -197,7 +198,7 @@ const SwipeToReply = ({
 };
 
 
-const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { message: Message, onReply: (message: Message) => void }) {
+const MessageBubble = React.memo(function MessageBubble({ message, onReply, isLastFromSender, isFirstFromSender }: { message: Message, onReply: (message: Message) => void, isLastFromSender: boolean, isFirstFromSender: boolean }) {
     const { user, firestore } = useFirebase();
     const isCurrentUser = message.senderId === user?.uid;
     const { data: sender, isLoading: senderLoading } = useDoc<UserProfile>(
@@ -209,8 +210,7 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
     }
 
     const senderName = sender?.name || '...';
-    
-    const messageTimestamp = message.timestamp ? (message.timestamp as any).toDate ? (message.timestamp as any).toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...';
+    const messageTimestamp = message.timestamp ? format((message.timestamp as any).toDate(), 'p') : '';
 
     return (
         <div
@@ -219,35 +219,28 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
           isCurrentUser ? "justify-end" : "justify-start"
         )}
       >
-        {!isCurrentUser && (
-            <ChatAvatar senderId={message.senderId} className="h-8 w-8 self-end" />
-        )}
         <div className={cn("max-w-[80%]", isCurrentUser ? "ml-auto" : "mr-auto")}>
          <SwipeToReply onReply={() => onReply(message)} isCurrentUser={isCurrentUser}>
             <div
                 className={cn(
-                    "relative rounded-xl shadow-sm group cursor-pointer",
+                    "relative shadow-sm group cursor-pointer text-sm",
+                    "px-3 py-2",
                     isCurrentUser
-                    ? "bg-primary text-primary-foreground rounded-br-none"
-                    : "bg-secondary text-secondary-foreground rounded-bl-none",
-                    message.voiceUrl ? "p-2" : "p-3",
-                    message.videoUrl ? "p-0 overflow-hidden rounded-full" : "",
-                     message.imageUrl ? "p-0 overflow-hidden" : ""
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground",
+                    isFirstFromSender && (isCurrentUser ? "rounded-t-lg rounded-bl-lg" : "rounded-t-lg rounded-br-lg"),
+                    !isFirstFromSender && (isCurrentUser ? "rounded-l-lg" : "rounded-r-lg"),
+                    isLastFromSender && (isCurrentUser ? "rounded-bl-lg" : "rounded-br-lg"),
+                    message.voiceUrl ? "p-2" : "",
+                    message.videoUrl ? "p-0 bg-transparent shadow-none" : "",
+                    message.imageUrl ? "p-0" : ""
                 )}
             >
-                <div className={cn("absolute w-3 h-3 -bottom-[1px] transform z-[-1]", message.imageUrl && "hidden", message.videoUrl && "hidden")}
-                    style={{
-                        clipPath: 'path("M 0 12 C 4.666666666666666 12 8.333333333333332 8.666666666666666 10 5 C 10.666666666666666 3.333333333333333 11.333333333333332 1.6666666666666667 12 0 L 12 12 L 0 12 Z")',
-                        ...isCurrentUser ? { right: '-5px', transform: 'scaleX(-1)' } : { left: '-5px' }
-                    }}
-                >
-                    <div className={cn("w-full h-full", isCurrentUser ? "bg-primary" : "bg-secondary")}></div>
-                </div>
+            {message.imageUrl && <div className="p-2 pt-1"><ReplyContent message={message}/></div>}
             
-            <div className={cn(message.imageUrl && "p-3")}>
-                {!isCurrentUser && senderName && <p className="mb-1 text-xs font-semibold text-primary">{senderName}</p>}
-                {message.replyTo && <ReplyMessagePreview message={message.replyTo} />}
-            </div>
+            {(isFirstFromSender && !isCurrentUser) && <p className="mb-1 text-xs font-semibold text-primary">{senderName}</p>}
+            
+            {!message.imageUrl && <ReplyContent message={message} />}
 
             {message.imageUrl && (
                 <Image 
@@ -255,7 +248,7 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
                 alt="chat image" 
                 width={400} 
                 height={300} 
-                className="mb-1"
+                className="mb-1 rounded-lg"
                 data-ai-hint="scenery photo"
                 />
             )}
@@ -269,12 +262,12 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
                     <VoiceMessagePlayer url={message.voiceUrl} />
                 </div>
             ) : (
-                message.text && <p className={cn('whitespace-pre-wrap break-words text-sm', message.imageUrl && 'p-3')}>{message.text}</p>
+                message.text && <p className='whitespace-pre-wrap break-words'>{message.text}</p>
             )}
             
-            <div className={cn("flex items-end gap-2", message.voiceUrl && 'mt-1', (message.imageUrl || message.videoUrl) && 'p-3' )}>
-                <div className="flex-1" />
-                <p className={cn("text-xs shrink-0", isCurrentUser ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>{messageTimestamp}</p>
+            <div className={cn("flex items-end gap-1.5 justify-end -mb-1 -mr-1.5", message.imageUrl && "absolute bottom-1 right-2 bg-black/40 text-white rounded-full px-2 py-0.5" )}>
+                <span className={cn("text-xs", isCurrentUser ? "text-primary-foreground/70" : "text-secondary-foreground/70")}>{messageTimestamp}</span>
+                {isCurrentUser && <CheckCheck className={cn("h-4 w-4", isCurrentUser ? "text-primary-foreground/70" : "text-blue-500")} />}
             </div>
            
             </div>
@@ -284,6 +277,12 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
     );
 });
 
+const ReplyContent = ({ message }: { message: Message }) => {
+    if (!message.replyTo) return null;
+    return <ReplyMessagePreview message={message.replyTo} />;
+};
+
+
 type ChatMessagesProps = {
     messages: Message[];
     onReply: (message: Message) => void;
@@ -292,10 +291,23 @@ type ChatMessagesProps = {
 const ChatMessages = React.memo(function ChatMessages({ messages, onReply }: ChatMessagesProps) {
     return (
         <div className="p-4">
-          <div className="flex flex-col gap-4">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} onReply={onReply} />
-            ))}
+          <div className="flex flex-col gap-1">
+            {messages.map((message, index) => {
+              const prevMessage = messages[index - 1];
+              const nextMessage = messages[index + 1];
+              const isLastFromSender = !nextMessage || nextMessage.senderId !== message.senderId;
+              const isFirstFromSender = !prevMessage || prevMessage.senderId !== message.senderId;
+
+              return (
+                <MessageBubble 
+                    key={message.id} 
+                    message={message} 
+                    onReply={onReply}
+                    isLastFromSender={isLastFromSender}
+                    isFirstFromSender={isFirstFromSender}
+                 />
+              )
+            })}
           </div>
         </div>
     );

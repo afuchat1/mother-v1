@@ -6,6 +6,7 @@ import ChatList from '@/components/chat/chat-list';
 import { AppContext } from '@/lib/context.tsx';
 import type { Chat } from '@/lib/types';
 import { useUser } from '@/firebase';
+import AppShell from '@/components/app-shell';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
@@ -18,7 +19,6 @@ export default function ChatPage() {
      if (isUserLoading) {
         return <p>Loading user...</p>;
     }
-
 
     const { activeChat, setActiveChat } = context;
     
@@ -34,12 +34,14 @@ export default function ChatPage() {
     }
 
     return (
-        <main className="flex h-full flex-col overflow-hidden">
-            {showChatList ? (
-                <ChatList activeChat={activeChat} setActiveChat={handleSelectChat} />
-            ) : (
-                activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
-            )}
-        </main>
+        <AppShell>
+            <main className="flex h-full flex-col overflow-hidden">
+                {showChatList ? (
+                    <ChatList activeChat={activeChat} setActiveChat={handleSelectChat} />
+                ) : (
+                    activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
+                )}
+            </main>
+        </AppShell>
     )
 }

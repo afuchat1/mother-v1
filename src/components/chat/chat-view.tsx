@@ -12,7 +12,7 @@ import { Skeleton } from '../ui/skeleton';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useCollection, useDoc } from '@/firebase';
-import { collection, serverTimestamp, query, orderBy, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useMemoFirebase } from '@/firebase/provider';
 
@@ -112,13 +112,14 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     setReplyTo(null);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string, videoUrl?: string }) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string, videoUrl?: string }) => {
     e.preventDefault();
     if (!input.trim() && !image && !options?.voiceUrl && !options?.videoUrl) return;
     
     const sentInput = input;
     const currentReplyTo = replyTo;
     const currentChatHistory = chat.messages;
+    const timestamp = serverTimestamp();
 
     const newMessagePayload: Omit<Message, 'id'> = {
         text: input,
@@ -128,10 +129,12 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         videoUrl: options?.videoUrl,
         replyTo: currentReplyTo ?? undefined,
         // @ts-ignore
-        timestamp: serverTimestamp(),
+        timestamp: timestamp,
     };
     
     addDocumentNonBlocking(messagesRef, newMessagePayload);
+
+     await setDoc(chatRef, { lastMessage: newMessagePayload }, { merge: true });
     
     setInput('');
     setImage(null);
@@ -215,7 +218,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
           <h2 className="font-semibold font-headline text-base">{chat.type === 'dm' ? otherUser?.name : chat.name}</h2>
           {chat.type !== 'ai' && (
             <p className="text-sm text-muted-foreground">
-                {chat.type === 'dm' ? 'Online' : `${chat.participantIds?.length || 0} members`}
+                {chat.type === 'dm' ? 'online' : `${chat.participantIds?.length || 0} members`}
             </p>
           )}
         </div>
@@ -232,7 +235,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
     return (
         <>
-            <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto bg-muted/30" ref={scrollRef}>
                 <div className="relative">
                     <ChatMessages messages={chat.messages} onReply={handleReply} />
                     {isAiReplying && (

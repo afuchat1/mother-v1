@@ -6,49 +6,71 @@ import { useContext } from 'react';
 import { AppContext } from '@/lib/context.tsx';
 import { cn } from '@/lib/utils';
 import {
-  Home,
+  MessageCircle,
   Store,
   Bot,
   User,
   ShoppingCart,
+  Menu,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useUser } from '@/firebase';
 
-const navItems = [
-  { href: '/app/chat', icon: Home, label: 'Chats' },
-  { href: '/app/mall', icon: Store, label: 'Shop' },
-  { href: '/app/ai-chat', icon: Bot, label: 'AI' },
-  { href: '/app/profile', icon: User, label: 'Account' },
+const menuItems = [
+  { href: '/app/mall', icon: Store, label: 'AfuMall' },
+  { href: '/app/ai-chat', icon: Bot, label: 'AfuAi Assistant' },
+  { href: '/app/profile', icon: User, label: 'My Profile' },
 ];
 
-function BottomNavbar({ activePath, handleNavClick }: { activePath: string, handleNavClick: (href: string) => void }) {
+function SideMenu() {
+    const { user } = useUser();
+    
     return (
-        <nav className="fixed bottom-0 left-0 right-0 border-t bg-background h-16 flex items-center justify-around z-20">
-            {navItems.map((item) => {
-                const isActive = activePath === item.href || (item.href !== '/app/chat' && activePath.startsWith(item.href));
-                
-                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                    e.preventDefault();
-                    handleNavClick(item.href);
-                };
-
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={handleClick}
-                        className="flex flex-1 flex-col items-center justify-center gap-1 text-xs h-full"
-                    >
-                        <div className="relative flex flex-col items-center gap-1">
-                            <item.icon className={cn("h-6 w-6", isActive ? "text-primary" : "text-muted-foreground")} />
-                            <span className={cn("text-xs font-medium", isActive ? "text-primary" : "text-muted-foreground")}>{item.label}</span>
-                        </div>
-                    </Link>
-                );
-            })}
-        </nav>
-    );
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Menu />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0">
+          <SheetHeader className="p-4 border-b text-left bg-secondary">
+             {user && (
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-14 w-14 border-2 border-primary">
+                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName || ''} />
+                        <AvatarFallback>{user.displayName?.charAt(0) || 'A'}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <SheetTitle className="font-headline">{user.displayName}</SheetTitle>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                </div>
+             )}
+          </SheetHeader>
+          <nav className="p-4">
+            <ul>
+              {menuItems.map(item => (
+                <li key={item.href}>
+                  <Link href={item.href} className="flex items-center gap-4 p-3 rounded-md hover:bg-accent">
+                    <item.icon className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-lg font-medium">{item.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+      </SheetContent>
+    </Sheet>
+    )
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -61,7 +83,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { cart, activeChat, setActiveChat } = context;
 
   const handleNavClick = (href: string) => {
-    // When navigating to the main chat list, we want to ensure no chat is active
     if (href === '/app/chat') {
         setActiveChat(null);
     }
@@ -73,30 +94,36 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const activePath = pathname;
   
   const isChatView = activePath.startsWith('/app/chat/') && activeChat;
+  const isChatList = activePath === '/app/chat';
+  const showFab = isChatList;
 
-  const showBottomNav = !isChatView;
-  
-  const showCartFab = (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
+  const showCartFab = (activePath.startsWith('/app/mall') || active-path.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
   return (
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
+        {isChatList && (
+             <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background p-2">
+                <SideMenu />
+                <h1 className="text-xl font-bold font-headline">Chats</h1>
+                <div className="w-10"></div>
+             </header>
+        )}
         <main className={cn(
           "flex-1",
-          // The main content area should be scrollable by default, except when a chat is active
-          showBottomNav && "overflow-y-auto",
-          // When the bottom nav is shown, add padding to avoid content being hidden behind it
-          showBottomNav ? "pb-16" : "" ,
-          // When a chat is active, we use a flex layout to contain the header/footer
-          !showBottomNav ? "flex flex-col overflow-hidden" : ""
+          isChatList ? "overflow-y-auto" : "flex flex-col overflow-hidden"
         )}>
             {children}
         </main>
-        {showBottomNav && <BottomNavbar activePath={activePath} handleNavClick={handleNavClick} />}
-        {showBottomNav && showCartFab && cartItemCount > 0 && (
-            <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
+        {showFab && (
+             <Button size="icon" className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
+                <MessageCircle className="h-7 w-7" />
+            </Button>
+        )}
+        {showCartFab && cartItemCount > 0 && (
+            <Link href="/app/cart" className="fixed bottom-6 right-6 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
                     <ShoppingCart className="h-6 w-6" />
-                    <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center rounded-full bg-destructive text-destructive-foreground p-0">{cartItem-count}</Badge>
+                    <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center rounded-full bg-destructive text-destructive-foreground p-0">{cartItemCount}</Badge>
                 </Button>
             </Link>
         )}

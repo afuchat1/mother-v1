@@ -3,11 +3,10 @@ import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, X, Trash2, Reply, Camera, Plus, Video } from "lucide-react";
+import { Send, Paperclip, Mic, X, Reply, Camera } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { Message } from '@/lib/types';
 import CameraView from './camera-view';
-import VideoView from './video-view';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type ChatInputProps = {
@@ -28,12 +27,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-  const [recordingMode, setRecordingMode] = useState<'audio' | 'video'>('audio');
 
   const handleAttachClick = () => {
     fileInputRef.current?.click();
@@ -57,23 +51,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     setShowCamera(false);
   };
 
-  const onVideoRecorded = (videoFile: File) => {
-    const videoUrl = URL.createObjectURL(videoFile);
-    handleSubmit({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>, { videoUrl });
-    setShowVideo(false);
-  };
-  
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
   const startRecording = async () => {
-    if (recordingMode === 'video') {
-      setShowVideo(true);
-      return;
-    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
@@ -93,14 +71,9 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       
       recorder.start();
       setIsRecording(true);
-      setRecordingTime(0);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
 
     } catch (err) {
       console.error("Error starting recording:", err);
-      // You might want to show a toast to the user here
     }
   };
 
@@ -108,59 +81,13 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
     }
   };
 
-  const cancelRecording = () => {
-     if (mediaRecorderRef.current && isRecording) {
-      // Don't call stop(), just clean up
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      mediaRecorderRef.current = null;
-      setIsRecording(false);
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
-    }
-  }
-
-  const handleMicClick = () => {
-    // A simple tap toggles mode, but only if not recording
-    if (!isRecording) {
-        if (!input && !imagePreview) {
-            setRecordingMode(prev => prev === 'audio' ? 'video' : 'audio');
-        }
-    }
-  };
-
-  const handleRecordButtonPress = () => {
-    if (input || imagePreview) return;
-    
-    holdTimeoutRef.current = setTimeout(() => {
-        startRecording();
-    }, 300); // 0.3-second delay
-  };
-
-  const handleRecordButtonRelease = () => {
-    if (holdTimeoutRef.current) {
-        clearTimeout(holdTimeoutRef.current);
-        holdTimeoutRef.current = null;
-    }
-    if (isRecording) {
-      stopRecording();
-    }
-  };
 
   if (showCamera) {
     return <CameraView onCapture={onPhotoTaken} onClose={() => setShowCamera(false)} />;
   }
-
-  if (showVideo) {
-    return <VideoView onRecord={onVideoRecorded} onClose={() => setShowVideo(false)} />;
-  }
-
 
   return (
     <div className="bg-background p-2 border-t">
@@ -170,7 +97,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               <div className="flex items-center gap-2 overflow-hidden">
                 <Reply className="h-4 w-4 text-primary shrink-0" />
                 <div className="overflow-hidden">
-                  <p className="font-semibold text-primary text-sm truncate">{replyTo.sender.name}</p>
+                  <p className="font-semibold text-primary text-sm truncate">{replyTo.senderId}</p>
                   <p className="text-muted-foreground text-sm truncate">{replyTo.text || (replyTo.imageUrl ? 'Image' : replyTo.voiceUrl ? 'Voice message' : 'Video message')}</p>
                 </div>
               </div>
@@ -195,27 +122,26 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
       )}
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-end gap-2">
-           {isRecording ? (
-             <div className="flex-1 flex items-center bg-input rounded-md h-10 px-4">
-               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                 <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
-               </div>
-               <div className="flex-1 text-center text-sm text-muted-foreground">
-                 Release to send
-               </div>
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-9 w-9" type="button" onClick={cancelRecording}>
-                    <Trash2 className="h-5 w-5" />
-                    <span className="sr-only">Cancel Recording</span>
-                </Button>
-             </div>
-           ) : (
-            <>
-              {handleImageChange && handleImageFile && (
+            <Textarea
+                ref={textareaRef}
+                placeholder="Message"
+                className="flex-1 resize-none bg-input border-0 rounded-full py-2 px-4 h-10 text-base max-h-32"
+                rows={1}
+                value={input}
+                onChange={onLocalInputChange}
+                maxLength={1000}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(e as any);
+                    }
+                }}
+            />
+            {handleImageChange && handleImageFile && (
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-10 w-10">
-                        <Plus className="h-5 w-5" />
+                        <Paperclip className="h-5 w-5" />
                         <span className="sr-only">Attach</span>
                       </Button>
                     </PopoverTrigger>
@@ -233,50 +159,33 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                     </PopoverContent>
                   </Popover>
               )}
-              <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-              <Textarea
-                  ref={textareaRef}
-                  placeholder="Message"
-                  className="flex-1 resize-none bg-input border-0 rounded-md py-2 px-3 h-10 text-base max-h-32"
-                  rows={1}
-                  value={input}
-                  onChange={onLocalInputChange}
-                  maxLength={1000}
-                  onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmit(e as any);
-                      }
-                  }}
-              />
-            </>
-           )}
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+            
             {(input || imagePreview ) ? (
                 <Button 
                   type="submit"
                   size="icon" 
-                  className="shrink-0 bg-primary rounded-md h-10 w-10"
+                  className="shrink-0 bg-primary rounded-full h-10 w-10"
                   disabled={isLoading}
                   >
                     <Send className="h-5 w-5" />
                     <span className="sr-only">Send</span>
                 </Button>
-            ) : !isRecording ? (
+            ) : (
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="shrink-0 text-muted-foreground h-10 w-10" 
+                  className="shrink-0 text-muted-foreground rounded-full h-10 w-10" 
                   type="button" 
-                  onClick={handleMicClick}
-                  onMouseDown={handleRecordButtonPress}
-                  onMouseUp={handleRecordButtonRelease}
-                  onTouchStart={handleRecordButtonPress}
-                  onTouchEnd={handleRecordButtonRelease}
+                  onMouseDown={startRecording}
+                  onMouseUp={stopRecording}
+                  onTouchStart={startRecording}
+                  onTouchEnd={stopRecording}
                   >
-                    {recordingMode === 'audio' ? <Mic className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                    <span className="sr-only">{recordingMode === 'audio' ? 'Hold to record voice, tap to switch' : 'Hold to record video, tap to switch'}</span>
+                    <Mic className="h-5 w-5" />
+                    <span className="sr-only">Hold to record voice</span>
                 </Button>
-            ) : null }
+            )}
         </div>
       </form>
     </div>
