@@ -199,6 +199,20 @@
         }
       },
       {
+        "path": "/users/{userId}/aiChats/default/messages/{messageId}",
+        "permissions": {
+            "read": "request.auth != null && request.auth.uid == userId",
+            "write": "request.auth != null && request.auth.uid == userId"
+        },
+        "definition": {
+            "entityName": "ChatMessage",
+            "schema": {
+                "$ref": "#/backend/entities/ChatMessage"
+            },
+            "description": "Stores AI chat messages for a specific user."
+        }
+      },
+      {
         "path": "/afuMallListings/{listingId}",
         "definition": {
           "entityName": "AfuMallListing",
