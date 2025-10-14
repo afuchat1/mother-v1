@@ -32,7 +32,7 @@ export default function EarningsPage() {
         <main className="h-full flex flex-col bg-secondary">
             <ProfilePageHeader title="Earnings" />
             <div className="flex-1 overflow-y-auto p-4">
-                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                 <div className="grid gap-4 grid-cols-1">
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">

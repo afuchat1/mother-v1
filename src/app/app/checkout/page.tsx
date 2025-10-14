@@ -63,7 +63,7 @@ export default function CheckoutPage() {
                                         <Input id="address" placeholder="123 Main St" />
                                         <Label htmlFor="address">Address</Label>
                                     </div>
-                                    <div className="flex flex-col gap-4">
+                                    <div className="grid grid-cols-1 gap-4">
                                          <div className='relative'>
                                             <Input id="city" placeholder="Anytown" />
                                             <Label htmlFor="city">City</Label>
@@ -85,12 +85,12 @@ export default function CheckoutPage() {
                                         <Input id="card-number" placeholder="**** **** **** 1234" />
                                         <Label htmlFor="card-number">Card Number</Label>
                                     </div>
-                                    <div className="flex flex-col gap-4">
-                                         <div className='relative'>
+                                    <div className="grid grid-cols-2 gap-4">
+                                         <div className='relative col-span-1'>
                                             <Input id="expiry" placeholder="MM/YY" />
                                             <Label htmlFor="expiry">Expiry Date</Label>
                                         </div>
-                                         <div className='relative'>
+                                         <div className='relative col-span-1'>
                                             <Input id="cvc" placeholder="123" />
                                             <Label htmlFor="cvc">CVC</Label>
                                         </div>

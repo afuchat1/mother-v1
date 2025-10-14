@@ -22,7 +22,7 @@ export default function EditProfilePage() {
         <main className="h-full flex flex-col bg-secondary">
             <ProfilePageHeader title="Edit Profile" />
             <div className="flex-1 overflow-y-auto p-4">
-                <div className="flex flex-col gap-8 max-w-md mx-auto">
+                <div className="flex flex-col gap-8">
                     <div className="flex flex-col items-center gap-4">
                         <div className="relative">
                             <Avatar className="h-24 w-24 border-4 border-primary/50">
