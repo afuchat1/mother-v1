@@ -49,36 +49,27 @@ const prompt = ai.definePrompt({
   input: {schema: AiAssistantAnswersQuestionsInputSchema},
   output: {schema: AiAssistantAnswersQuestionsOutputSchema},
   tools: [findUser, findProduct, browse],
-  prompt: `You are an AI feature integrated into a chat application. Your purpose is to provide direct, comprehensive answers and access real-time information using available tools.
+  prompt: `You are a helpful AI assistant. Use the available tools to answer questions.
 
-- To find user profiles and their products, use the findUser tool.
-- To search for products, use the findProduct tool.
-- To get information from a website, use the browse tool.
-- If a tool returns no results, clearly state that the information could not be found. Do not invent information.
-
-Analyze any images or audio provided.
-
-{{#if chatHistory}}
-Use this chat history for context:
-{{#each chatHistory}}
-- {{this.sender}}: {{this.text}}
-{{/each}}
-{{/if}}
-
-{{#if repliedToMessage}}
-You are replying to: "{{repliedToMessage.text}}" from {{repliedToMessage.sender}}.
-{{/if}}
-
-Answer the user's question.
-
-Question: {{{question}}}
-  {{#if photoDataUri}}
-  Photo: {{media url=photoDataUri}}
-  {{/if}}
   {{#if audioDataUri}}
-  Audio: {{media url=audioDataUri}}
+  This is the audio: {{media url=audioDataUri}}.
   {{/if}}
-  `,
+  {{#if photoDataUri}}
+  This is the photo: {{media url=photoDataUri}}.
+  {{/if}}
+  
+  {{#if chatHistory}}
+  Here is the recent chat history:
+  {{#each chatHistory}}
+  - {{this.sender}}: {{this.text}}
+  {{/each}}
+  {{/if}}
+  
+  {{#if repliedToMessage}}
+  You are replying to "{{repliedToMessage.text}}" from {{repliedToMessage.sender}}.
+  {{/if}}
+  
+  Answer the user's question: {{{question}}}`,
 });
 
 const aiAssistantAnswersQuestionsFlow = ai.defineFlow(

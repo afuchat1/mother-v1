@@ -75,7 +75,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
 
     handleNewMessage(userMessage);
     
-    // Handle voice input with the "fast" model
     if (options?.voiceUrl && selectedModel === 'afuai-fast') {
         updateMessage(userMessageId, { text: "Voice message" });
         const upgradeMessage: Message = {
@@ -93,21 +92,21 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
         const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
         let audioDataUri: string | undefined = undefined;
 
-        const aiInput: any = { 
-            question: userQuestion, 
-            photoDataUri,
-            chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
-        };
-
         if (options?.voiceUrl && selectedModel === 'afuai-advanced') {
             const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
             audioDataUri = await toBase64(audioBlob);
-            aiInput.audioDataUri = audioDataUri;
-            aiInput.question = userQuestion || "Analyze the attached audio and its tone.";
-            if (!userQuestion) {
+             if (!userQuestion) {
+                userQuestion = "Analyze the attached audio, including its content and tone.";
                 updateMessage(userMessageId, { text: "Voice message for analysis" });
             }
         }
+
+        const aiInput: any = { 
+            question: userQuestion, 
+            photoDataUri,
+            audioDataUri,
+            chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
+        };
         
         const result = await aiAssistantAnswersQuestions(aiInput);
         
@@ -133,7 +132,11 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
         let description = error.message || 'Failed to get a response from the AI assistant.';
         let text = 'Sorry, I encountered an error. Please try again.';
 
-        if (error.message && error.message.includes('429')) {
+        if (error.message && error.message.includes('billed users')) {
+            title = 'Billing Required';
+            description = 'This AI feature is only accessible to billed users at this time.';
+            text = 'Sorry, this feature requires a billing-enabled account.';
+        } else if (error.message && error.message.includes('429')) {
             title = 'API Quota Exceeded';
             description = 'You have exceeded your free tier limit for the AI model.';
             text = 'Sorry, I cannot respond right now due to high usage. Please try again later.';
