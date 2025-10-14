@@ -206,15 +206,15 @@
       {
         "path": "/users/{userId}/chats/{chatId}/messages/{messageId}",
         "permissions": {
-           "read": "request.auth != null && request.auth.uid == userId",
-           "write": "request.auth != null && request.auth.uid == userId"
+           "read": "request.auth != null && resource.data.participantIds.hasAny([request.auth.uid])",
+           "write": "request.auth != null && request.resource.data.senderId == request.auth.uid"
         },
         "definition": {
           "entityName": "ChatMessage",
            "schema": {
             "$ref": "#/backend/entities/ChatMessage"
           },
-          "description": "Stores chat messages within a user's specific chat. Only the user can access messages in their own chat subcollections."
+          "description": "Stores chat messages within a user's specific chat. Only a chat participant can read messages. Only the sender can write a message."
         }
       },
       {
