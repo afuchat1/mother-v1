@@ -2,25 +2,33 @@
 import { useContext } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { products } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, MessageSquare, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AppContext } from '@/lib/context.tsx';
+import { useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { Product } from '@/lib/types';
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const context = useContext(AppContext);
   const { productId } = params;
+  const firestore = useFirestore();
+
+  const productRef = doc(firestore, 'afuMallListings', productId as string);
+  const { data: product, isLoading } = useDoc<Product>(productRef);
 
   if (!context) {
     return <p>Loading...</p>
   }
   const { addToCart } = context;
 
-  const product = products.find((p) => p.id === productId);
+  if (isLoading) {
+    return <div className="flex flex-col h-full items-center justify-center bg-secondary"><p>Loading product...</p></div>
+  }
 
   if (!product) {
     return (
@@ -56,6 +64,7 @@ export default function ProductDetailPage() {
             </div>
             <div className="p-4 flex flex-col">
               <h1 className="text-3xl font-bold font-headline mb-2">{name}</h1>
+              {seller && (
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={seller.avatarUrl} alt={seller.name} />
@@ -63,6 +72,7 @@ export default function ProductDetailPage() {
                 </Avatar>
                 <span className="font-medium text-muted-foreground">{seller.name}</span>
               </div>
+              )}
               <p className="text-4xl font-bold text-primary mb-6">${price.toFixed(2)}</p>
               
               <CardContent className="p-6 bg-secondary/50 rounded-lg flex-grow mb-6">

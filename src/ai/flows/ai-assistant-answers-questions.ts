@@ -13,21 +13,7 @@ import {z} from 'genkit';
 import { findUser, findProduct, browse } from '../tools/app-tools';
 
 const AiAssistantAnswersQuestionsInputSchema = z.object({
-  question: z.string().describe('The question to be answered by the AI.'),
-  photoDataUri: z.string().optional().describe(
-    "A photo, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-  ),
-  audioDataUri: z.string().optional().describe(
-    "An audio recording, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-  ),
-   repliedToMessage: z.object({
-    sender: z.string(),
-    text: z.string(),
-  }).optional().describe('The message being replied to, for context.'),
-  chatHistory: z.array(z.object({
-    sender: z.string(),
-    text: z.string(),
-  })).optional().describe('The last few messages in the chat for context.'),
+  prompt: z.array(z.any()).describe("The multi-modal prompt for the AI model."),
 });
 export type AiAssistantAnswersQuestionsInput = z.infer<typeof AiAssistantAnswersQuestionsInputSchema>;
 
@@ -52,38 +38,8 @@ const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
     tools: [findUser, findProduct, browse],
   },
   async (input) => {
-    const { question, photoDataUri, audioDataUri, chatHistory, repliedToMessage } = input;
-
-    let promptText = `You are a helpful AI assistant. Use the available tools to answer questions.`;
-    
-    if (audioDataUri) {
-      promptText += ` The user has sent an audio message. Your primary task is to listen to it and provide a conversational reply.`;
-    }
-    if (photoDataUri) {
-      promptText += ` The user has also sent a photo.`;
-    }
-
-    if (chatHistory && chatHistory.length > 0) {
-      promptText += '\n\nHere is the recent chat history for additional context:\n';
-      promptText += chatHistory.map(m => `- ${m.sender}: ${m.text}`).join('\n');
-    }
-
-    if (repliedToMessage) {
-        promptText += `\n\nYou are replying to "${repliedToMessage.text}" from ${repliedToMessage.sender}.`;
-    }
-
-    promptText += `\n\nUser's message: ${question}`;
-
-    const promptParts: any[] = [{ text: promptText }];
-    if (photoDataUri) {
-      promptParts.push({ media: { url: photoDataUri } });
-    }
-    if (audioDataUri) {
-        promptParts.push({ media: { url: audioDataUri } });
-    }
-
     const { output } = await ai.generate({
-      prompt: promptParts,
+      prompt: input.prompt,
       output: { schema: AiAssistantAnswersQuestionsOutputSchema },
     });
 

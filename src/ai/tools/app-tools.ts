@@ -9,8 +9,24 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { users, products } from '@/lib/data';
 import { parse } from 'node-html-parser';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+
+// Initialize Firebase Admin SDK if not already initialized
+if (!getApps().length) {
+  try {
+    // Try to initialize with service account from environment variables
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string);
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+  } catch(e) {
+    console.warn("Could not initialize Firebase Admin SDK. AI Tools requiring database access will not work.", e);
+  }
+}
+
+const db = getFirestore();
 
 export const findUser = ai.defineTool(
   {
@@ -24,28 +40,37 @@ export const findUser = ai.defineTool(
       id: z.string().optional(),
       name: z.string().optional(),
       avatarUrl: z.string().optional(),
-      bio: z.string().optional(),
-      productsSold: z.array(z.object({
-          id: z.string(),
-          name: z.string(),
-          price: z.number(),
-      })).optional(),
+      productsSoldCount: z.number().optional(),
     }),
   },
   async ({ name }) => {
     console.log(`[findUser] Searching for: ${name}`);
-    const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
-    if (user) {
-        return {
-            found: true,
-            id: user.id,
-            name: user.name,
-            avatarUrl: user.avatarUrl,
-            bio: user.bio,
-            productsSold: user.productsSold?.map(p => ({ id: p.id, name: p.name, price: p.price }))
-        };
+    try {
+      const usersRef = db.collection('users');
+      // Using '==' for an exact match on the name. Firestore is case-sensitive.
+      const snapshot = await usersRef.where('name', '==', name).limit(1).get();
+
+      if (snapshot.empty) {
+        return { found: false };
+      }
+
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data();
+
+      // Get count of products sold by this user
+      const productsSnapshot = await db.collection('afuMallListings').where('sellerId', '==', userDoc.id).get();
+
+      return {
+          found: true,
+          id: userDoc.id,
+          name: userData.name,
+          avatarUrl: userData.avatarUrl,
+          productsSoldCount: productsSnapshot.size,
+      };
+    } catch (error) {
+        console.error('[findUser] Error:', error);
+        return { found: false };
     }
-    return { found: false };
   }
 );
 
@@ -68,13 +93,32 @@ export const findProduct = ai.defineTool(
     },
     async ({ query }) => {
       console.log(`[findProduct] Searching for: ${query}`);
-      const lowercasedQuery = query.toLowerCase();
-      const foundProducts = products.filter(
-        p =>
-          p.name.toLowerCase().includes(lowercasedQuery) ||
-          p.description.toLowerCase().includes(lowercasedQuery)
-      );
-      return foundProducts.map(({ id, name, description, price }) => ({ id, name, description, price }));
+      try {
+        // Firestore does not support case-insensitive search natively.
+        // A common workaround is to store a lower-case version of searchable fields.
+        // For this demo, we'll fetch all and filter, which is not scalable.
+        const productsRef = db.collection('afuMallListings');
+        const snapshot = await productsRef.get();
+        
+        const lowercasedQuery = query.toLowerCase();
+        const foundProducts: any[] = [];
+
+        snapshot.forEach(doc => {
+            const product = doc.data();
+            if (
+                product.name.toLowerCase().includes(lowercasedQuery) ||
+                product.description.toLowerCase().includes(lowercasedQuery)
+            ) {
+                foundProducts.push({ id: doc.id, ...product });
+            }
+        });
+
+        return foundProducts.map(({ id, name, description, price }) => ({ id, name, description, price }));
+
+      } catch (error) {
+        console.error('[findProduct] Error:', error);
+        return [];
+      }
     }
 );
 

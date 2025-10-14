@@ -4,14 +4,25 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Product } from '@/lib/types';
+import { useDoc, useMemoFirebase } from '@/firebase';
+import { doc, getFirestore } from 'firebase/firestore';
 
 type ProductCardProps = {
   product: Product;
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const firestore = getFirestore();
+  
+  const sellerRef = useMemoFirebase(() => {
+      if (!product.sellerId) return null;
+      return doc(firestore, 'users', product.sellerId);
+  }, [firestore, product.sellerId]);
+  
+  const { data: seller } = useDoc(sellerRef);
+
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg bg-background">
+    <Card className="overflow-hidden transition-all hover:shadow-lg bg-background max-w-md mx-auto">
       <CardHeader className="p-0">
         <Link href={`/app/mall/${product.id}`}>
             <Image
@@ -32,10 +43,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       <CardFooter className="flex justify-between p-4 pt-0">
          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Avatar className="h-6 w-6">
-                <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} />
-                <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
+                <AvatarImage src={seller?.avatarUrl} alt={seller?.name} />
+                <AvatarFallback>{seller?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span>{product.seller.name}</span>
+            <span>{seller?.name}</span>
         </div>
         <Link href={`/app/mall/${product.id}`} passHref>
           <Button variant="outline" size="sm">View</Button>

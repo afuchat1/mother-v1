@@ -14,38 +14,63 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { Product } from '@/lib/types';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 
 type AddProductDialogProps = {
   children: React.ReactNode;
-  onAddProduct: (product: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => void;
 };
 
-export default function AddProductDialog({ children, onAddProduct }: AddProductDialogProps) {
+export default function AddProductDialog({ children }: AddProductDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
 
   const handleSubmit = () => {
-    if (name && description && price) {
-      onAddProduct({
+    if (name && description && price && user) {
+      const productsCollectionRef = collection(firestore, 'afuMallListings');
+      
+      const newProductPayload = {
         name,
         description,
         price: parseFloat(price),
+        sellerId: user.uid,
+        imageUrl: `https://picsum.photos/seed/${name.replace(/\s/g, '')}/600/400`, // Placeholder
+        // @ts-ignore
+        createdAt: serverTimestamp(),
+      };
+
+      addDocumentNonBlocking(productsCollectionRef, newProductPayload);
+      
+      toast({
+        title: 'Product Listed!',
+        description: `${name} is now available in the AfuMall.`,
       });
+
       // Reset fields and close dialog
       setName('');
       setDescription('');
       setPrice('');
       setIsOpen(false);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Missing information',
+            description: 'Please fill out all fields.',
+        });
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-[calc(100vw-2rem)] w-full">
+      <DialogContent className="w-full">
         <DialogHeader>
           <DialogTitle className='font-headline'>List a New Product</DialogTitle>
           <DialogDescription>
@@ -71,7 +96,7 @@ export default function AddProductDialog({ children, onAddProduct }: AddProductD
               Price ($)
             </Label>
           </div>
-           <div className="grid w-full max-w-sm items-center gap-1.5">
+           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="picture" className='relative !-translate-y-0 !scale-100 peer-placeholder-shown:!translate-y-0 !top-0 peer-focus:!left-auto'>
               Image
             </Label>

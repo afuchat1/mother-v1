@@ -96,7 +96,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <Link href="/app/cart" className="fixed bottom-20 right-4 z-20">
                 <Button size="icon" className="rounded-full h-14 w-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90">
                     <ShoppingCart className="h-6 w-6" />
-                    <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center rounded-full bg-destructive text-destructive-foreground p-0">{cartItemCount}</Badge>
+                    <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center rounded-full bg-destructive text-destructive-foreground p-0">{cartItem-count}</Badge>
                 </Button>
             </Link>
         )}

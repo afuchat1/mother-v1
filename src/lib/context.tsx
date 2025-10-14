@@ -1,15 +1,19 @@
 'use client';
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { Chat, CartItem, Product, Message } from '@/lib/types';
+import type { User } from 'firebase/auth';
 
 // App Context
 type AppContextType = {
+  currentUser: User | null;
   activeChat: Chat | null;
   setActiveChat: (chat: Chat | null) => void;
   cart: CartItem[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
+  // These are now no-ops as data is fetched from Firebase directly in components.
+  // Kept to avoid prop-drilling and extensive refactoring of components that don't need to be Firebase-aware.
   chats: Chat[];
   products: Product[];
   addMessageToChat: (chatId: string, message: Message) => void;

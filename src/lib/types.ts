@@ -1,16 +1,23 @@
-export type User = {
+import { Timestamp } from "firebase/firestore";
+
+export type UserProfile = {
   id: string;
   name: string;
   avatarUrl: string;
   bio?: string;
-  productsSold?: Product[];
+};
+
+export const aiUser: UserProfile = {
+  id: 'ai',
+  name: 'AfuAi',
+  avatarUrl: 'https://picsum.photos/seed/ai/40/40',
 };
 
 export type Message = {
   id: string;
   text: string;
-  createdAt: string;
-  sender: User;
+  timestamp: Timestamp;
+  senderId: string;
   imageUrl?: string;
   voiceUrl?: string;
   videoUrl?: string;
@@ -19,11 +26,11 @@ export type Message = {
 
 export type Chat = {
   id: string;
-  type: 'dm' | 'group' | 'ai';
+  type: 'dm' | 'group';
   name: string;
   avatarUrl?: string;
-  members?: User[];
-  messages: Message[];
+  participantIds?: string[];
+  lastMessage?: Message; 
 };
 
 export type Product = {
@@ -32,7 +39,8 @@ export type Product = {
   description: string;
   price: number;
   imageUrl: string;
-  seller: User;
+  sellerId: string;
+  seller?: UserProfile; // Denormalized seller info
 };
 
 export type CartItem = {

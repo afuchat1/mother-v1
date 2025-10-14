@@ -5,15 +5,20 @@ import ProductCard from "@/components/mall/product-card";
 import AddProductDialog from "@/components/mall/add-product-dialog";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCollection, useFirestore, useUser } from "@/firebase";
+import { collection } from "firebase/firestore";
+import type { Product } from "@/lib/types";
 
 export default function MallPage() {
-  const context = useContext(AppContext);
+  const firestore = useFirestore();
+  const { user } = useUser();
 
-  if (!context) {
+  const productsRef = collection(firestore, 'afuMallListings');
+  const { data: products, isLoading } = useCollection<Product>(productsRef);
+
+  if (isLoading || !user) {
     return <p>Loading...</p>
   }
-
-  const { products, addProduct } = context;
 
   return (
     <main className="flex flex-col h-full bg-secondary">
@@ -25,7 +30,7 @@ export default function MallPage() {
                 Discover products from your community.
               </p>
             </div>
-            <AddProductDialog onAddProduct={addProduct}>
+            <AddProductDialog>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" /> New Product
               </Button>
@@ -34,7 +39,7 @@ export default function MallPage() {
       </header>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid grid-cols-1 gap-6">
-          {products.map((product) => (
+          {products && products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

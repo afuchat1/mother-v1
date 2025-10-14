@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Poppins, PT_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from '@/lib/context.tsx';
+import { ThemeProvider } from '@/lib/context';
+import { FirebaseClientProvider } from "@/firebase";
+
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -34,7 +36,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${poppins.variable} ${ptSans.variable}`}>
       <body className="font-body antialiased">
         <ThemeProvider>
-          {children}
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>
       </body>

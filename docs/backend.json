@@ -176,57 +176,27 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. Path-based ownership for private user data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "description": "Stores user profile information. Path-based ownership for private user data."
         }
       },
       {
-        "path": "/users/{userId}/chatRooms/{chatRoomId}",
+        "path": "/chatRooms/{chatRoomId}",
         "definition": {
           "entityName": "ChatRoom",
           "schema": {
             "$ref": "#/backend/entities/ChatRoom"
           },
-          "description": "Stores chat room metadata. Includes denormalized 'participantIds' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "chatRoomId",
-              "description": "The unique identifier for the chat room."
-            }
-          ]
+          "description": "Stores chat room metadata. Includes denormalized 'participantIds' for authorization independence."
         }
       },
       {
-        "path": "/users/{userId}/chatRooms/{chatRoomId}/messages/{messageId}",
+        "path": "/chatRooms/{chatRoomId}/messages/{messageId}",
         "definition": {
           "entityName": "ChatMessage",
           "schema": {
             "$ref": "#/backend/entities/ChatMessage"
           },
-          "description": "Stores chat messages within a chat room. Inherits authorization from the chat room.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "chatRoomId",
-              "description": "The unique identifier for the chat room."
-            },
-            {
-              "name": "messageId",
-              "description": "The unique identifier for the chat message."
-            }
-          ]
+          "description": "Stores chat messages within a chat room. Inherits authorization from the chat room."
         }
       },
       {
@@ -236,16 +206,9 @@
           "schema": {
             "$ref": "#/backend/entities/AfuMallListing"
           },
-          "description": "Stores AfuMall product listings. Access is controlled by the 'sellerId' field.",
-          "params": [
-            {
-              "name": "listingId",
-              "description": "The unique identifier for the AfuMall listing."
-            }
-          ]
+          "description": "Stores AfuMall product listings. Access is controlled by the 'sellerId' field."
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to support AfuChat's core features: user profiles, chat system, AfuMall, and AI assistant integration. It prioritizes authorization independence, clarity, and scalability. User profiles are stored in a dedicated collection. ChatRooms and ChatMessages are nested under users to ensure clear ownership and authorization. AfuMall listings are stored in a separate collection and owned by users via the sellerId field. This design allows for efficient querying and secure access control. Denormalization is applied where necessary to avoid complex queries and maintain data integrity. Specifically, for ChatRooms, the participantIds are denormalized to ensure authorization independence. This avoids the need for complex `get()` calls in security rules when accessing messages within a chat room. All paths follow a consistent naming convention, and ownership is explicitly defined to simplify security rules and improve debuggability. The structure supports QAPs (Rules are not Filters) by segregating data with different access requirements into separate collections, like storing user profiles separate from AfuMall listings."
+    ]
   }
 }

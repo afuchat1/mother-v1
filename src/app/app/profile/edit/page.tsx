@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { currentUser } from "@/lib/data";
+import { useState, useContext, useEffect } from 'react';
+import { AppContext } from "@/lib/context.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,27 +8,53 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ProfilePageHeader from '@/components/profile-page-header';
 import { Camera } from 'lucide-react';
+import { useFirestore, useUser, useDoc } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import type { UserProfile } from '@/lib/types';
 
 export default function EditProfilePage() {
-    const [name, setName] = useState(currentUser.name);
-    const [bio, setBio] = useState(currentUser.bio || '');
+    const firestore = useFirestore();
+    const { user: authUser } = useUser();
+    const { toast } = useToast();
+
+    const userDocRef = authUser ? doc(firestore, 'users', authUser.uid) : null;
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+    const [name, setName] = useState('');
+    const [bio, setBio] = useState('');
+
+    useEffect(() => {
+        if (userProfile) {
+            setName(userProfile.name || authUser?.displayName || '');
+            setBio(userProfile.bio || '');
+        }
+    }, [userProfile, authUser]);
 
     const handleSaveChanges = () => {
-        // In a real app, this would save changes to the backend.
-        alert('Changes saved!');
+        if (!userDocRef) return;
+        setDoc(userDocRef, {
+            name: name,
+            bio: bio,
+        }, { merge: true });
+        toast({ title: "Profile updated!"});
     };
+
+    if (!authUser) {
+        return <p>Loading...</p>
+    }
 
     return (
         <main className="h-full flex flex-col bg-secondary">
             <ProfilePageHeader title="Edit Profile" />
             <div className="flex-1 overflow-y-auto p-4">
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-8 w-full">
                     <div className="flex flex-col items-center gap-4">
                         <div className="relative">
                             <Avatar className="h-24 w-24 border-4 border-primary/50">
-                                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                                <AvatarImage src={authUser.photoURL || undefined} alt={name} />
                                 <AvatarFallback>
-                                {currentUser.name.charAt(0)}
+                                {name?.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
                              <Button size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 border-2 border-background">

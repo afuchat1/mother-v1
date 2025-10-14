@@ -1,18 +1,20 @@
 'use client';
-import { useState, useRef, useEffect, useTransition, useContext } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Chat, Message } from "@/lib/types";
-import ChatAvatar from "./chat-avatar";
+import type { Chat, Message, UserProfile } from "@/lib/types";
+import { ChatAvatar } from "./chat-avatar";
 import ChatMessages from "./chat-messages";
 import ChatInput from "./chat-input";
-import AiChatHandler from "./ai-chat-handler";
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MoreVertical, ArrowDown } from 'lucide-react';
-import { currentUser, aiUser } from '@/lib/data';
+import { aiUser } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
-import { AppContext } from '@/lib/context.tsx';
+import { useFirestore, useUser, useCollection, useDoc } from '@/firebase';
+import { collection, serverTimestamp, query, orderBy, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useMemoFirebase } from '@/firebase/provider';
 
 
 type ChatViewProps = {
@@ -21,15 +23,22 @@ type ChatViewProps = {
 };
 
 export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewProps) {
-  const context = useContext(AppContext);
   const router = useRouter();
+  const firestore = useFirestore();
+  const { user: currentUser } = useUser();
 
-  if (!context) {
+  if (!currentUser) {
     return <p>Loading...</p>
   }
   
-  const { addMessageToChat, chats } = context;
-  const chat = chats.find(c => c.id === initialChat.id) || initialChat;
+  const chatRef = doc(firestore, `users/${currentUser.uid}/chats`, initialChat.id);
+  const { data: chatData } = useDoc<Chat>(chatRef);
+
+  const messagesRef = collection(chatRef, 'messages');
+  const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+
+  const { data: messages, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
+  const chat = { ...initialChat, ...chatData, messages: messages || [] };
 
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
@@ -111,18 +120,18 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     const currentReplyTo = replyTo;
     const currentChatHistory = chat.messages;
 
-    const newMessage: Message = {
-        id: `msg_${Date.now()}`,
+    const newMessagePayload: Omit<Message, 'id'> = {
         text: input,
-        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sender: currentUser,
+        senderId: currentUser.uid,
         imageUrl: image ? URL.createObjectURL(image) : undefined,
         voiceUrl: options?.voiceUrl,
         videoUrl: options?.videoUrl,
         replyTo: currentReplyTo ?? undefined,
+        // @ts-ignore
+        timestamp: serverTimestamp(),
     };
-
-    addMessageToChat(chat.id, newMessage);
+    
+    addDocumentNonBlocking(messagesRef, newMessagePayload);
     
     setInput('');
     setImage(null);
@@ -130,7 +139,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     
     const shouldTriggerAi = chat.type === 'group' && (
         sentInput.toLowerCase().includes('@afuai') || 
-        (currentReplyTo && currentReplyTo.sender.id === aiUser.id)
+        (currentReplyTo && currentReplyTo.senderId === aiUser.id)
     );
 
     if (shouldTriggerAi) {
@@ -138,12 +147,12 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
             try {
                 const aiInput: any = { 
                   question: sentInput,
-                  chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
+                  chatHistory: currentChatHistory.slice(-15).map(m => ({ senderId: m.senderId, text: m.text || 'Voice Message' })),
                 };
 
                 if (currentReplyTo) {
                   aiInput.repliedToMessage = {
-                    sender: currentReplyTo.sender.name,
+                    senderId: currentReplyTo.senderId,
                     text: currentReplyTo.text,
                   };
                 }
@@ -155,13 +164,12 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                 }
         
                 if (result.answer) {
-                    const aiMessage: Message = {
-                      id: `ai_${Date.now()}`,
+                    const aiMessagePayload = {
                       text: result.answer,
-                      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      sender: aiUser,
+                      senderId: aiUser.id,
+                      timestamp: serverTimestamp(),
                     };
-                    addMessageToChat(chat.id, aiMessage);
+                    addDocumentNonBlocking(messagesRef, aiMessagePayload);
                 } else {
                     throw new Error('The AI assistant returned an empty response.');
                 }
@@ -181,13 +189,12 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                   title: title,
                   description: description,
                 });
-                const errorMessage: Message = {
-                    id: `err_${Date.now()}`,
+                const errorMessagePayload = {
                     text: text,
-                    createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    sender: aiUser,
+                    senderId: aiUser.id,
+                    timestamp: serverTimestamp(),
                 };
-                addMessageToChat(chat.id, errorMessage);
+                addDocumentNonBlocking(messagesRef, errorMessagePayload);
             }
         });
     }
@@ -197,18 +204,26 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
       setActiveChat(null);
       router.push('/app/chat');
   }
+  
+  const otherParticipantId = chat.participantIds?.find(id => id !== currentUser.uid);
+  const otherUserRef = useMemoFirebase(() => {
+    if(chat.type !== 'dm' || !otherParticipantId) return null;
+    return doc(firestore, 'users', otherParticipantId);
+  }, [firestore, chat.type, otherParticipantId]);
 
-  const commonHeader = (
+  const { data: otherUser } = useDoc<UserProfile>(otherUserRef);
+
+  const header = (
     <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
         <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft />
         </Button>
-        <ChatAvatar chat={chat} />
+        <ChatAvatar chat={chat} senderId={chat.type === 'dm' ? otherParticipantId : undefined} />
         <div className="flex-1">
-          <h2 className="font-semibold font-headline text-base">{chat.name}</h2>
+          <h2 className="font-semibold font-headline text-base">{chat.type === 'dm' ? otherUser?.name : chat.name}</h2>
           {chat.type !== 'ai' && (
             <p className="text-sm text-muted-foreground">
-                {chat.type === 'dm' ? 'Online' : `${chat.members?.length} members`}
+                {chat.type === 'dm' ? 'Online' : `${chat.participantIds?.length || 0} members`}
             </p>
           )}
         </div>
@@ -219,9 +234,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   );
 
   const renderContent = () => {
-    if (chat.type === 'ai') {
-        // AI Chat has its own self-contained logic handler
-        return <AiChatHandler />;
+    if (messagesLoading) {
+      return <div className="flex-1 flex items-center justify-center"><p>Loading messages...</p></div>
     }
 
     return (
@@ -232,7 +246,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                     {isAiReplying && (
                         <div className="p-4">
                             <div className="flex items-end gap-2 justify-start">
-                            <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                            <ChatAvatar senderId={aiUser.id} />
                             <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
                                 <div className="flex items-center space-x-2 p-2">
                                     <Skeleton className="h-2 w-2 rounded-full" />
@@ -272,7 +286,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   return (
     <>
-        {commonHeader}
+        {header}
         {renderContent()}
     </>
   );

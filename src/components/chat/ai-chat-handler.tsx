@@ -1,14 +1,17 @@
 'use client';
 import { useState, useTransition, useRef, useEffect, useContext } from 'react';
-import type { Chat, Message } from '@/lib/types';
-import { aiUser, currentUser } from '@/lib/data';
-import ChatAvatar from './chat-avatar';
+import type { Message } from '@/lib/types';
 import ChatMessages from './chat-messages';
 import AiChatInput from './ai-chat-input';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
-import { AppContext } from '@/lib/context.tsx';
+import { useFirebase, useCollection } from '@/firebase';
+import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ChatAvatar } from '@/components/chat/chat-avatar';
+import { aiUser } from '@/lib/types';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 // Helper to convert file or blob to base64
 const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -19,29 +22,16 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
 });
 
 export default function AiChatHandler() {
-  const context = useContext(AppContext);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  if (!context) {
-    return <p>Loading context...</p>
-  }
+  const { user, firestore } = useFirebase();
 
-  const { chats, addMessageToChat, updateMessageInChat } = context;
-  const chat = chats.find(c => c.type === 'ai');
+  const messagesRef = collection(firestore, 'users', user?.uid || 'anon', 'aiChat', 'messages');
+  const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
 
-  if (!chat) {
-    return <p>AI Chat not found.</p>
-  }
-
-  const handleNewMessage = (newMessage: Message) => {
-    addMessageToChat(chat.id, newMessage);
-  };
-  
-  const updateMessage = (messageId: string, updates: Partial<Message>) => {
-    updateMessageInChat(chat.id, messageId, updates);
-  };
+  const { data: messages } = useCollection<Message>(messagesQuery);
+  const aiChat = { messages: messages || [] };
 
   const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
     if (scrollRef.current) {
@@ -58,63 +48,61 @@ export default function AiChatHandler() {
 
    useEffect(() => {
     scrollToBottom('smooth');
-  }, [chat.messages, isPending]);
+  }, [aiChat.messages, isPending]);
 
 
   const handleSubmit = async (text: string, options?: { voiceUrl?: string, selectedModel?: string, imageFile?: File | null }) => {
     if (!text.trim() && !options?.imageFile && !options?.voiceUrl) return;
 
-    let userQuestion = text;
-    const userMessageId = `user_${Date.now()}`;
-    const currentImageToSend = options?.imageFile;
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Not signed in', description: 'You must be signed in to chat with the AI.'});
+        return;
+    }
+
     const selectedModel = options?.selectedModel || 'afuai-fast';
     
-    const currentChatHistory = chat.messages;
-
-    const userMessage: Message = {
-      id: userMessageId,
-      text: text,
-      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      sender: currentUser,
-      imageUrl: currentImageToSend ? URL.createObjectURL(currentImageToSend) : undefined,
-      voiceUrl: options?.voiceUrl,
-    };
-
-    handleNewMessage(userMessage);
-    
     if (options?.voiceUrl && selectedModel === 'afuai-fast') {
-        updateMessage(userMessageId, { text: "Voice message" });
-        const upgradeMessage: Message = {
-            id: `ai_upgrade_${Date.now()}`,
+        const upgradeMessage: Omit<Message, 'id'> = {
             text: "It looks like you're trying to send a voice message. To have the AI analyze audio, please upgrade to AfuAi Advanced.",
-            createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            sender: aiUser,
+            senderId: aiUser.id,
+            // @ts-ignore
+            timestamp: serverTimestamp(),
         };
-        handleNewMessage(upgradeMessage);
-        return; // Stop further processing
+        addDocumentNonBlocking(messagesRef, upgradeMessage);
+        return; 
     }
+
+    const userMessage: Omit<Message, 'id'> = {
+      text: text || "This is a voice message. Please respond to it.",
+      senderId: user.uid,
+      imageUrl: options?.imageFile ? URL.createObjectURL(options.imageFile) : undefined,
+      voiceUrl: options?.voiceUrl,
+      // @ts-ignore
+      timestamp: serverTimestamp(),
+    };
+    addDocumentNonBlocking(messagesRef, userMessage);
 
     startTransition(async () => {
       try {
-        const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
-        let audioDataUri: string | undefined = undefined;
+        const promptParts: any[] = [];
+        const currentChatHistory = aiChat.messages.slice(-15);
+        
+        let promptText = `Chat History:\n${currentChatHistory.map(m => `${m.senderId === user.uid ? 'User' : 'AI'}: ${m.text}`).join('\n')}\n\nUser: ${text}`;
+        
+        promptParts.push({ text: promptText });
+        
+        if (options?.imageFile) {
+            const photoDataUri = await toBase64(options.imageFile);
+            promptParts.push({ media: { url: photoDataUri } });
+        }
 
         if (options?.voiceUrl && selectedModel === 'afuai-advanced') {
             const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
-            audioDataUri = await toBase64(audioBlob);
-             if (!userQuestion) {
-                userQuestion = "This is a voice message. Please respond to it.";
-                updateMessage(userMessageId, { text: "Voice message" });
-            }
+            const audioDataUri = await toBase64(audioBlob);
+            promptParts.push({ media: { url: audioDataUri } });
         }
 
-        const aiInput: any = { 
-            question: userQuestion, 
-            photoDataUri,
-            audioDataUri,
-            chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
-        };
-        
+        const aiInput = { prompt: promptParts };
         const result = await aiAssistantAnswersQuestions(aiInput);
         
         const error = (result as any).error;
@@ -123,13 +111,13 @@ export default function AiChatHandler() {
         }
 
         if (result.answer) {
-            const aiMessage: Message = {
-              id: `ai_${Date.now()}`,
+            const aiMessage: Omit<Message, 'id'> = {
               text: result.answer,
-              createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              sender: aiUser,
+              senderId: aiUser.id,
+              // @ts-ignore
+              timestamp: serverTimestamp(),
             };
-            handleNewMessage(aiMessage);
+            addDocumentNonBlocking(messagesRef, aiMessage);
         } else {
             throw new Error('The AI assistant returned an empty response.');
         }
@@ -155,13 +143,13 @@ export default function AiChatHandler() {
           description: description,
         });
 
-        const errorMessage: Message = {
-            id: `err_${Date.now()}`,
+        const errorMessage: Omit<Message, 'id'> = {
             text: text,
-            createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            sender: aiUser,
+            senderId: aiUser.id,
+            // @ts-ignore
+            timestamp: serverTimestamp(),
         };
-        handleNewMessage(errorMessage);
+        addDocumentNonBlocking(messagesRef, errorMessage);
       }
     });
   };
@@ -170,10 +158,10 @@ export default function AiChatHandler() {
     <>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <div className="relative p-4">
-            <ChatMessages messages={chat.messages} onReply={() => {}} />
+            <ChatMessages messages={aiChat.messages} onReply={() => {}} />
             {isPending && (
             <div className="flex items-end gap-2 justify-start mt-4">
-                <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
+                <ChatAvatar senderId={aiUser.id} />
                 <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
                     <div className="flex items-center space-x-2 p-2">
                         <Skeleton className="h-2 w-2 rounded-full animate-pulse" />
