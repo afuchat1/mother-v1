@@ -4,18 +4,20 @@ import { useRouter } from 'next/navigation';
 import ProfilePageHeader from '@/components/profile-page-header';
 import { Input } from '@/components/ui/input';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, serverTimestamp, getDocs, limit, addDoc } from 'firebase/firestore';
+import { collection, query, where, serverTimestamp, getDocs, limit, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile, Chat } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 export default function NewChatPage() {
   const router = useRouter();
   const firestore = useFirestore();
   const { user: currentUser } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   const usersQuery = useMemoFirebase(() => {
-    if (!searchTerm.trim()) return null;
+    if (!firestore || !searchTerm.trim()) return null;
     return query(
       collection(firestore, 'users'),
       where('name', '>=', searchTerm),
@@ -27,59 +29,61 @@ export default function NewChatPage() {
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
   const handleSelectUser = async (selectedUser: UserProfile) => {
-    if (!currentUser) return;
+    if (!currentUser || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to start a chat.' });
+        return;
+    };
     if (currentUser.uid === selectedUser.id) {
-        router.push('/app/chat'); // Cannot chat with yourself
+        toast({ title: 'Chat with yourself?', description: "You can't start a chat with yourself." });
         return;
     }
 
-    // Check if a DM chat already exists
-    const chatsRef = collection(firestore, `users/${currentUser.uid}/chats`);
-    const existingChatQuery = query(
-        chatsRef, 
-        where('type', '==', 'dm'),
-        where('participantIds', 'array-contains', selectedUser.id)
-    );
+    // A more robust way to create a unique DM chat ID
+    const chatId = [currentUser.uid, selectedUser.id].sort().join('_');
+    const chatDocRef = doc(firestore, `users/${currentUser.uid}/chats/${chatId}`);
+    
+    const docSnap = await getDoc(chatDocRef);
 
-    const querySnapshot = await getDocs(existingChatQuery);
-    if (!querySnapshot.empty) {
+    if (docSnap.exists()) {
         // Chat already exists, navigate to it
-        const chatId = querySnapshot.docs[0].id;
         router.push(`/app/chat/${chatId}`);
     } else {
-        // Create a new chat for both users
-        const newChat: Omit<Chat, 'id'> = {
+        // --- Create a new chat for both users ---
+        const now = serverTimestamp();
+
+        // Chat object for the current user
+        const currentUserChat: Omit<Chat, 'id'> = {
             type: 'dm',
             participantIds: [currentUser.uid, selectedUser.id],
-            name: selectedUser.name, // For the current user's chat list
+            name: selectedUser.name, 
             avatarUrl: selectedUser.avatarUrl,
             lastMessage: {
-                text: 'Chat created',
+                text: 'You are now connected!',
                 senderId: 'system',
                 // @ts-ignore
-                timestamp: serverTimestamp(),
+                timestamp: now,
             }
         };
 
-        // Add chat to current user's subcollection
-        const currentUserChatRef = await addDoc(collection(firestore, `users/${currentUser.uid}/chats`), newChat);
-
-        // Add chat to the other user's subcollection
+        // Chat object for the other user
         const otherUserChat: Omit<Chat, 'id'> = {
              type: 'dm',
             participantIds: [currentUser.uid, selectedUser.id],
-            name: currentUser.displayName || 'User',
+            name: currentUser.displayName || 'New Contact',
             avatarUrl: currentUser.photoURL || '',
              lastMessage: {
-                text: 'Chat created',
+                text: 'You are now connected!',
                 senderId: 'system',
                 // @ts-ignore
-                timestamp: serverTimestamp(),
+                timestamp: now,
             }
         }
-        await addDoc(collection(firestore, `users/${selectedUser.id}/chats`), otherUserChat);
 
-        router.push(`/app/chat/${currentUserChatRef.id}`);
+        // Set the chat document in both users' subcollections
+        await setDoc(chatDocRef, currentUserChat);
+        await setDoc(doc(firestore, `users/${selectedUser.id}/chats/${chatId}`), otherUserChat);
+
+        router.push(`/app/chat/${chatId}`);
     }
   };
 

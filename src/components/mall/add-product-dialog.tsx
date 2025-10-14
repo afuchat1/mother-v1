@@ -33,6 +33,7 @@ export default function AddProductDialog({ children }: AddProductDialogProps) {
   const { toast } = useToast();
 
   const handleSubmit = () => {
+    if (!firestore) return;
     if (name && description && price && user) {
       const productsCollectionRef = collection(firestore, 'afuMallListings');
       
@@ -85,8 +86,8 @@ export default function AddProductDialog({ children }: AddProductDialogProps) {
             </Label>
           </div>
           <div className="relative">
-            <Textarea id="description" placeholder="Describe your product" className='peer' value={description} onChange={(e) => setDescription(e.target.value)} />
-             <Label htmlFor="description" className='-translate-y-3 top-3 peer-placeholder-shown:top-1/2'>
+            <Textarea id="description" placeholder="Describe your product" className='peer pt-2' value={description} onChange={(e) => setDescription(e.target.value)} />
+             <Label htmlFor="description" className='top-2 peer-focus:top-2 peer-placeholder-shown:top-1/2'>
               Description
             </Label>
           </div>
@@ -97,10 +98,10 @@ export default function AddProductDialog({ children }: AddProductDialogProps) {
             </Label>
           </div>
            <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="picture" className='relative !-translate-y-0 !scale-100 peer-placeholder-shown:!translate-y-0 !top-0 peer-focus:!left-auto'>
+            <Label htmlFor="picture" className='relative !-translate-y-0 !scale-100 !top-0 !p-0'>
               Image
             </Label>
-            <Input id="picture" type="file" />
+            <Input id="picture" type="file" className="h-auto p-0 border-none file:h-10 file:px-3 file:py-2 file:rounded-md file:border file:border-input"/>
           </div>
         </div>
         <DialogFooter className="flex-row">

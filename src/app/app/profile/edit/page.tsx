@@ -28,6 +28,8 @@ export default function EditProfilePage() {
         if (userProfile) {
             setName(userProfile.name || authUser?.displayName || '');
             setBio(userProfile.bio || '');
+        } else if (authUser) {
+            setName(authUser.displayName || '');
         }
     }, [userProfile, authUser]);
 
@@ -72,11 +74,11 @@ export default function EditProfilePage() {
                             <Textarea 
                                 id="bio" 
                                 placeholder="Tell us about yourself" 
-                                className="min-h-[80px] peer"
+                                className="min-h-[80px] peer pt-2"
                                 value={bio} 
                                 onChange={(e) => setBio(e.target.value)} 
                             />
-                            <Label htmlFor="bio" className='-translate-y-3 top-3 peer-placeholder-shown:top-1/2'>Bio</Label>
+                            <Label htmlFor="bio" className='top-2 peer-focus:top-2 peer-placeholder-shown:top-1/2'>Bio</Label>
                         </div>
                     </div>
 

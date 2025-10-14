@@ -125,7 +125,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
             <Textarea
                 ref={textareaRef}
                 placeholder="Message"
-                className="flex-1 resize-none bg-input border-0 rounded-full py-2 px-4 h-10 text-base max-h-32"
+                className="flex-1 resize-none bg-secondary border-0 rounded-full py-2 px-4 h-10 text-base max-h-32"
                 rows={1}
                 value={input}
                 onChange={onLocalInputChange}
