@@ -1,0 +1,153 @@
+/**
+ * @fileoverview Firestore Security Rules for AfuChat application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a user-ownership model for user profiles and AfuMall listings.
+ * Chat rooms and messages are secured based on participant lists.
+ * All write operations require authentication.
+ * Read access to AfuMall listings is public.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile data. Access is restricted to the user.
+ * - /users/{userId}/chatRooms/{chatRoomId}: Stores chat room metadata. Access is restricted to participants.
+ * - /users/{userId}/chatRooms/{chatRoomId}/messages/{messageId}: Stores chat messages. Access is inherited from the chat room.
+ * - /afuMallListings/{listingId}: Stores AfuMall listings. Access is restricted to the seller.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - Public read access is granted to AfuMall listings.
+ * - Denormalization of participantIds is used for chat room authorization.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces user-ownership for user profiles.
+     * @path /users/{userId}
+     * @allow (create) User abc creates their own profile.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.id: "abc"
+     * @allow (get, list, update, delete) User abc reads/modifies their own profile.
+     *    - auth.uid: "abc"
+     *    - resource.data.id: "abc"
+     * @deny (create) User abc tries to create a profile for user def.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.id: "def"
+     * @deny (get, list, update, delete) User abc tries to read/modify user def's profile.
+     *    - auth.uid: "abc"
+     *    - resource.data.id: "def"
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return request.auth != null && resource.data.id == request.auth.uid;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false; // User listing is not permitted
+
+      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Enforces participant-based access control for chat rooms.
+     * @path /users/{userId}/chatRooms/{chatRoomId}
+     * @allow (create) User abc creates a chat room they participate in.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.participantIds: ["abc", "def"]
+     * @allow (get, list, update, delete) User abc reads/modifies a chat room they participate in.
+     *    - auth.uid: "abc"
+     *    - resource.data.participantIds: ["abc", "def"]
+     * @deny (create) User abc tries to create a chat room they don't participate in.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.participantIds: ["def", "ghi"]
+     * @deny (get, list, update, delete) User abc tries to read/modify a chat room they don't participate in.
+     *    - auth.uid: "abc"
+     *    - resource.data.participantIds: ["def", "ghi"]
+     * @principle Restricts access to chat rooms to participating users.
+     */
+    match /users/{userId}/chatRooms/{chatRoomId} {
+      function isParticipant(chatRoom) {
+        return request.auth != null && chatRoom.data.participantIds.hasAny([request.auth.uid]);
+      }
+
+      allow get: if exists(resource) && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow list: if false;
+
+      allow create: if request.auth != null && request.resource.data.participantIds.hasAny([request.auth.uid]);
+      allow update: if exists(resource) && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow delete: if exists(resource) && resource.data.participantIds.hasAny([request.auth.uid]);
+    }
+
+    /**
+     * @description Enforces participant-based access control for chat messages within chat rooms.
+     * @path /users/{userId}/chatRooms/{chatRoomId}/messages/{messageId}
+     * @allow (create) User abc creates a message in a chat room they participate in.
+     *    - auth.uid: "abc"
+     *    - get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds: ["abc", "def"]
+     *    - request.resource.data.senderId: "abc"
+     * @allow (get, list) User abc reads messages in a chat room they participate in.
+     *    - auth.uid: "abc"
+     *    - get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds: ["abc", "def"]
+     * @deny (create) User abc tries to create a message in a chat room they don't participate in.
+     *    - auth.uid: "abc"
+     *    - get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds: ["def", "ghi"]
+     * @deny (get, list, update, delete) User abc tries to read messages in a chat room they don't participate in.
+     *    - auth.uid: "abc"
+     *    - get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds: ["def", "ghi"]
+     * @principle Inherits access control from the parent chat room and validates the sender.
+     */
+    match /users/{userId}/chatRooms/{chatRoomId}/messages/{messageId} {
+      function isParticipantOfChatRoom(userId, chatRoomId) {
+          return request.auth != null && get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds.hasAny([request.auth.uid]);
+      }
+
+      allow get: if exists(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)) && get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds.hasAny([request.auth.uid]);
+      allow list: if false;
+
+      allow create: if exists(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)) && get(/databases/$(database)/documents/users/$(userId)/chatRooms/$(chatRoomId)).data.participantIds.hasAny([request.auth.uid]) && request.resource.data.senderId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to AfuMall listings but restricts write access to the seller.
+     * @path /afuMallListings/{listingId}
+     * @allow (get, list) Anyone can read AfuMall listings.
+     * @allow (create) User abc creates a listing with themselves as the seller.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.sellerId: "abc"
+     * @allow (update, delete) User abc modifies their own listing.
+     *    - auth.uid: "abc"
+     *    - resource.data.sellerId: "abc"
+     * @deny (create) User abc tries to create a listing for user def.
+     *    - auth.uid: "abc"
+     *    - request.resource.data.sellerId: "def"
+     * @deny (update, delete) User abc tries to modify user def's listing.
+     *    - auth.uid: "abc"
+     *    - resource.data.sellerId: "def"
+     * @principle Allows public read access while enforcing document ownership for writes.
+     */
+    match /afuMallListings/{listingId} {
+      function isOwner(sellerId) {
+        return request.auth != null && request.auth.uid == sellerId;
+      }
+      function isExistingOwner(sellerId) {
+        return request.auth != null && resource.data.sellerId == request.auth.uid;
+      }
+
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if request.auth != null && request.resource.data.sellerId == request.auth.uid;
+      allow update: if isOwner(resource.data.sellerId);
+      allow delete: if isOwner(resource.data.sellerId);
+    }
+  }
+}
