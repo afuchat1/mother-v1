@@ -52,14 +52,14 @@ const prompt = ai.definePrompt({
   prompt: `You are a helpful AI assistant. Use the available tools to answer questions.
 
   {{#if audioDataUri}}
-  This is the audio: {{media url=audioDataUri}}.
+  Analyze the attached audio. This is the primary context. {{media url=audioDataUri}}
   {{/if}}
   {{#if photoDataUri}}
   This is the photo: {{media url=photoDataUri}}.
   {{/if}}
   
   {{#if chatHistory}}
-  Here is the recent chat history:
+  Here is the recent chat history for additional context:
   {{#each chatHistory}}
   - {{this.sender}}: {{this.text}}
   {{/each}}
@@ -69,7 +69,7 @@ const prompt = ai.definePrompt({
   You are replying to "{{repliedToMessage.text}}" from {{repliedToMessage.sender}}.
   {{/if}}
   
-  Answer the user's question: {{{question}}}`,
+  Now, answer the user's question: {{{question}}}`,
 });
 
 const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
