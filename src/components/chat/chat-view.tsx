@@ -1,5 +1,6 @@
 'use client';
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect, useTransition, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Chat, Message } from "@/lib/types";
 import ChatAvatar from "./chat-avatar";
 import ChatMessages from "./chat-messages";
@@ -11,6 +12,7 @@ import { currentUser, aiUser } from '@/lib/data';
 import { Skeleton } from '../ui/skeleton';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
+import { AppContext } from '@/lib/context.tsx';
 
 
 type ChatViewProps = {
@@ -19,7 +21,16 @@ type ChatViewProps = {
 };
 
 export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewProps) {
-  const [chat, setChat] = useState(initialChat);
+  const context = useContext(AppContext);
+  const router = useRouter();
+
+  if (!context) {
+    return <p>Loading...</p>
+  }
+  
+  const { addMessageToChat, chats } = context;
+  const chat = chats.find(c => c.id === initialChat.id) || initialChat;
+
   const [input, setInput] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -39,16 +50,12 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   };
 
   useEffect(() => {
-    setChat(initialChat);
     scrollToBottom('auto');
-  }, [initialChat]);
+  }, [chat.id]);
 
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
-
-    // Auto-scroll on initial load
-    scrollToBottom('auto');
 
     const handleScroll = () => {
         if (scrollContainer) {
@@ -73,22 +80,6 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
       }
     }
   }, [chat.messages, isAiReplying]);
-
-  const handleNewMessage = (newMessage: Message) => {
-    setChat(prevChat => ({
-        ...prevChat,
-        messages: [...prevChat.messages, newMessage]
-    }));
-  };
-
-  const updateMessage = (messageId: string, updates: Partial<Message>) => {
-    setChat(prevChat => ({
-      ...prevChat,
-      messages: prevChat.messages.map(msg => 
-        msg.id === messageId ? { ...msg, ...updates } : msg
-      )
-    }));
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -131,7 +122,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         replyTo: currentReplyTo ?? undefined,
     };
 
-    handleNewMessage(newMessage);
+    addMessageToChat(chat.id, newMessage);
     
     setInput('');
     setImage(null);
@@ -170,7 +161,7 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                       createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                       sender: aiUser,
                     };
-                    handleNewMessage(aiMessage);
+                    addMessageToChat(chat.id, aiMessage);
                 } else {
                     throw new Error('The AI assistant returned an empty response.');
                 }
@@ -196,15 +187,20 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                     createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     sender: aiUser,
                 };
-                handleNewMessage(errorMessage);
+                addMessageToChat(chat.id, errorMessage);
             }
         });
     }
   };
+  
+  const handleBack = () => {
+      setActiveChat(null);
+      router.push('/app/chat');
+  }
 
   const commonHeader = (
     <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
-        <Button variant="ghost" size="icon" onClick={() => setActiveChat(null)}>
+        <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft />
         </Button>
         <ChatAvatar chat={chat} />
@@ -224,7 +220,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   const renderContent = () => {
     if (chat.type === 'ai') {
-        return <AiChatHandler chat={chat} handleNewMessage={handleNewMessage} updateMessage={updateMessage} />;
+        // AI Chat has its own self-contained logic handler
+        return <AiChatHandler />;
     }
 
     return (

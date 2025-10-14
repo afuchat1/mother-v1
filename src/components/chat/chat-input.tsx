@@ -76,7 +76,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = recorder;
       
       const audioChunks: Blob[] = [];
@@ -171,7 +171,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
                 <Reply className="h-4 w-4 text-primary shrink-0" />
                 <div className="overflow-hidden">
                   <p className="font-semibold text-primary text-sm truncate">{replyTo.sender.name}</p>
-                  <p className="text-muted-foreground text-sm truncate">{replyTo.text || 'Voice message'}</p>
+                  <p className="text-muted-foreground text-sm truncate">{replyTo.text || (replyTo.imageUrl ? 'Image' : replyTo.voiceUrl ? 'Voice message' : 'Video message')}</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={cancelReply}>

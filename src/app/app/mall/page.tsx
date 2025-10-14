@@ -1,24 +1,19 @@
 'use client';
-import { useState } from "react";
-import { products as initialProducts, currentUser } from "@/lib/data";
+import { useContext } from "react";
+import { AppContext } from "@/lib/context.tsx";
 import ProductCard from "@/components/mall/product-card";
 import AddProductDialog from "@/components/mall/add-product-dialog";
 import { PlusCircle } from "lucide-react";
-import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 
 export default function MallPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const context = useContext(AppContext);
 
-  const addProduct = (newProductData: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => {
-    const newProduct: Product = {
-      id: `p${products.length + 1}`,
-      ...newProductData,
-      imageUrl: 'https://picsum.photos/seed/newproduct/300/200',
-      seller: currentUser,
-    };
-    setProducts(prevProducts => [newProduct, ...prevProducts]);
-  };
+  if (!context) {
+    return <p>Loading...</p>
+  }
+
+  const { products, addProduct } = context;
 
   return (
     <main className="flex flex-col h-full bg-secondary">

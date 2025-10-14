@@ -1,8 +1,9 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Send, Trash2 } from "lucide-react";
+import { Mic, Send, Trash2, Paperclip, X, Camera } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,9 +14,12 @@ import {
 import { Badge } from '../ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import CameraView from './camera-view';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+
 
 type AiChatInputProps = {
-    handleSubmit: (text: string, options?: { voiceUrl?: string, selectedModel?: string }) => void;
+    handleSubmit: (text: string, options?: { voiceUrl?: string, selectedModel?: string, imageFile?: File | null }) => void;
     isLoading?: boolean;
 }
 
@@ -28,6 +32,10 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -39,6 +47,25 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
         textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 128)}px`;
     }
   }, [input]);
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const onPhotoTaken = (file: File) => {
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setShowCamera(false);
+  };
+
+  const removeImage = () => {
+      setImageFile(null);
+      setImagePreview(null);
+  }
   
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -93,10 +120,8 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
 
   const cancelRecording = () => {
      if (mediaRecorderRef.current && isRecording) {
-      // Manually stop tracks to release mic
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      // Set a flag or different state to indicate cancellation
-      mediaRecorderRef.current.ondataavailable = null; // Stop processing further data
+      mediaRecorderRef.current.ondataavailable = null;
       mediaRecorderRef.current.onstop = null;
       mediaRecorderRef.current = null;
       
@@ -119,14 +144,34 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (input.trim()) {
-          handleSubmit(input, { selectedModel });
+      if (input.trim() || imageFile) {
+          handleSubmit(input, { selectedModel, imageFile });
           setInput('');
+          setImageFile(null);
+          setImagePreview(null);
       }
+  }
+
+  if (showCamera) {
+    return <CameraView onCapture={onPhotoTaken} onClose={() => setShowCamera(false)} />;
   }
   
   return (
     <form onSubmit={handleFormSubmit} className="relative bg-secondary/50 rounded-lg p-2">
+      {imagePreview && (
+        <div className="p-2 relative w-24 h-24">
+            <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
+            <Button
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                onClick={removeImage}
+                type="button"
+            >
+                <X className="h-4 w-4" />
+            </Button>
+        </div>
+       )}
       {isRecording ? (
         <div className="flex items-center gap-2 h-full min-h-[68px]">
           <Button 
@@ -159,19 +204,28 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
         </div>
       ) : (
       <div className="flex items-start gap-2">
-        {selectedModel === 'afuai-advanced' && (
-          <Button 
-              variant="ghost" 
-              size="icon" 
-              className="shrink-0 text-muted-foreground h-10 w-10" 
-              onClick={handleMicClick} 
-              type="button"
-              disabled={isLoading}
-          >
-            <Mic className="h-5 w-5" />
-            <span className="sr-only">Voice input</span>
-          </Button>
-        )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-10 w-10">
+                <Paperclip className="h-5 w-5" />
+                <span className="sr-only">Attach</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2 mb-2">
+              <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowCamera(true)} type="button" className="flex flex-col h-auto p-3 gap-1">
+                      <Camera className="h-5 w-5" />
+                      <span className="text-xs">Camera</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} type="button" className="flex flex-col h-auto p-3 gap-1">
+                      <Paperclip className="h-5 w-5" />
+                      <span className="text-xs">File</span>
+                  </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <input type="file" ref={fileInputRef} onChange={handleImageFileChange} className="hidden" accept="image/*" />
+
         <div className='flex-1 flex flex-col gap-2'>
             <Select value={selectedModel} onValueChange={setSelectedModel} disabled={isLoading}>
                 <SelectTrigger className="w-auto border-0 bg-transparent focus:ring-0 h-auto p-0 text-base">
@@ -209,11 +263,23 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
             />
         </div>
         <div className='flex items-end h-full'>
-            {(input && !isLoading) ? (
+            {(input || imageFile) && !isLoading ? (
               <Button type="submit" size="icon" className="shrink-0 h-10 w-10 bg-primary text-primary-foreground rounded-md">
                   <Send />
                   <span className="sr-only">Send</span>
               </Button>
+            ) : selectedModel === 'afuai-advanced' ? (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="shrink-0 text-muted-foreground h-10 w-10" 
+                    onClick={handleMicClick} 
+                    type="button"
+                    disabled={isLoading}
+                >
+                    <Mic className="h-5 w-5" />
+                    <span className="sr-only">Voice input</span>
+                </Button>
             ) : (
               <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground h-10 w-10" type="button" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M18 11v2"/><path d="M6 11v2"/><path d="M21 8.5v7"/><path d="M3 8.5v7"/></svg>

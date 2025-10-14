@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/app/chat', icon: Home, label: 'Home' },
+  { href: '/app/chat', icon: Home, label: 'Chats' },
   { href: '/app/mall', icon: Store, label: 'Shop' },
   { href: '/app/ai-chat', icon: Bot, label: 'AI' },
   { href: '/app/profile', icon: User, label: 'Account' },
@@ -72,8 +72,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const activePath = pathname;
   
-  // The bottom nav should be hidden ONLY when a specific user chat is active.
-  const showBottomNav = !activeChat;
+  const isChatView = activePath.startsWith('/app/chat/') && activeChat;
+
+  const showBottomNav = !isChatView;
   
   const showCartFab = (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 

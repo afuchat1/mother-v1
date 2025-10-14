@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import type { Chat, CartItem, Product } from '@/lib/types';
+import type { Chat, CartItem, Product, Message } from '@/lib/types';
 
 // App Context
 type AppContextType = {
@@ -10,6 +10,11 @@ type AppContextType = {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
+  chats: Chat[];
+  products: Product[];
+  addMessageToChat: (chatId: string, message: Message) => void;
+  updateMessageInChat: (chatId: string, messageId: string, updates: Partial<Message>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => void;
 };
 
 export const AppContext = createContext<AppContextType | null>(null);

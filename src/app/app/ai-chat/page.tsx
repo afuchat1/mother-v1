@@ -1,19 +1,17 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useContext } from 'react';
 import Image from 'next/image';
 import AiChatHandler from '@/components/chat/ai-chat-handler';
-import { chats } from '@/lib/data';
-import type { Chat, Message } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Menu, PenSquare, MessageSquare } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import AiChatInput from '@/components/chat/ai-chat-input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateImage } from '@/ai/flows/image-generation-flow';
 import SideMenu from '@/components/side-menu';
 import { useToast } from '@/hooks/use-toast';
+import { AppContext } from '@/lib/context.tsx';
 
 function ImagineTab() {
     const [prompt, setPrompt] = useState('');
@@ -78,43 +76,22 @@ function ImagineTab() {
 
 
 export default function AiChatPage() {
-    const initialAiChat = chats.find(c => c.type === 'ai');
-    const blankAiChat = initialAiChat ? { ...initialAiChat, messages: [] } : undefined;
-
-    const [chat, setChat] = useState<Chat | undefined>(blankAiChat);
+    const context = useContext(AppContext);
     const [activeTab, setActiveTab] = useState('ask');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    if (!chat) {
+    if (!context) {
         return <p>Loading AI Chat...</p>;
     }
 
-    const handleNewMessage = (newMessage: Message) => {
-        setChat(prevChat => {
-            if (!prevChat) return undefined;
-            // Pass the full previous chat history to the handler
-            const updatedMessages = [...prevChat.messages, newMessage];
-            return {
-                ...prevChat,
-                messages: updatedMessages
-            };
-        });
-    };
-    
-    const updateMessage = (messageId: string, updates: Partial<Message>) => {
-        setChat(prevChat => {
-            if (!prevChat) return undefined;
-            return {
-                ...prevChat,
-                messages: prevChat.messages.map(msg =>
-                    msg.id === messageId ? { ...msg, ...updates } : msg
-                )
-            };
-        });
-    };
+    const { chats, addMessageToChat } = context;
+    const aiChat = chats.find(c => c.type === 'ai');
 
     const startNewConversation = () => {
-        setChat(blankAiChat);
+        if (!aiChat) return;
+        // This is a simplified approach. A real app might create a new chat entry.
+        // For now, we'll just clear the messages of the existing AI chat.
+        addMessageToChat(aiChat.id, { id: 'clear', text: '', createdAt: '', sender: {id: '', name: '', avatarUrl: ''} });
     }
     
     return (
@@ -144,11 +121,7 @@ export default function AiChatPage() {
                 </header>
                 
                 {activeTab === 'ask' ? (
-                     <AiChatHandler 
-                        chat={chat} 
-                        handleNewMessage={handleNewMessage} 
-                        updateMessage={updateMessage}
-                    />
+                     <AiChatHandler />
                 ) : (
                     <ImagineTab />
                 )}

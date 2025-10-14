@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import type { Chat, Product, CartItem } from '@/lib/types';
+import type { Chat, Product, CartItem, Message } from '@/lib/types';
 import AppShell from '@/components/app-shell';
-import { chats as allChats } from '@/lib/data';
+import { chats as initialChats, products as initialProducts, currentUser } from '@/lib/data';
 import { AppContext } from '@/lib/context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import { usePathname } from 'next/navigation';
@@ -17,27 +17,73 @@ export default function AppLayout({
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
   const pathname = usePathname();
+  const [chats, setChats] = useState<Chat[]>(initialChats);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  const addMessageToChat = (chatId: string, message: Message) => {
+    setChats(prevChats =>
+      prevChats.map(chat => {
+        if (chat.id === chatId) {
+          // Create a new messages array with the new message
+          const updatedMessages = [...chat.messages, message];
+          // Return a new chat object with the updated messages
+          return { ...chat, messages: updatedMessages };
+        }
+        return chat;
+      })
+    );
+  };
+  
+  const updateMessageInChat = (chatId: string, messageId: string, updates: Partial<Message>) => {
+    setChats(prevChats =>
+      prevChats.map(chat => {
+        if (chat.id === chatId) {
+          return {
+            ...chat,
+            messages: chat.messages.map(msg =>
+              msg.id === messageId ? { ...msg, ...updates } : msg
+            ),
+          };
+        }
+        return chat;
+      })
+    );
+  };
+
+  const addProduct = (newProductData: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => {
+    setProducts(prevProducts => {
+       const newProduct: Product = {
+        id: `p${prevProducts.length + 1}`,
+        ...newProductData,
+        imageUrl: 'https://picsum.photos/seed/newproduct/300/200',
+        seller: currentUser,
+      };
+      return [newProduct, ...prevProducts];
+    });
+  };
 
   useEffect(() => {
     // This logic determines which chat should be active based on the URL.
     // And handles clearing the active chat when navigating away from chat pages.
-    if (pathname.startsWith('/app/chat/')) {
-       // This is where you would load a specific chat based on ID from URL
-       // For now, we do nothing to keep the active chat if one is selected
-    } else if (pathname === '/app/chat') {
-       // When on the main chat list page, no specific chat is active
-       // We only clear it if we are on the list view.
-       if (activeChat) {
-         // Do not clear, so we can navigate back to it.
+    const chatPathRegex = /^\/app\/chat\/(chat\d+)$/;
+    const match = pathname.match(chatPathRegex);
+    
+    if (match) {
+       const chatId = match[1];
+       const foundChat = chats.find(c => c.id === chatId);
+       if (foundChat && (!activeChat || activeChat.id !== foundChat.id)) {
+           setActiveChat(foundChat);
        }
-    } else {
-        // If we navigate to a non-chat page (that's not a specific chat room), 
-        // clear the active chat
+    } else if (pathname === '/app/chat' || pathname.startsWith('/app/ai-chat')) {
+        if (activeChat) {
+            setActiveChat(null);
+        }
+    } else if (!pathname.startsWith('/app/chat/')) {
         if (activeChat) {
             setActiveChat(null);
         }
     }
-  }, [pathname, activeChat]);
+  }, [pathname, chats, activeChat]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {
@@ -65,8 +111,22 @@ export default function AppLayout({
     setCart([]);
   };
 
+  const appContextValue = {
+    activeChat,
+    setActiveChat,
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    chats,
+    products,
+    addMessageToChat,
+    updateMessageInChat,
+    addProduct
+  };
+
   return (
-    <AppContext.Provider value={{ activeChat, setActiveChat, cart, addToCart, removeFromCart, clearCart }}>
+    <AppContext.Provider value={appContextValue}>
       <AppShell>
         {children}
       </AppShell>

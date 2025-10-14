@@ -47,7 +47,7 @@ export default function ChatList({ chats, activeChat, setActiveChat }: ChatListP
                                 "truncate text-sm w-11/12",
                                 activeChat?.id === chat.id ? "text-accent-foreground/90" : "text-muted-foreground"
                             )}>
-                                {chat.messages[chat.messages.length - 1].text}
+                                {chat.messages[chat.messages.length - 1].text || (chat.messages[chat.messages.length - 1].imageUrl ? 'Image' : chat.messages[chat.messages.length - 1].voiceUrl ? 'Voice message' : 'Video message')}
                             </p>
                              <div className="flex flex-col items-end">
                                 <Check className="h-4 w-4 text-primary" />

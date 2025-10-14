@@ -1,14 +1,14 @@
 'use client';
-import { useState, useTransition, useRef, useEffect } from 'react';
+import { useState, useTransition, useRef, useEffect, useContext } from 'react';
 import type { Chat, Message } from '@/lib/types';
 import { aiUser, currentUser } from '@/lib/data';
 import ChatAvatar from './chat-avatar';
 import ChatMessages from './chat-messages';
 import AiChatInput from './ai-chat-input';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
-import { speechToText } from '@/ai/flows/speech-to-text';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
+import { AppContext } from '@/lib/context.tsx';
 
 // Helper to convert file or blob to base64
 const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -18,18 +18,30 @@ const toBase64 = (file: File | Blob): Promise<string> => new Promise((resolve, r
     reader.onerror = error => reject(error);
 });
 
-type AiChatHandlerProps = {
-    chat: Chat;
-    handleNewMessage: (message: Message) => void;
-    updateMessage: (messageId: string, updates: Partial<Message>) => void;
-    imageToSend?: File | null;
-    clearImageToSend?: () => void;
-};
-
-export default function AiChatHandler({ chat, handleNewMessage, updateMessage, imageToSend, clearImageToSend }: AiChatHandlerProps) {
+export default function AiChatHandler() {
+  const context = useContext(AppContext);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  if (!context) {
+    return <p>Loading context...</p>
+  }
+
+  const { chats, addMessageToChat, updateMessageInChat } = context;
+  const chat = chats.find(c => c.type === 'ai');
+
+  if (!chat) {
+    return <p>AI Chat not found.</p>
+  }
+
+  const handleNewMessage = (newMessage: Message) => {
+    addMessageToChat(chat.id, newMessage);
+  };
+  
+  const updateMessage = (messageId: string, updates: Partial<Message>) => {
+    updateMessageInChat(chat.id, messageId, updates);
+  };
 
   const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
     if (scrollRef.current) {
@@ -49,20 +61,15 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
   }, [chat.messages, isPending]);
 
 
-  const handleSubmit = async (text: string, options?: { voiceUrl?: string, selectedModel?: string }) => {
-    if (!text.trim() && !imageToSend && !options?.voiceUrl) return;
+  const handleSubmit = async (text: string, options?: { voiceUrl?: string, selectedModel?: string, imageFile?: File | null }) => {
+    if (!text.trim() && !options?.imageFile && !options?.voiceUrl) return;
 
     let userQuestion = text;
     const userMessageId = `user_${Date.now()}`;
-    const currentImageToSend = imageToSend;
+    const currentImageToSend = options?.imageFile;
     const selectedModel = options?.selectedModel || 'afuai-fast';
     
-    // Use a callback with setChat to get the most up-to-date history
     const currentChatHistory = chat.messages;
-
-    if (clearImageToSend) {
-        clearImageToSend();
-    }
 
     const userMessage: Message = {
       id: userMessageId,
@@ -169,9 +176,9 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
                 <ChatAvatar chat={{...chat, name: aiUser.name, avatarUrl: aiUser.avatarUrl}} />
                 <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
                     <div className="flex items-center space-x-2 p-2">
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
-                        <Skeleton className="h-2 w-2 rounded-full" />
+                        <Skeleton className="h-2 w-2 rounded-full animate-pulse" />
+                        <Skeleton className="h-2 w-2 rounded-full animate-pulse delay-75" />
+                        <Skeleton className="h-2 w-2 rounded-full animate-pulse delay-150" />
                     </div>
                 </div>
             </div>
