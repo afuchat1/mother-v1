@@ -49,12 +49,13 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
   }, [chat.messages, isPending]);
 
 
-  const handleSubmit = async (text: string, options?: { voiceUrl?: string }) => {
+  const handleSubmit = async (text: string, options?: { voiceUrl?: string, selectedModel?: string }) => {
     if (!text.trim() && !imageToSend && !options?.voiceUrl) return;
 
     let userQuestion = text;
     const userMessageId = `user_${Date.now()}`;
     const currentImageToSend = imageToSend;
+    const selectedModel = options?.selectedModel || 'afuai-fast';
     
     // Use a callback with setChat to get the most up-to-date history
     const currentChatHistory = chat.messages;
@@ -76,28 +77,37 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
     
     startTransition(async () => {
       try {
-        let finalUserQuestion = userQuestion;
-
-        if (options?.voiceUrl) {
-            const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
-            const audioDataUri = await toBase64(audioBlob);
-            const transcriptionResult = await speechToText(audioDataUri);
-
-            if (transcriptionResult && transcriptionResult.text) {
-                finalUserQuestion = transcriptionResult.text;
-                updateMessage(userMessageId, { text: finalUserQuestion });
-            } else {
-                 throw new Error("Failed to transcribe audio.");
-            }
-        }
-        
         const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
-        
-        const aiInput = { 
-            question: finalUserQuestion, 
+        let audioDataUri: string | undefined = undefined;
+
+        const aiInput: any = { 
+            question: userQuestion, 
             photoDataUri,
             chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
         };
+
+        if (options?.voiceUrl) {
+            const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
+            audioDataUri = await toBase64(audioBlob);
+
+            if (selectedModel === 'afuai-advanced') {
+                // For advanced model, send audio directly
+                aiInput.audioDataUri = audioDataUri;
+                aiInput.question = userQuestion || "Analyze the attached audio.";
+                if (!userQuestion) {
+                    updateMessage(userMessageId, { text: "Voice message sent" });
+                }
+            } else {
+                // For fast model, transcribe first
+                const transcriptionResult = await speechToText(audioDataUri);
+                if (transcriptionResult && transcriptionResult.text) {
+                    aiInput.question = transcriptionResult.text;
+                    updateMessage(userMessageId, { text: transcriptionResult.text });
+                } else {
+                    throw new Error("Failed to transcribe audio.");
+                }
+            }
+        }
         
         const result = await aiAssistantAnswersQuestions(aiInput);
         

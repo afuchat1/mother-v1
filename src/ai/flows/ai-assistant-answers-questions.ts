@@ -17,6 +17,9 @@ const AiAssistantAnswersQuestionsInputSchema = z.object({
   photoDataUri: z.string().optional().describe(
     "A photo, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
+  audioDataUri: z.string().optional().describe(
+    "An audio recording, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+  ),
    repliedToMessage: z.object({
     sender: z.string(),
     text: z.string(),
@@ -53,7 +56,7 @@ const prompt = ai.definePrompt({
 - To get information from a website, use the browse tool.
 - If a tool returns no results, clearly state that the information could not be found. Do not invent information.
 
-Analyze any images provided.
+Analyze any images or audio provided.
 
 {{#if chatHistory}}
 Use this chat history for context:
@@ -71,6 +74,9 @@ Answer the user's question.
 Question: {{{question}}}
   {{#if photoDataUri}}
   Photo: {{media url=photoDataUri}}
+  {{/if}}
+  {{#if audioDataUri}}
+  Audio: {{media url=audioDataUri}}
   {{/if}}
   `,
 });

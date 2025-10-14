@@ -14,12 +14,13 @@ import { Badge } from '../ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 type AiChatInputProps = {
-    handleSubmit: (text: string, options?: { voiceUrl?: string }) => void;
+    handleSubmit: (text: string, options?: { voiceUrl?: string, selectedModel?: string }) => void;
     isLoading?: boolean;
 }
 
 export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProps) {
   const [input, setInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState('afuai-fast');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
@@ -42,8 +43,9 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
       recorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
-        // Call handleSubmit with the voice URL. The handler will transcribe it.
-        handleSubmit('', { voiceUrl: audioUrl });
+        // Call handleSubmit with the voice URL and selected model.
+        handleSubmit(input, { voiceUrl: audioUrl, selectedModel });
+        setInput('');
         stream.getTracks().forEach(track => track.stop());
       };
       
@@ -75,7 +77,7 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (input.trim()) {
-          handleSubmit(input);
+          handleSubmit(input, { selectedModel });
           setInput('');
       }
   }
@@ -95,7 +97,7 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
           <span className="sr-only">Voice input</span>
         </Button>
         <div className='flex-1 flex flex-col gap-2'>
-            <Select defaultValue="afuai-fast" disabled={isLoading}>
+            <Select value={selectedModel} onValueChange={setSelectedModel} disabled={isLoading}>
                 <SelectTrigger className="w-auto border-0 bg-transparent focus:ring-0 h-auto p-0 text-base">
                     <SelectValue placeholder="Model" />
                 </SelectTrigger>
