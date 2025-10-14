@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +12,7 @@ type ProductCardProps = {
   product: Product;
 };
 
-export default function ProductCard({ product }: ProductCardProps) {
+const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const firestore = getFirestore();
   
   const sellerRef = useMemoFirebase(() => {
@@ -22,7 +23,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { data: seller } = useDoc(sellerRef);
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg bg-background max-w-md mx-auto">
+    <Card className="overflow-hidden transition-all hover:shadow-lg bg-background w-full">
       <CardHeader className="p-0">
         <Link href={`/app/mall/${product.id}`}>
             <Image
@@ -54,4 +55,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       </CardFooter>
     </Card>
   );
-}
+});
+
+export default ProductCard;

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition, useRef, useEffect, useContext } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import type { Message } from '@/lib/types';
 import ChatMessages from './chat-messages';
 import AiChatInput from './ai-chat-input';
@@ -7,7 +7,7 @@ import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-que
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 import { useFirebase, useCollection } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { ChatAvatar } from '@/components/chat/chat-avatar';
 import { aiUser } from '@/lib/types';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';

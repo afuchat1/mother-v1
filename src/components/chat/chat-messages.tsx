@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Message, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -194,7 +195,7 @@ const SwipeToReply = ({
 };
 
 
-const MessageBubble = ({ message, onReply }: { message: Message, onReply: (message: Message) => void }) => {
+const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { message: Message, onReply: (message: Message) => void }) {
     const { user, firestore } = useFirebase();
     const isCurrentUser = message.senderId === user?.uid;
     const { data: sender, isLoading: senderLoading } = useDoc<UserProfile>(
@@ -280,14 +281,14 @@ const MessageBubble = ({ message, onReply }: { message: Message, onReply: (messa
         </div>
       </div>
     );
-};
+});
 
 type ChatMessagesProps = {
     messages: Message[];
     onReply: (message: Message) => void;
 };
   
-export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
+const ChatMessages = React.memo(function ChatMessages({ messages, onReply }: ChatMessagesProps) {
     return (
         <div className="p-4">
           <div className="flex flex-col gap-4">
@@ -297,4 +298,6 @@ export default function ChatMessages({ messages, onReply }: ChatMessagesProps) {
           </div>
         </div>
     );
-}
+});
+
+export default ChatMessages;
