@@ -31,9 +31,9 @@ const db = getFirestore();
 export const findUser = ai.defineTool(
   {
     name: 'findUser',
-    description: 'Finds a user in the application by their name to retrieve their profile and activities.',
+    description: 'Finds a user in the application by their exact name to retrieve their profile and activities.',
     inputSchema: z.object({
-      name: z.string().describe('The name of the user to find.'),
+      name: z.string().describe('The exact name of the user to find.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
