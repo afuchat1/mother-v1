@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/button";
 import { useCollection, useFirestore, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Product } from "@/lib/types";
+import { useMemoFirebase } from "@/firebase/provider";
 
 export default function MallPage() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const productsRef = collection(firestore, 'afuMallListings');
+  const productsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'afuMallListings');
+  }, [firestore]);
+  
   const { data: products, isLoading } = useCollection<Product>(productsRef);
 
   if (isLoading || !user) {
