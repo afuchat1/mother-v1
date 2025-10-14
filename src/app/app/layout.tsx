@@ -5,7 +5,7 @@ import AppShell from '@/components/app-shell';
 import { AppContext } from '@/lib/context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import { usePathname, useRouter } from 'next/navigation';
-import { FirebaseClientProvider, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 
 
 export default function AppLayout({
@@ -26,32 +26,11 @@ export default function AppLayout({
     }
   }, [currentUser, isUserLoading, router]);
 
-
-  // This logic is now handled by components listening to Firestore
-  const addMessageToChat = (chatId: string, message: Message) => {
-    console.log('Adding message (now handled by Firestore):', chatId, message);
-  };
-  
-  const updateMessageInChat = (chatId: string, messageId: string, updates: Partial<Message>) => {
-     console.log('Updating message (now handled by Firestore):', chatId, messageId, updates);
-  };
-
-  const addProduct = (newProductData: Omit<Product, 'id' | 'seller' | 'imageUrl'>) => {
-     console.log('Adding product (now handled by Firestore):', newProductData);
-  };
-
   useEffect(() => {
     const chatPathRegex = /^\/app\/chat\/(chat\d+)$/;
     const match = pathname.match(chatPathRegex);
     
-    if (match) {
-       const chatId = match[1];
-       // Active chat is now managed within the chat components themselves
-    } else if (pathname === '/app/chat' || pathname.startsWith('/app/ai-chat')) {
-        if (activeChat) {
-            setActiveChat(null);
-        }
-    } else if (!pathname.startsWith('/app/chat/')) {
+    if (!match) {
         if (activeChat) {
             setActiveChat(null);
         }
@@ -84,7 +63,6 @@ export default function AppLayout({
     setCart([]);
   };
 
-  // The AppContext is simplified as data is now fetched from Firebase.
   const appContextValue = {
     currentUser,
     activeChat,
@@ -93,8 +71,6 @@ export default function AppLayout({
     addToCart,
     removeFromCart,
     clearCart,
-    // The following are now managed by components directly.
-    // They are kept here as no-op functions to prevent crashes in existing components.
     chats: [], 
     products: [],
     addMessageToChat: () => {},
@@ -104,7 +80,7 @@ export default function AppLayout({
 
   if (isUserLoading || !currentUser) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <p>Loading...</p>
       </div>
     );

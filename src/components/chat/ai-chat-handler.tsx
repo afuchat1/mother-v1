@@ -6,7 +6,7 @@ import AiChatInput from './ai-chat-input';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
-import { useFirebase, useCollection } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { ChatAvatar } from '@/components/chat/chat-avatar';
 import { aiUser } from '@/lib/types';
@@ -27,8 +27,15 @@ export default function AiChatHandler() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user, firestore } = useFirebase();
 
-  const messagesRef = collection(firestore, 'users', user?.uid || 'anon', 'aiChat', 'messages');
-  const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+  const messagesRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'aiChat', 'messages');
+  }, [firestore, user]);
+
+  const messagesQuery = useMemoFirebase(() => {
+    if (!messagesRef) return null;
+    return query(messagesRef, orderBy('timestamp', 'asc'));
+  }, [messagesRef]);
 
   const { data: messages } = useCollection<Message>(messagesQuery);
   const aiChat = { messages: messages || [] };
@@ -54,7 +61,7 @@ export default function AiChatHandler() {
   const handleSubmit = async (text: string, options?: { voiceUrl?: string, selectedModel?: string, imageFile?: File | null }) => {
     if (!text.trim() && !options?.imageFile && !options?.voiceUrl) return;
 
-    if (!user) {
+    if (!user || !messagesRef) {
         toast({ variant: 'destructive', title: 'Not signed in', description: 'You must be signed in to chat with the AI.'});
         return;
     }
@@ -155,7 +162,7 @@ export default function AiChatHandler() {
   };
   
   return (
-    <>
+    <div className='h-full flex flex-col'>
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
         <div className="relative p-4">
             <ChatMessages messages={aiChat.messages} onReply={() => {}} />
@@ -179,6 +186,6 @@ export default function AiChatHandler() {
             isLoading={isPending}
         />
       </div>
-    </>
+    </div>
   );
 }

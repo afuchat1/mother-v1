@@ -6,7 +6,6 @@ import ChatList from '@/components/chat/chat-list';
 import { AppContext } from '@/lib/context.tsx';
 import type { Chat } from '@/lib/types';
 import { useUser } from '@/firebase';
-import AppShell from '@/components/app-shell';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
@@ -22,26 +21,26 @@ export default function ChatPage() {
 
     const { activeChat, setActiveChat } = context;
     
-    // On mobile, if no chat is active, show the list.
-    // If a chat is active, show the chat view.
     const showChatList = !activeChat;
 
     const handleSelectChat = (chat: Chat) => {
         if (!user) return;
         setActiveChat(chat);
-        // Navigate to a dynamic route for the chat
         router.push(`/app/chat/${chat.id}`);
     }
 
     return (
-        <AppShell>
-            <main className="flex h-full flex-col overflow-hidden">
-                {showChatList ? (
+        <div className="flex h-full flex-col overflow-hidden">
+            {showChatList ? (
+                <>
+                    <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background p-4 sticky top-0 z-10">
+                        <h1 className="text-2xl font-bold font-headline">Chats</h1>
+                    </header>
                     <ChatList activeChat={activeChat} setActiveChat={handleSelectChat} />
-                ) : (
-                    activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
-                )}
-            </main>
-        </AppShell>
+                </>
+            ) : (
+                activeChat && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />
+            )}
+        </div>
     )
 }
