@@ -1,104 +1,119 @@
-/**
- * @fileoverview Firestore Security Rules for AfuChat application.
- *
- * Core Philosophy:
- * This ruleset prioritizes user privacy and data ownership. Each authenticated user has full access to their own data and associated subcollections.
- * Chat rooms and AfuMall listings implement shared access and public read patterns respectively, with appropriate safeguards.
- *
- * Data Structure:
- * - /users/{userId}: User profile data, accessible only to the user themselves.
- * - /chatRooms/{chatRoomId}: Chat rooms, with access controlled via a list of participant IDs.
- * - /chatRooms/{chatRoomId}/messages/{messageId}: Chat messages within a chat room, access controlled via the parent chat room.
- * - /afuMallListings/{listingId}: Product listings in AfuMall, publicly readable but writable only by the seller.
- *
- * Key Security Decisions:
- * - Users can only read and write their own profile data.
- * - Chat room access is based on a denormalized list of participant IDs.
- * - AfuMall listings are publicly readable but writable only by the seller.
- *
- * Denormalization for Authorization:
- * - ChatRoom documents contain a 'participantIds' array to quickly determine user access without additional reads.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile data.
+     * @description Secure user profiles, allowing only the owner to read and write.
      * @path /users/{userId}
-     * @allow (read, write) if the user is signed in and the user ID matches the document ID.
-     * @deny (read, write) if the user is not signed in or the user ID does not match the document ID.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (create, update, delete) - User with UID 'dnSEb4FRr8gcxnQZVZSqKKJ4rAu2' can create/update/delete their own profile at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2.
+     * @allow (get, list) - User with UID 'dnSEb4FRr8gcxnQZVZSqKKJ4rAu2' can read their profile at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2.
+     * @deny (create, update, delete) - User with UID 'otherUserId' cannot create/update/delete profile at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2.
+     * @deny (get, list) - User with UID 'otherUserId' cannot read profile at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2.
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get, list: if isOwner(userId);
+      allow create: if request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Controls access to chat rooms.
+     * @description Secure chat rooms, allowing participants to read and write.
      * @path /chatRooms/{chatRoomId}
-     * @allow (read, write) if the user is a participant in the chat room.
-     * @deny (read, write) if the user is not a participant in the chat room.
-     * @principle Enforces shared access based on participant list.
+     * @allow (get, list) - User with UID 'participantId' can read a chat room if 'participantId' is in the 'participantIds' array.
+     * @allow (create) - User can create a chat room.
+     * @allow (update) - Only a participant can update the chat room details.
+     * @allow (delete) - Only a participant can delete the chat room.
+     * @deny (get, list) - User with UID 'nonParticipantId' cannot read a chat room if 'nonParticipantId' is not in the 'participantIds' array.
+     * @principle Enforces shared access based on the 'participantIds' array in the chat room document.
      */
     match /chatRooms/{chatRoomId} {
-      allow get: if isParticipant(resource.data.participantIds);
-      allow list: if true; // Publicly listable for discovery.  Consider tightening if needed.
-      allow create: if isSignedIn() && request.resource.data.keys().hasAll(['id', 'type', 'participantIds']) && request.resource.data.id == request.resource.id;
-      allow update: if isSignedIn() && isParticipant(resource.data.participantIds);
-      allow delete: if false; // Deletion is not allowed for chat rooms.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isParticipant() {
+          return isSignedIn() && resource.data.participantIds.hasAny([request.auth.uid]);
+      }
+
+      allow get, list: if isSignedIn() && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow create: if isSignedIn();
+      allow update: if isParticipant();
+      allow delete: if isParticipant();
     }
 
     /**
-     * @description Controls access to chat messages within a chat room.
+     * @description Secure chat messages within chat rooms, allowing only chat room participants to read and write.
      * @path /chatRooms/{chatRoomId}/messages/{messageId}
-     * @allow (read, write) if the user is a participant in the parent chat room.
-     * @deny (read, write) if the user is not a participant in the parent chat room.
-     * @principle Enforces shared access based on parent chat room's participant list.
+     * @allow (get, list) - User with UID 'participantId' can read a chat message if they are a participant in the chat room.
+     * @allow (create) - User with UID 'participantId' can create a chat message if they are a participant in the chat room.
+     * @allow (update) - User with UID 'participantId' can update a chat message if they are a participant in the chat room.
+     * @allow (delete) - User with UID 'participantId' can delete a chat message if they are a participant in the chat room.
+     * @deny (get, list) - User with UID 'nonParticipantId' cannot read a chat message if they are not a participant in the chat room.
+     * @principle Inherits authorization from the parent chat room, ensuring only participants can access messages.
      */
     match /chatRooms/{chatRoomId}/messages/{messageId} {
-      allow get: if isParticipant(get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds);
-      allow list: if isParticipant(get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds);
-      allow create: if isSignedIn() && isParticipant(get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds);
-      allow update: if isSignedIn() && isParticipant(get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds);
-      allow delete: if isSignedIn() && isParticipant(get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds);
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+        function isParticipant(chatRoomId) {
+            return isSignedIn() && get(/databases/$(database)/documents/chatRooms/$(chatRoomId)).data.participantIds.hasAny([request.auth.uid]);
+        }
+
+      allow get, list: if isParticipant(chatRoomId);
+      allow create: if isParticipant(chatRoomId);
+      allow update: if isParticipant(chatRoomId);
+      allow delete: if isParticipant(chatRoomId);
     }
 
     /**
-     * @description Controls access to AfuMall listings.
+     * @description Secure AfuMall listings, allowing public read access but restricting writes to the seller.
      * @path /afuMallListings/{listingId}
-     * @allow (read) to anyone.
-     * @allow (create, update, delete) only to the seller of the product.
-     * @deny (create, update, delete) if the user is not the seller of the product.
-     * @principle Enforces public read access with owner-only writes.
+     * @allow (get, list) - Any user can read the AfuMall listings.
+     * @allow (create) - User with UID 'sellerId' can create an AfuMall listing where request.resource.data.sellerId == request.auth.uid.
+     * @allow (update, delete) - User with UID 'sellerId' can update/delete their own AfuMall listing, where resource.data.sellerId == request.auth.uid.
+     * @deny (create) - User with UID 'otherUserId' cannot create an AfuMall listing for another user.
+     * @deny (update, delete) - User with UID 'otherUserId' cannot update/delete an AfuMall listing that they don't own.
+     * @principle Allows public read access while enforcing ownership for writes.
      */
     match /afuMallListings/{listingId} {
-      allow get: if true;
-      allow list: if true;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner() {
+        return isSignedIn() && request.auth.uid == resource.data.sellerId;
+      }
+
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
-      allow update: if isSignedIn() && resource != null && isOwner(resource.data.sellerId);
-      allow delete: if isSignedIn() && resource != null && isOwner(resource.data.sellerId);
+      allow update: if isOwner();
+      allow delete: if isOwner();
     }
-  }
 
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
+    /**
+     * @description Secure chat list for a user, allowing only the owner to read their chats.
+     * @path /users/{userId}/chats
+     * @allow (list) - User with UID 'dnSEb4FRr8gcxnQZVZSqKKJ4rAu2' can list their own chats at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2/chats.
+     * @deny (list) - User with UID 'otherUserId' cannot list chats at /users/dnSEb4FRr8gcxnQZVZSqKKJ4rAu2/chats.
+     * @principle Enforces document ownership for list operation on user's chats.
+     */
+    match /users/{userId}/chats/{documentId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
 
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-  function isExistingOwner(userId) {
-    return isSignedIn() && isOwner(userId) && resource != null;
-  }
-
-  function isParticipant(participantIds) {
-    return isSignedIn() && participantIds is list && request.auth.uid in participantIds;
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+    }
   }
 }
