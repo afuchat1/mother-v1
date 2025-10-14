@@ -4,23 +4,23 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Product } from '@/lib/types';
-import { useDoc, useMemoFirebase } from '@/firebase';
-import { doc, getFirestore } from 'firebase/firestore';
+import type { Product, UserProfile } from '@/lib/types';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 type ProductCardProps = {
   product: Product;
 };
 
 const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
-  const firestore = getFirestore();
+  const firestore = useFirestore();
   
   const sellerRef = useMemoFirebase(() => {
       if (!product.sellerId) return null;
       return doc(firestore, 'users', product.sellerId);
   }, [firestore, product.sellerId]);
   
-  const { data: seller } = useDoc(sellerRef);
+  const { data: seller } = useDoc<UserProfile>(sellerRef);
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg bg-background w-full">

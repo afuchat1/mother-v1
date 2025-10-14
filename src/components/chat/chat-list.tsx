@@ -5,7 +5,7 @@ import { ChatAvatar } from "./chat-avatar";
 import { cn } from "@/lib/utils";
 import { Check } from 'lucide-react';
 import { useCollection, useFirestore, useUser } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/provider";
 
 type ChatListProps = {
@@ -59,7 +59,7 @@ export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
                         <div className="flex justify-between items-center">
                             <span className="font-semibold truncate">{chat.name}</span>
                             <span className="text-xs text-muted-foreground shrink-0">
-                                {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp.seconds * 1000).toLocaleTimeString() : ''}
+                                {chat.lastMessage?.timestamp ? (chat.lastMessage.timestamp as any).toDate ? (chat.lastMessage.timestamp as any).toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' : ''}
                             </span>
                         </div>
                         <div className="flex items-start justify-between">

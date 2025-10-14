@@ -132,6 +132,8 @@ const ReplyMessagePreview = ({ message }: { message: Message }) => {
     let previewText = message.text;
     if (message.voiceUrl) previewText = 'Voice message';
     if (message.videoUrl) previewText = 'Video message';
+    if (message.imageUrl) previewText = 'Image';
+
 
     return (
         <div className="p-2 border-l-2 border-primary/50 bg-secondary/30 rounded-md mb-2 opacity-80 text-xs">
@@ -208,8 +210,7 @@ const MessageBubble = React.memo(function MessageBubble({ message, onReply }: { 
 
     const senderName = sender?.name || '...';
     
-    const messageTimestamp = message.timestamp ? (message.timestamp as any).toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...';
-
+    const messageTimestamp = message.timestamp ? (message.timestamp as any).toDate ? (message.timestamp as any).toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...';
 
     return (
         <div

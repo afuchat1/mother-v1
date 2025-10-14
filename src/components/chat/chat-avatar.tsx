@@ -4,6 +4,8 @@ import type { Chat, UserProfile } from "@/lib/types";
 import { Users } from "lucide-react";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, DocumentReference } from "firebase/firestore";
+import React from 'react';
+
 
 type ChatAvatarProps = {
   chat?: Chat;
@@ -11,7 +13,7 @@ type ChatAvatarProps = {
   className?: string;
 };
 
-export function ChatAvatar({ chat, senderId, className }: ChatAvatarProps) {
+const ChatAvatar = React.memo(function ChatAvatar({ chat, senderId, className }: ChatAvatarProps) {
   const firestore = useFirestore();
 
   const singleUserRef = useMemoFirebase(() => {
@@ -42,4 +44,6 @@ export function ChatAvatar({ chat, senderId, className }: ChatAvatarProps) {
       </AvatarFallback>
     </Avatar>
   );
-}
+});
+
+export { ChatAvatar };

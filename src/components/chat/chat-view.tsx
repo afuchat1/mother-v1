@@ -146,16 +146,8 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
         startAiTransition(async () => {
             try {
                 const aiInput: any = { 
-                  question: sentInput,
-                  chatHistory: currentChatHistory.slice(-15).map(m => ({ senderId: m.senderId, text: m.text || 'Voice Message' })),
+                  prompt: [ { text: `Chat History:\n${currentChatHistory.slice(-15).map(m => `${m.senderId === currentUser.uid ? 'User' : 'AI'}: ${m.text || (m.voiceUrl ? 'Voice Message' : 'Image')}`).join('\n')}\n\nUser: ${sentInput}` }]
                 };
-
-                if (currentReplyTo) {
-                  aiInput.repliedToMessage = {
-                    senderId: currentReplyTo.senderId,
-                    text: currentReplyTo.text,
-                  };
-                }
 
                 const result = await aiAssistantAnswersQuestions(aiInput);
                 const error = (result as any).error;
