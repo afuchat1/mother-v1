@@ -4,7 +4,7 @@ import type { Chat, Product, CartItem, Message } from '@/lib/types';
 import AppShell from '@/components/app-shell';
 import { AppContext } from '@/lib/context.tsx';
 import { useToast } from '@/hooks/use-toast';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FirebaseClientProvider, useUser } from '@/firebase';
 
 
@@ -17,10 +17,15 @@ export default function AppLayout({
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
   const pathname = usePathname();
-  const { user: currentUser } = useUser();
-  // Chats and Products will now be fetched from Firebase directly in their components.
-  // const [chats, setChats] = useState<Chat[]>(initialChats);
-  // const [products, setProducts] = useState<Product[]>([]);
+  const router = useRouter();
+  const { user: currentUser, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && !currentUser) {
+      router.push('/login');
+    }
+  }, [currentUser, isUserLoading, router]);
+
 
   // This logic is now handled by components listening to Firestore
   const addMessageToChat = (chatId: string, message: Message) => {
@@ -96,6 +101,14 @@ export default function AppLayout({
     updateMessageInChat: () => {},
     addProduct: () => {},
   };
+
+  if (isUserLoading || !currentUser) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
       <AppContext.Provider value={appContextValue}>
