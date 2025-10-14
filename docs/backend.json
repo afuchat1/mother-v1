@@ -180,27 +180,36 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. Path-based ownership for private user data."
+          "description": "Stores user profile information. Path-based ownership for private user data. List is allowed for authenticated users to enable user search."
         }
       },
       {
-        "path": "/chatRooms/{chatRoomId}",
+        "path": "/users/{userId}/chats/{chatId}",
+        "permissions": {
+           "read": "request.auth != null && request.auth.uid == userId",
+           "write": "request.auth != null && request.auth.uid == userId",
+           "list": "request.auth != null && request.auth.uid == userId"
+        },
         "definition": {
-          "entityName": "ChatRoom",
-          "schema": {
+          "entityName": "Chat",
+           "schema": {
             "$ref": "#/backend/entities/ChatRoom"
           },
-          "description": "Stores chat room metadata. Includes denormalized 'participantIds' for authorization independence."
+          "description": "Stores a user's chat references. Only the user can access their own chat list."
         }
       },
       {
-        "path": "/chatRooms/{chatRoomId}/messages/{messageId}",
+        "path": "/users/{userId}/chats/{chatId}/messages/{messageId}",
+        "permissions": {
+           "read": "request.auth != null && request.auth.uid == userId",
+           "write": "request.auth != null && request.auth.uid == userId"
+        },
         "definition": {
           "entityName": "ChatMessage",
-          "schema": {
+           "schema": {
             "$ref": "#/backend/entities/ChatMessage"
           },
-          "description": "Stores chat messages within a chat room. Inherits authorization from the chat room."
+          "description": "Stores chat messages within a user's specific chat. Only the user can access messages in their own chat subcollections."
         }
       },
       {
@@ -219,12 +228,16 @@
       },
       {
         "path": "/afuMallListings/{listingId}",
+         "permissions": {
+          "read": "request.auth != null",
+          "write": "request.auth != null && request.resource.data.sellerId == request.auth.uid"
+        },
         "definition": {
           "entityName": "AfuMallListing",
           "schema": {
             "$ref": "#/backend/entities/AfuMallListing"
           },
-          "description": "Stores AfuMall product listings. Access is controlled by the 'sellerId' field."
+          "description": "Stores AfuMall product listings. Any authenticated user can read. Only the seller can write."
         }
       }
     ]
