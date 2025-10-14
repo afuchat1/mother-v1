@@ -23,6 +23,7 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('afuai-fast');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,7 +31,18 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
   };
+
+  useEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 128)}px`;
+    }
+  }, [input]);
   
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -184,10 +196,12 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
             </Select>
 
             <Textarea
+              ref={textareaRef}
               placeholder="Ask anything"
-              className="flex-1 resize-none bg-transparent border-0 rounded-md p-0 h-auto text-base focus-visible:ring-0 shadow-none"
+              className="flex-1 resize-none bg-transparent border-0 rounded-md p-0 h-auto text-base focus-visible:ring-0 shadow-none max-h-32"
               rows={1}
               value={input}
+              maxLength={1000}
               onChange={handleInputChange}
               onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {

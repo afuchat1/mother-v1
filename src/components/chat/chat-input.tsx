@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 type ChatInputProps = {
     input: string;
-    handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => void;
+    handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
     handleSubmit: (e: React.FormEvent<HTMLFormElement>, options?: { voiceUrl?: string, videoUrl?: string }) => void;
     isLoading?: boolean;
     handleImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -25,6 +25,7 @@ type ChatInputProps = {
 
 export default function ChatInput({ input, handleInputChange, handleSubmit, isLoading, handleImageChange, handleImageFile, imagePreview, removeImage, replyTo, cancelReply }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -37,6 +38,21 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
   const handleAttachClick = () => {
     fileInputRef.current?.click();
   };
+
+  const onLocalInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleInputChange(e);
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 128)}px`;
+    }
+  }, [input]);
 
   const onPhotoTaken = (imageFile: File) => {
     if (handleImageFile) {
@@ -182,7 +198,7 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
         </div>
       )}
       <form onSubmit={handleSubmit} className="relative">
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
            {isRecording ? (
              <div className="flex-1 flex items-center bg-input rounded-md h-10 px-4">
                <div className="flex items-center gap-2">
@@ -223,11 +239,13 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
               )}
               <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
               <Textarea
+                  ref={textareaRef}
                   placeholder="Message"
-                  className="flex-1 resize-none bg-input border-0 rounded-md py-2 px-3 h-10 text-base"
+                  className="flex-1 resize-none bg-input border-0 rounded-md py-2 px-3 h-10 text-base max-h-32"
                   rows={1}
                   value={input}
-                  onChange={handleInputChange}
+                  onChange={onLocalInputChange}
+                  maxLength={1000}
                   onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
