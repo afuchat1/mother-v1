@@ -31,10 +31,6 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
   };
 
   useEffect(() => {

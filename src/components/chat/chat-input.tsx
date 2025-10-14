@@ -41,10 +41,6 @@ export default function ChatInput({ input, handleInputChange, handleSubmit, isLo
 
   const onLocalInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleInputChange(e);
-    if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
   };
 
   useEffect(() => {
