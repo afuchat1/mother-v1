@@ -14,6 +14,10 @@
           "type": "string",
           "description": "User's full name."
         },
+        "name_lowercase": {
+          "type": "string",
+          "description": "User's full name in lowercase for case-insensitive search."
+        },
         "avatarUrl": {
           "type": "string",
           "description": "URL of the user's avatar image.",
@@ -33,6 +37,7 @@
       "required": [
         "id",
         "name",
+        "name_lowercase",
         "email"
       ]
     },

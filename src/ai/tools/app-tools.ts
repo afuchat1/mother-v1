@@ -31,9 +31,9 @@ const db = getFirestore();
 export const findUser = ai.defineTool(
   {
     name: 'findUser',
-    description: 'Finds a user in the application by their exact name to retrieve their profile and activities.',
+    description: 'Finds a user in the application by their name to retrieve their profile and activities.',
     inputSchema: z.object({
-      name: z.string().describe('The exact name of the user to find.'),
+      name: z.string().describe('The name of the user to find.'),
     }),
     outputSchema: z.object({
       found: z.boolean(),
@@ -47,8 +47,11 @@ export const findUser = ai.defineTool(
     console.log(`[findUser] Searching for: ${name}`);
     try {
       const usersRef = db.collection('users');
-      // Using '==' for an exact match on the name. Firestore is case-sensitive.
-      const snapshot = await usersRef.where('name', '==', name).limit(1).get();
+      // Using '>=' and '<=' for case-insensitive prefix search on the lowercase field.
+      const snapshot = await usersRef
+        .where('name_lowercase', '>=', name.toLowerCase())
+        .where('name_lowercase', '<=', name.toLowerCase() + '\uf8ff')
+        .limit(1).get();
 
       if (snapshot.empty) {
         return { found: false };

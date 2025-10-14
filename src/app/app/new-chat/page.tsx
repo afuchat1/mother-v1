@@ -18,10 +18,11 @@ export default function NewChatPage() {
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !searchTerm.trim()) return null;
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
     return query(
       collection(firestore, 'users'),
-      where('name', '>=', searchTerm),
-      where('name', '<=', searchTerm + '\uf8ff'),
+      where('name_lowercase', '>=', lowercasedSearchTerm),
+      where('name_lowercase', '<=', lowercasedSearchTerm + '\uf8ff'),
       limit(10)
     );
   }, [firestore, searchTerm]);

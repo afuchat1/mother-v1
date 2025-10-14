@@ -88,6 +88,7 @@ export default function LoginPage() {
         await setDoc(userDocRef, {
           id: newUser.uid,
           name: displayName,
+          name_lowercase: displayName.toLowerCase(),
           email: newUser.email,
           avatarUrl: `https://picsum.photos/seed/${newUser.uid}/100/100`,
           createdAt: serverTimestamp()
