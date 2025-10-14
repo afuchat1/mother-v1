@@ -1,5 +1,5 @@
 'use client';
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AfuChatLogo } from "@/components/icons";
