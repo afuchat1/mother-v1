@@ -75,6 +75,19 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
 
     handleNewMessage(userMessage);
     
+    // Handle voice input with the "fast" model
+    if (options?.voiceUrl && selectedModel === 'afuai-fast') {
+        updateMessage(userMessageId, { text: "Voice message" });
+        const upgradeMessage: Message = {
+            id: `ai_upgrade_${Date.now()}`,
+            text: "It looks like you're trying to send a voice message. To have the AI analyze audio, please upgrade to AfuAi Advanced.",
+            createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            sender: aiUser,
+        };
+        handleNewMessage(upgradeMessage);
+        return; // Stop further processing
+    }
+
     startTransition(async () => {
       try {
         const photoDataUri = currentImageToSend ? await toBase64(currentImageToSend) : undefined;
@@ -86,26 +99,13 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
             chatHistory: currentChatHistory.slice(-15).map(m => ({ sender: m.sender.name, text: m.text || 'Voice Message' })),
         };
 
-        if (options?.voiceUrl) {
+        if (options?.voiceUrl && selectedModel === 'afuai-advanced') {
             const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
             audioDataUri = await toBase64(audioBlob);
-
-            if (selectedModel === 'afuai-advanced') {
-                // For advanced model, send audio directly
-                aiInput.audioDataUri = audioDataUri;
-                aiInput.question = userQuestion || "Analyze the attached audio.";
-                if (!userQuestion) {
-                    updateMessage(userMessageId, { text: "Voice message sent" });
-                }
-            } else {
-                // For fast model, transcribe first
-                const transcriptionResult = await speechToText(audioDataUri);
-                if (transcriptionResult && transcriptionResult.text) {
-                    aiInput.question = transcriptionResult.text;
-                    updateMessage(userMessageId, { text: transcriptionResult.text });
-                } else {
-                    throw new Error("Failed to transcribe audio.");
-                }
+            aiInput.audioDataUri = audioDataUri;
+            aiInput.question = userQuestion || "Analyze the attached audio and its tone.";
+            if (!userQuestion) {
+                updateMessage(userMessageId, { text: "Voice message for analysis" });
             }
         }
         
@@ -137,8 +137,6 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
             title = 'API Quota Exceeded';
             description = 'You have exceeded your free tier limit for the AI model.';
             text = 'Sorry, I cannot respond right now due to high usage. Please try again later.';
-        } else {
-            console.error('AI Assistant Error:', error.message || error);
         }
 
         toast({
