@@ -1,8 +1,8 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, Send } from "lucide-react";
+import { Mic, Send, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from '../ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type AiChatInputProps = {
     handleSubmit: (text: string, options?: { voiceUrl?: string, selectedModel?: string }) => void;
@@ -23,10 +24,18 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   const [selectedModel, setSelectedModel] = useState('afuai-fast');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+  };
+  
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const startRecording = async () => {
@@ -41,16 +50,24 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
       };
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        // Call handleSubmit with the voice URL and selected model.
-        handleSubmit(input, { voiceUrl: audioUrl, selectedModel });
-        setInput('');
+        if (audioChunks.length > 0) {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            handleSubmit(input, { voiceUrl: audioUrl, selectedModel });
+            setInput('');
+        }
         stream.getTracks().forEach(track => track.stop());
+        if (recordingIntervalRef.current) {
+            clearInterval(recordingIntervalRef.current);
+        }
       };
       
       recorder.start();
       setIsRecording(true);
+      setRecordingTime(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
       toast({ title: 'Recording started...' });
     } catch (err) {
       console.error("Error starting recording:", err);
@@ -63,6 +80,24 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       toast({ title: 'Recording finished.' });
+    }
+  };
+
+  const cancelRecording = () => {
+     if (mediaRecorderRef.current && isRecording) {
+      // Manually stop tracks to release mic
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      // Set a flag or different state to indicate cancellation
+      mediaRecorderRef.current.ondataavailable = null; // Stop processing further data
+      mediaRecorderRef.current.onstop = null;
+      mediaRecorderRef.current = null;
+      
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      setRecordingTime(0);
+      toast({ title: 'Recording canceled' });
     }
   };
 
@@ -84,6 +119,37 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
   
   return (
     <form onSubmit={handleFormSubmit} className="relative bg-secondary/50 rounded-lg p-2">
+      {isRecording ? (
+        <div className="flex items-center gap-2 h-full min-h-[68px]">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="shrink-0 text-muted-foreground h-10 w-10" 
+            onClick={cancelRecording} 
+            type="button"
+          >
+            <Trash2 className="h-5 w-5 text-red-500" />
+            <span className="sr-only">Cancel Recording</span>
+          </Button>
+
+          <div className="flex-1 flex items-center justify-center bg-input rounded-md h-10 px-4">
+            <div className="flex items-center gap-2 text-red-500">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+                <span className="text-sm font-mono">{formatTime(recordingTime)}</span>
+            </div>
+          </div>
+        
+          <Button 
+            size="icon" 
+            className="shrink-0 h-10 w-10 bg-primary text-primary-foreground rounded-md"
+            onClick={handleMicClick} 
+            type="button"
+          >
+            <div className="h-4 w-4 bg-primary-foreground rounded-sm"></div>
+            <span className="sr-only">Stop Recording</span>
+          </Button>
+        </div>
+      ) : (
       <div className="flex items-start gap-2">
         <Button 
             variant="ghost" 
@@ -131,7 +197,7 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
             />
         </div>
         <div className='flex items-end h-full'>
-            {input && !isLoading ? (
+            {(input && !isLoading) ? (
               <Button type="submit" size="icon" className="shrink-0 h-10 w-10 bg-primary text-primary-foreground rounded-md">
                   <Send />
                   <span className="sr-only">Send</span>
@@ -144,6 +210,7 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
             )}
         </div>
       </div>
+      )}
     </form>
   );
 }
