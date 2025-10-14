@@ -97,7 +97,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const isChatList = activePath === '/app/chat';
   const showFab = isChatList;
 
-  const showCartFab = (activePath.startsWith('/app/mall') || active-path.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
+  const showCartFab = (activePath.startsWith('/app/mall') || activePath.startsWith('/app/cart') || activePath.startsWith('/app/checkout'));
 
   return (
     <div className={cn("h-[100dvh] w-full bg-background flex flex-col")}>
