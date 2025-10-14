@@ -170,6 +170,11 @@
     "structure": [
       {
         "path": "/users/{userId}",
+        "permissions": {
+          "read": "request.auth != null && request.auth.uid == userId",
+          "write": "request.auth != null && request.auth.uid == userId",
+          "list": "request.auth != null"
+        },
         "definition": {
           "entityName": "UserProfile",
           "schema": {
