@@ -55,12 +55,12 @@ const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
     const { question, photoDataUri, audioDataUri, chatHistory, repliedToMessage } = input;
 
     let promptText = `You are a helpful AI assistant. Use the available tools to answer questions.`;
-
+    
     if (audioDataUri) {
-      promptText += `\nAnalyze the attached audio. This is the primary context.`;
+      promptText += ` The user has sent an audio message. Your primary task is to listen to it and provide a conversational reply.`;
     }
     if (photoDataUri) {
-      promptText += `\nThis is the photo.`;
+      promptText += ` The user has also sent a photo.`;
     }
 
     if (chatHistory && chatHistory.length > 0) {
@@ -72,7 +72,7 @@ const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
         promptText += `\n\nYou are replying to "${repliedToMessage.text}" from ${repliedToMessage.sender}.`;
     }
 
-    promptText += `\n\nNow, answer the user's question: ${question}`;
+    promptText += `\n\nUser's message: ${question}`;
 
     const promptParts: any[] = [{ text: promptText }];
     if (photoDataUri) {

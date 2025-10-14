@@ -96,8 +96,8 @@ export default function AiChatHandler({ chat, handleNewMessage, updateMessage, i
             const audioBlob = await fetch(options.voiceUrl).then(res => res.blob());
             audioDataUri = await toBase64(audioBlob);
              if (!userQuestion) {
-                userQuestion = "Analyze the attached audio, including its content and tone.";
-                updateMessage(userMessageId, { text: "Voice message for analysis" });
+                userQuestion = "This is a voice message. Please respond to it.";
+                updateMessage(userMessageId, { text: "Voice message" });
             }
         }
 
