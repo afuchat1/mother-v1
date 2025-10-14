@@ -29,7 +29,9 @@ export default function AiChatHandler() {
 
   const messagesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'aiChat', 'messages');
+    // Corrected path: users/{uid}/aiChats/{chatId}/messages
+    // Using 'default' as a consistent document ID for the single AI chat history.
+    return collection(firestore, 'users', user.uid, 'aiChats', 'default', 'messages');
   }, [firestore, user]);
 
   const messagesQuery = useMemoFirebase(() => {
