@@ -44,42 +44,49 @@ export async function aiAssistantAnswersQuestions(input: AiAssistantAnswersQuest
   return result;
 }
 
-const prompt = ai.definePrompt({
-  name: 'aiAssistantAnswersQuestionsPrompt',
-  input: {schema: AiAssistantAnswersQuestionsInputSchema},
-  output: {schema: AiAssistantAnswersQuestionsOutputSchema},
-  tools: [findUser, findProduct, browse],
-  prompt: `You are a helpful AI assistant. Use the available tools to answer questions.
-
-  {{#if audioDataUri}}
-  Analyze the attached audio. This is the primary context. {{media url=audioDataUri}}
-  {{/if}}
-  {{#if photoDataUri}}
-  This is the photo: {{media url=photoDataUri}}.
-  {{/if}}
-  
-  {{#if chatHistory}}
-  Here is the recent chat history for additional context:
-  {{#each chatHistory}}
-  - {{this.sender}}: {{this.text}}
-  {{/each}}
-  {{/if}}
-  
-  {{#if repliedToMessage}}
-  You are replying to "{{repliedToMessage.text}}" from {{repliedToMessage.sender}}.
-  {{/if}}
-  
-  Now, answer the user's question: {{{question}}}`,
-});
-
 const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
   {
     name: 'aiAssistantAnswersQuestionsFlow',
     inputSchema: AiAssistantAnswersQuestionsInputSchema,
     outputSchema: AiAssistantAnswersQuestionsOutputSchema,
+    tools: [findUser, findProduct, browse],
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { question, photoDataUri, audioDataUri, chatHistory, repliedToMessage } = input;
+
+    let promptText = `You are a helpful AI assistant. Use the available tools to answer questions.`;
+
+    if (audioDataUri) {
+      promptText += `\nAnalyze the attached audio. This is the primary context.`;
+    }
+    if (photoDataUri) {
+      promptText += `\nThis is the photo.`;
+    }
+
+    if (chatHistory && chatHistory.length > 0) {
+      promptText += '\n\nHere is the recent chat history for additional context:\n';
+      promptText += chatHistory.map(m => `- ${m.sender}: ${m.text}`).join('\n');
+    }
+
+    if (repliedToMessage) {
+        promptText += `\n\nYou are replying to "${repliedToMessage.text}" from ${repliedToMessage.sender}.`;
+    }
+
+    promptText += `\n\nNow, answer the user's question: ${question}`;
+
+    const promptParts: any[] = [{ text: promptText }];
+    if (photoDataUri) {
+      promptParts.push({ media: { url: photoDataUri } });
+    }
+    if (audioDataUri) {
+        promptParts.push({ media: { url: audioDataUri } });
+    }
+
+    const { output } = await ai.generate({
+      prompt: promptParts,
+      output: { schema: AiAssistantAnswersQuestionsOutputSchema },
+    });
+
     if (!output) {
       throw new Error('The AI returned an empty response.');
     }
