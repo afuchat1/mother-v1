@@ -186,13 +186,13 @@
       {
         "path": "/users/{userId}/chats/{chatId}",
         "permissions": {
-           "read": "request.auth != null && request.auth.uid == userId",
-           "write": "request.auth != null && request.auth.uid == userId",
-           "list": "request.auth != null && request.auth.uid == userId"
+          "read": "request.auth != null && request.auth.uid == userId",
+          "write": "request.auth != null && request.auth.uid == userId",
+          "list": "request.auth != null && request.auth.uid == userId"
         },
         "definition": {
           "entityName": "Chat",
-           "schema": {
+          "schema": {
             "$ref": "#/backend/entities/ChatRoom"
           },
           "description": "Stores a user's chat references. Only the user can access their own chat list."
@@ -201,12 +201,12 @@
       {
         "path": "/users/{userId}/chats/{chatId}/messages/{messageId}",
         "permissions": {
-           "read": "request.auth != null && request.auth.uid == userId",
-           "write": "request.auth != null && request.auth.uid == userId"
+          "read": "request.auth != null && request.auth.uid == userId",
+          "write": "request.auth != null && request.auth.uid == userId"
         },
         "definition": {
           "entityName": "ChatMessage",
-           "schema": {
+          "schema": {
             "$ref": "#/backend/entities/ChatMessage"
           },
           "description": "Stores chat messages within a user's specific chat. Only the user can access messages in their own chat subcollections."
@@ -228,7 +228,7 @@
       },
       {
         "path": "/afuMallListings/{listingId}",
-         "permissions": {
+        "permissions": {
           "read": "request.auth != null",
           "write": "request.auth != null && request.resource.data.sellerId == request.auth.uid"
         },
@@ -243,5 +243,3 @@
     ]
   }
 }
-
-    
