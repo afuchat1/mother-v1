@@ -151,17 +151,19 @@ export default function AiChatInput({ handleSubmit, isLoading }: AiChatInputProp
         </div>
       ) : (
       <div className="flex items-start gap-2">
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            className="shrink-0 text-muted-foreground h-10 w-10" 
-            onClick={handleMicClick} 
-            type="button"
-            disabled={isLoading}
-        >
-          <Mic className="h-5 w-5" />
-          <span className="sr-only">Voice input</span>
-        </Button>
+        {selectedModel === 'afuai-advanced' && (
+          <Button 
+              variant="ghost" 
+              size="icon" 
+              className="shrink-0 text-muted-foreground h-10 w-10" 
+              onClick={handleMicClick} 
+              type="button"
+              disabled={isLoading}
+          >
+            <Mic className="h-5 w-5" />
+            <span className="sr-only">Voice input</span>
+          </Button>
+        )}
         <div className='flex-1 flex flex-col gap-2'>
             <Select value={selectedModel} onValueChange={setSelectedModel} disabled={isLoading}>
                 <SelectTrigger className="w-auto border-0 bg-transparent focus:ring-0 h-auto p-0 text-base">
