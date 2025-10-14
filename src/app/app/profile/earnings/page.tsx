@@ -1,10 +1,11 @@
 'use client';
+import { useState, useEffect } from 'react';
 import ProfilePageHeader from '@/components/profile-page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, Users } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
-const data = [
+const generateData = () => [
   { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
   { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
   { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
@@ -15,11 +16,18 @@ const data = [
   { name: "Aug", total: Math.floor(Math.random() * 5000) + 1000 },
   { name: "Sep", total: Math.floor(Math.random() * 5000) + 1000 },
   { name: "Oct", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Nov", total: Math.floor(Math.random() * 5000) + 1000 },
+  { name: "Nov", total: Math.floor(Math.random_() * 5000) + 1000 },
   { name: "Dec", total: Math.floor(Math.random() * 5000) + 1000 },
-]
+];
+
 
 export default function EarningsPage() {
+    const [data, setData] = useState<any[]>([]);
+
+    useEffect(() => {
+        setData(generateData());
+    }, []);
+
     return (
         <main className="h-full flex flex-col bg-secondary">
             <ProfilePageHeader title="Earnings" />
