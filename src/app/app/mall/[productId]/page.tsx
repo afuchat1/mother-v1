@@ -15,10 +15,10 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const context = useContext(AppContext);
-  const { productId } = params;
+  const productId = params.productId as string;
   const firestore = useFirestore();
 
-  const productRef = doc(firestore, 'afuMallListings', productId as string);
+  const productRef = doc(firestore, 'afuMallListings', productId);
   const { data: product, isLoading } = useDoc<Product>(productRef);
 
   if (!context) {
