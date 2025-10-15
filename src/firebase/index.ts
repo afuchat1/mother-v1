@@ -1,46 +1,53 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, type Firestore } from 'firebase/firestore'
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
+let firebaseApp: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+
+function initialize() {
   if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
     try {
-      // Attempt to initialize via Firebase App Hosting environment variables
       firebaseApp = initializeApp();
     } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
       firebaseApp = initializeApp(firebaseConfig);
     }
-
-    return getSdks(firebaseApp);
+  } else {
+    firebaseApp = getApp();
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+  try {
+    firestore = initializeFirestore(firebaseApp, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch (e) {
+    // This can happen in development with multiple tabs open.
+    // It's safe to fall back to getFirestore() in this case.
+    if ((e as any).code === 'failed-precondition') {
+        console.warn('Firestore persistence failed to initialize. This is often due to multiple tabs open. Falling back to default persistence.');
+    }
+    firestore = getFirestore(firebaseApp);
+  }
+  
+  auth = getAuth(firebaseApp);
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  const firestore = initializeFirestore(firebaseApp, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  });
+// Initialize on first import.
+initialize();
 
+// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+export function initializeFirebase() {
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: firestore
+    auth,
+    firestore,
   };
 }
 
