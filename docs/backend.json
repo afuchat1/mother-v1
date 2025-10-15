@@ -201,9 +201,9 @@
       },
       "description": "Stores chat messages within a user's specific chat.",
       "permissions": {
-        "read": "request.auth != null && get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])",
-        "write": "request.auth != null && request.resource.data.senderId == request.auth.uid",
-        "list": "request.auth != null && get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])"
+        "read": "get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])",
+        "write": "request.resource.data.senderId == request.auth.uid",
+        "list": "get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])"
       }
     },
     "/users/{userId}/aiChats/default/messages/{messageId}": {
@@ -229,5 +229,3 @@
     }
   }
 }
-
-    
