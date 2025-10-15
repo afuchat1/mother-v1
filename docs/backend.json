@@ -221,7 +221,8 @@
         "path": "/users/{userId}/aiChats/default/messages/{messageId}",
         "permissions": {
           "read": "request.auth != null && request.auth.uid == userId",
-          "write": "request.auth != null && request.auth.uid == userId"
+          "write": "request.auth != null && request.auth.uid == userId",
+          "list": "request.auth != null && request.auth.uid == userId"
         },
         "definition": {
           "entityName": "ChatMessage",
