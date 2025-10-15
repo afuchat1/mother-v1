@@ -53,11 +53,11 @@
         },
         "senderId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ChatMessage). Identifier of the user who sent the message."
+          "description": "Identifier of the user who sent the message."
         },
         "chatRoomId": {
           "type": "string",
-          "description": "Reference to ChatRoom. (Relationship: ChatRoom 1:N ChatMessage). Identifier of the chat room the message belongs to."
+          "description": "Identifier of the chat room the message belongs to."
         },
         "messageType": {
           "type": "string",
@@ -65,7 +65,7 @@
         },
         "content": {
           "type": "string",
-          "description": "Content of the message. Could be text, URL to image, or URL to voice recording."
+          "description": "Content of the message."
         },
         "timestamp": {
           "type": "string",
@@ -86,7 +86,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ChatRoom",
       "type": "object",
-      "description": "Represents a chat room, either a direct message between two users or a group chat.",
+      "description": "Represents a chat room.",
       "properties": {
         "id": {
           "type": "string",
@@ -94,7 +94,7 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the chat room (for group chats). Null for direct messages."
+          "description": "Name of the chat room."
         },
         "type": {
           "type": "string",
@@ -102,7 +102,7 @@
         },
         "participantIds": {
           "type": "array",
-          "description": "References to UserProfiles. Identifiers of the users participating in the chat room. (Relationship: ChatRoom N:N UserProfile)",
+          "description": "Identifiers of the users participating in the chat room.",
           "items": {
             "type": "string"
           }
@@ -131,7 +131,7 @@
         },
         "sellerId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N AfuMallListing). Identifier of the user who is selling the product."
+          "description": "Identifier of the user who is selling the product."
         },
         "name": {
           "type": "string",
@@ -172,80 +172,59 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "permissions": {
-          "read": "request.auth != null && request.auth.uid == userId",
-          "write": "request.auth != null && request.auth.uid == userId",
-          "list": "request.auth != null"
-        },
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. Path-based ownership for private user data. List is allowed for authenticated users to enable user search."
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
       },
-      {
-        "path": "/users/{userId}/chats/{chatId}",
+      "description": "Stores user profile information.",
+      "permissions": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId",
+        "list": "request.auth != null"
+      },
+      "/chats/{chatId}": {
+        "schema": {
+          "$ref": "#/entities/ChatRoom"
+        },
+        "description": "Stores a user's chat references.",
         "permissions": {
           "read": "request.auth != null && request.auth.uid == userId",
           "write": "request.auth != null && request.auth.uid == userId",
           "list": "request.auth != null && request.auth.uid == userId"
         },
-        "definition": {
-          "entityName": "Chat",
+        "/messages/{messageId}": {
           "schema": {
-            "$ref": "#/backend/entities/ChatRoom"
+            "$ref": "#/entities/ChatMessage"
           },
-          "description": "Stores a user's chat references. Only the user can access their own chat list."
+          "description": "Stores chat messages within a user's specific chat.",
+          "permissions": {
+            "read": "request.auth != null && get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])",
+            "write": "request.auth != null && request.resource.data.senderId == request.auth.uid",
+            "list": "request.auth != null && get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])"
+          }
         }
       },
-      {
-        "path": "/users/{userId}/chats/{chatId}/messages/{messageId}",
-        "permissions": {
-          "read": "request.auth != null && get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])",
-          "write": "request.auth != null && request.resource.data.senderId == request.auth.uid"
+      "/aiChats/default/messages/{messageId}": {
+        "schema": {
+          "$ref": "#/entities/ChatMessage"
         },
-        "definition": {
-          "entityName": "ChatMessage",
-          "schema": {
-            "$ref": "#/backend/entities/ChatMessage"
-          },
-          "description": "Stores chat messages within a user's specific chat. Only a chat participant can read messages. Only the sender can write a message."
-        }
-      },
-      {
-        "path": "/users/{userId}/aiChats/default/messages/{messageId}",
+        "description": "Stores AI chat messages for a specific user.",
         "permissions": {
           "read": "request.auth != null && request.auth.uid == userId",
           "write": "request.auth != null && request.auth.uid == userId",
           "list": "request.auth != null && request.auth.uid == userId"
-        },
-        "definition": {
-          "entityName": "ChatMessage",
-          "schema": {
-            "$ref": "#/backend/entities/ChatMessage"
-          },
-          "description": "Stores AI chat messages for a specific user."
-        }
-      },
-      {
-        "path": "/afuMallListings/{listingId}",
-        "permissions": {
-          "read": "request.auth != null",
-          "write": "request.auth != null && (request.resource.data.sellerId == request.auth.uid || resource.data.sellerId == request.auth.uid)"
-        },
-        "definition": {
-          "entityName": "AfuMallListing",
-          "schema": {
-            "$ref": "#/backend/entities/AfuMallListing"
-          },
-          "description": "Stores AfuMall product listings. Any authenticated user can read. Only the seller can write."
         }
       }
-    ]
+    },
+    "/afuMallListings/{listingId}": {
+      "schema": {
+        "$ref": "#/entities/AfuMallListing"
+      },
+      "description": "Stores AfuMall product listings.",
+      "permissions": {
+        "read": "request.auth != null",
+        "write": "request.auth != null && (request.resource.data.sellerId == request.auth.uid || resource.data.sellerId == request.auth.uid)"
+      }
+    }
   }
 }
