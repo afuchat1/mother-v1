@@ -27,7 +27,7 @@ export default function AppLayout({
   }, [currentUser, isUserLoading, router]);
 
   useEffect(() => {
-    const chatPathRegex = /^\/app\/chat\/(chat\d+)$/;
+    const chatPathRegex = /^\/app\/chat\/(.+)$/;
     const match = pathname.match(chatPathRegex);
     
     if (!match) {
@@ -35,7 +35,7 @@ export default function AppLayout({
             setActiveChat(null);
         }
     }
-  }, [pathname, activeChat]);
+  }, [pathname]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {
