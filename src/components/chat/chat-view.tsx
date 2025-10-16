@@ -11,10 +11,9 @@ import { aiUser } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { aiAssistantAnswersQuestions } from '@/ai/flows/ai-assistant-answers-questions';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useCollection, useDoc } from '@/firebase';
+import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, serverTimestamp, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { useMemoFirebase } from '@/firebase/provider';
 
 
 type ChatViewProps = {

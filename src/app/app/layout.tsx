@@ -35,7 +35,7 @@ export default function AppLayout({
             setActiveChat(null);
         }
     }
-  }, [pathname]);
+  }, [pathname, activeChat]);
 
   const addToCart = (product: Product) => {
     setCart(prevCart => {

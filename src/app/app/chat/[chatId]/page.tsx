@@ -30,23 +30,23 @@ export default function ChatPage() {
                 router.replace('/app/chat');
             }
         }
-    }, [isLoading, currentChat, error, router]);
+    }, [isLoading, currentChat, error, router, chatId]);
 
     if (isLoading || !user) {
-        return <p>Loading chat...</p>;
+        return <main className="flex-1 overflow-y-auto"><p className="p-4 text-center">Loading chat...</p></main>;
     }
 
     if (error) {
-        return <p>Error loading chat. Redirecting...</p>;
+        return <main className="flex-1 overflow-y-auto"><p className="p-4 text-center">Error loading chat. Redirecting...</p></main>;
     }
     
     if (!context) {
-        return <p>Loading context...</p>;
+        return <main className="flex-1 overflow-y-auto"><p className="p-4 text-center">Loading context...</p></main>;
     }
 
     // By this point, isLoading is false and we have a currentChat
     if (!currentChat) {
-        return <p>Chat not found. Redirecting...</p>;
+        return <main className="flex-1 overflow-y-auto"><p className="p-4 text-center">Chat not found. Redirecting...</p></main>;
     }
     
     const { setActiveChat } = context;
