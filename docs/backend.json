@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -176,64 +177,37 @@
       "schema": {
         "$ref": "#/entities/UserProfile"
       },
-      "description": "Stores user profile information.",
-      "permissions": {
-        "read": "request.auth != null && request.auth.uid == userId",
-        "write": "request.auth != null && request.auth.uid == userId"
-      }
+      "description": "Stores user profile information."
     },
      "/users": {
       "schema": {
         "$ref": "#/entities/UserProfile"
       },
-      "description": "User collection, allows searching/listing for logged in users.",
-      "permissions": {
-        "list": "request.auth != null"
-      }
+      "description": "User collection, allows searching/listing for logged in users."
     },
     "/users/{userId}/chats/{chatId}": {
       "schema": {
         "$ref": "#/entities/ChatRoom"
       },
-      "description": "Stores a user's chat references.",
-      "permissions": {
-        "read": "request.auth != null && request.auth.uid == userId",
-        "write": "request.auth != null && request.auth.uid == userId",
-        "list": "request.auth != null && request.auth.uid == userId"
-      }
+      "description": "Stores a user's chat references."
     },
     "/users/{userId}/chats/{chatId}/messages/{messageId}": {
       "schema": {
         "$ref": "#/entities/ChatMessage"
       },
-      "description": "Stores chat messages within a user's specific chat.",
-      "permissions": {
-        "read": "get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])",
-        "write": "request.resource.data.senderId == request.auth.uid",
-        "list": "get(/databases/(default)/documents/users/$(userId)/chats/$(chatId)).data.participantIds.hasAny([request.auth.uid])"
-      }
+      "description": "Stores chat messages within a user's specific chat."
     },
     "/users/{userId}/aiChats/default/messages/{messageId}": {
       "schema": {
         "$ref": "#/entities/ChatMessage"
       },
-      "description": "Stores AI chat messages for a specific user.",
-      "permissions": {
-        "read": "request.auth != null && request.auth.uid == userId",
-        "write": "request.auth != null && request.auth.uid == userId",
-        "list": "request.auth != null && request.auth.uid == userId"
-      }
+      "description": "Stores AI chat messages for a specific user."
     },
     "/afuMallListings/{listingId}": {
       "schema": {
         "$ref": "#/entities/AfuMallListing"
       },
-      "description": "Stores AfuMall product listings.",
-      "permissions": {
-        "read": "request.auth != null",
-        "write": "request.auth != null && (request.resource.data.sellerId == request.auth.uid || resource.data.sellerId == request.auth.uid)",
-        "list": "request.auth != null"
-      }
+      "description": "Stores AfuMall product listings."
     }
   }
 }
