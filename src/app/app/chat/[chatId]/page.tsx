@@ -1,5 +1,5 @@
 'use client';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ChatView from '@/components/chat/chat-view';
 import { AppContext } from '@/lib/context.tsx';
@@ -19,18 +19,25 @@ export default function ChatPage() {
     const chatDocRef = user ? doc(firestore, `users/${user.uid}/chats/${chatId}`) : null;
     const { data: currentChat, isLoading, error } = useDoc<Chat>(chatDocRef);
     
+    useEffect(() => {
+        if (error) {
+            console.error("Error fetching chat:", error);
+            router.replace('/app/chat');
+        }
+        if (!isLoading && !currentChat) {
+            router.replace('/app/chat');
+        }
+    }, [isLoading, currentChat, error, router]);
+
     if (!context || isLoading || !user) {
         return <p>Loading chat...</p>;
     }
 
     if (error) {
-        console.error("Error fetching chat:", error);
-        router.replace('/app/chat');
         return <p>Error loading chat. Redirecting...</p>;
     }
 
-    if (!isLoading && !currentChat) {
-        router.replace('/app/chat');
+    if (!currentChat) {
         return <p>Chat not found. Redirecting...</p>;
     }
     
