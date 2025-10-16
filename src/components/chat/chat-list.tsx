@@ -8,6 +8,8 @@ import { useCollection, useFirestore, useUser } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/provider";
 import { format, isToday, isYesterday } from 'date-fns';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type ChatListProps = {
   activeChat: Chat | null;
@@ -17,6 +19,7 @@ type ChatListProps = {
 export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
   const firestore = useFirestore();
   const { user } = useUser();
+  const pathname = usePathname();
 
   const chatsQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -27,10 +30,6 @@ export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
   }, [firestore, user]);
 
   const { data: chats, isLoading } = useCollection<Chat>(chatsQuery);
-
-  const handleChatSelection = (chat: Chat) => {
-    setActiveChat(chat);
-  }
 
   const formatTimestamp = (timestamp: any) => {
     if (!timestamp || !timestamp.toDate) return '';
@@ -56,16 +55,17 @@ export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
     <ScrollArea className="flex-1">
         <div className="flex flex-col">
             {chats && chats.map((chat) => (
-            <button
+            <Link
                 key={chat.id}
-                onClick={() => handleChatSelection(chat)}
+                href={`/app/chat/${chat.id}`}
+                onClick={() => setActiveChat(chat)}
                 className={cn(
                     "flex items-center gap-3 px-4 py-3 text-left transition-colors border-b",
-                    "hover:bg-accent"
+                    pathname === `/app/chat/${chat.id}` ? "bg-accent" : "hover:bg-accent"
                 )}
             >
                 <ChatAvatar chat={chat} className="h-14 w-14" />
-                <div className="flex-1 overflow-hidden border-t-0">
+                <div className="flex-1 overflow-hidden">
                     <div className="flex justify-between items-center">
                         <span className="font-semibold truncate text-lg">{chat.name}</span>
                         <span className="text-xs text-muted-foreground shrink-0">
@@ -81,7 +81,7 @@ export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
                         </div>
                     </div>
                 </div>
-            </button>
+            </Link>
             ))}
         </div>
     </ScrollArea>
