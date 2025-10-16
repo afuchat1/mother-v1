@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -180,7 +179,15 @@
       "description": "Stores user profile information.",
       "permissions": {
         "read": "request.auth != null && request.auth.uid == userId",
-        "write": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+     "/users": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "User collection, allows searching/listing for logged in users.",
+      "permissions": {
         "list": "request.auth != null"
       }
     },
@@ -224,7 +231,8 @@
       "description": "Stores AfuMall product listings.",
       "permissions": {
         "read": "request.auth != null",
-        "write": "request.auth != null && (request.resource.data.sellerId == request.auth.uid || resource.data.sellerId == request.auth.uid)"
+        "write": "request.auth != null && (request.resource.data.sellerId == request.auth.uid || resource.data.sellerId == request.auth.uid)",
+        "list": "request.auth != null"
       }
     }
   }
