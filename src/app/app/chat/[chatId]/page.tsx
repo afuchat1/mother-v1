@@ -1,44 +1,45 @@
 'use client';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ChatView from '@/components/chat/chat-view';
 import { AppContext } from '@/lib/context.tsx';
+import { useDoc, useFirestore, useUser } from '@/firebase';
+import type { Chat } from '@/lib/types';
+import { doc } from 'firebase/firestore';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
     const params = useParams();
     const router = useRouter();
+    const firestore = useFirestore();
+    const { user } = useUser();
 
-    if (!context) {
-        return <p>Loading chat context...</p>;
-    }
-
-    const { chats, activeChat, setActiveChat } = context;
     const { chatId } = params;
 
-    const currentChat = chats.find(c => c.id === chatId);
+    const chatDocRef = user ? doc(firestore, `users/${user.uid}/chats/${chatId}`) : null;
+    const { data: currentChat, isLoading, error } = useDoc<Chat>(chatDocRef);
+    
+    if (!context || isLoading || !user) {
+        return <p>Loading chat...</p>;
+    }
 
-    useEffect(() => {
-        // If the chat doesn't exist, redirect back.
-        if (!currentChat) {
-            router.replace('/app/chat');
-            return;
-        }
+    if (error) {
+        console.error("Error fetching chat:", error);
+        router.replace('/app/chat');
+        return <p>Error loading chat. Redirecting...</p>;
+    }
 
-        // Ensure the active chat in context matches the one from the URL
-        if (!activeChat || activeChat.id !== currentChat.id) {
-            setActiveChat(currentChat);
-        }
-    }, [currentChat, activeChat, router, setActiveChat]);
-
-
-    if (!currentChat) {
+    if (!isLoading && !currentChat) {
+        router.replace('/app/chat');
         return <p>Chat not found. Redirecting...</p>;
     }
     
+    // setActiveChat is still useful for other parts of the UI that might react to the active chat
+    const { setActiveChat } = context;
+
     return (
         <main className="flex h-full flex-col overflow-hidden">
-            {activeChat && activeChat.id === chatId && <ChatView key={activeChat.id} chat={activeChat} setActiveChat={setActiveChat} />}
+            {currentChat && <ChatView key={currentChat.id} chat={currentChat} setActiveChat={setActiveChat} />}
         </main>
     )
 }
