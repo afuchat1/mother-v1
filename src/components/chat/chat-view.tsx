@@ -31,11 +31,11 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
     return <p>Loading...</p>
   }
   
-  const chatRef = doc(firestore, `users/${currentUser.uid}/chats`, initialChat.id);
+  const chatRef = useMemoFirebase(() => doc(firestore, `users/${currentUser.uid}/chats`, initialChat.id), [firestore, currentUser.uid, initialChat.id]);
   const { data: chatData } = useDoc<Chat>(chatRef);
 
-  const messagesRef = collection(chatRef, 'messages');
-  const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+  const messagesRef = useMemoFirebase(() => collection(chatRef, 'messages'), [chatRef]);
+  const messagesQuery = useMemoFirebase(() => query(messagesRef, orderBy('timestamp', 'asc')), [messagesRef]);
 
   const { data: messages, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
   const chat = { ...initialChat, ...chatData, messages: messages || [] };
