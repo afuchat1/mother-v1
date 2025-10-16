@@ -1,32 +1,24 @@
 'use client';
 import { useContext } from 'react';
-import { useRouter } from 'next/navigation';
 import ChatList from '@/components/chat/chat-list';
 import { AppContext } from '@/lib/context.tsx';
 import type { Chat } from '@/lib/types';
-import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 
 export default function ChatPage() {
     const context = useContext(AppContext);
-    const router = useRouter();
-    const { user, isUserLoading } = useUser();
 
     if (!context) {
         return <p>Loading chat context...</p>;
-    }
-     if (isUserLoading) {
-        return <p>Loading user...</p>;
     }
 
     const { activeChat, setActiveChat } = context;
     
     const handleSelectChat = (chat: Chat) => {
-        if (!user) return;
         setActiveChat(chat);
-        router.push(`/app/chat/${chat.id}`);
+        // Navigation is handled by the Link component in ChatList
     }
 
     return (

@@ -14,39 +14,46 @@ export default function ChatPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const { chatId } = params;
+    const chatId = params.chatId as string;
 
     const chatDocRef = user ? doc(firestore, `users/${user.uid}/chats/${chatId}`) : null;
     const { data: currentChat, isLoading, error } = useDoc<Chat>(chatDocRef);
     
     useEffect(() => {
-        if (error) {
-            console.error("Error fetching chat:", error);
-            router.replace('/app/chat');
-        }
-        if (!isLoading && !currentChat) {
-            router.replace('/app/chat');
+        // Only redirect if loading is finished and there's a definite problem
+        if (!isLoading) {
+            if (error) {
+                console.error("Error fetching chat:", error);
+                router.replace('/app/chat');
+            } else if (!currentChat) {
+                // This means loading finished and the document doesn't exist.
+                router.replace('/app/chat');
+            }
         }
     }, [isLoading, currentChat, error, router]);
 
-    if (!context || isLoading || !user) {
+    if (isLoading || !user) {
         return <p>Loading chat...</p>;
     }
 
     if (error) {
         return <p>Error loading chat. Redirecting...</p>;
     }
+    
+    if (!context) {
+        return <p>Loading context...</p>;
+    }
 
+    // By this point, isLoading is false and we have a currentChat
     if (!currentChat) {
         return <p>Chat not found. Redirecting...</p>;
     }
     
-    // setActiveChat is still useful for other parts of the UI that might react to the active chat
     const { setActiveChat } = context;
 
     return (
         <main className="flex h-full flex-col overflow-hidden">
-            {currentChat && <ChatView key={currentChat.id} chat={currentChat} setActiveChat={setActiveChat} />}
+            <ChatView key={currentChat.id} chat={currentChat} setActiveChat={setActiveChat} />
         </main>
     )
 }
