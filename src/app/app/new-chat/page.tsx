@@ -92,31 +92,88 @@ export default function NewChatPage() {
     <main className="h-full flex flex-col bg-secondary">
       <ProfilePageHeader title="New Message" />
       <div className="p-4 border-b bg-background">
-        <Input
-          placeholder="Search for users..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-secondary focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-        />
+        <div className="relative">
+          <Input
+            placeholder="Search for users to chat with..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-secondary focus-visible:ring-0 focus-visible:ring-offset-0 border-0 pl-10"
+          />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <span className="text-muted-foreground">🔍</span>
+          </div>
+        </div>
+        {searchTerm.trim() && (
+          <p className="text-xs text-muted-foreground mt-2">
+            {isLoading ? 'Searching...' : `${users?.length || 0} user${users?.length !== 1 ? 's' : ''} found`}
+          </p>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto">
-        {isLoading && <p className="p-4 text-center text-muted-foreground">Searching...</p>}
-        {!isLoading && users && users.length === 0 && searchTerm && (
-          <p className="p-4 text-center text-muted-foreground">No users found.</p>
+        {!searchTerm.trim() && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center space-y-4 max-w-sm">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <span className="text-2xl">👋</span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold">Find someone to chat with</h3>
+                <p className="text-sm text-muted-foreground">
+                  Search for users by name to start a new conversation
+                </p>
+              </div>
+            </div>
+          </div>
         )}
+        
+        {isLoading && searchTerm.trim() && (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center space-y-3">
+              <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-muted-foreground">Searching for users...</p>
+            </div>
+          </div>
+        )}
+        
+        {!isLoading && searchTerm.trim() && users && users.length === 0 && (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center space-y-4 max-w-sm">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                <span className="text-2xl">😔</span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold">No users found</h3>
+                <p className="text-sm text-muted-foreground">
+                  Try searching with a different name or check your spelling
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="flex flex-col">
             {users && users.filter(u => u.id !== currentUser?.uid).map((user) => (
                 <button
                     key={user.id}
                     onClick={() => handleSelectUser(user)}
-                    className="flex items-center gap-3 px-4 py-3 text-left transition-colors border-b hover:bg-accent"
+                    className="flex items-center gap-3 px-4 py-4 text-left transition-all duration-200 border-b hover:bg-accent hover:shadow-sm active:scale-98"
                 >
-                    <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.avatarUrl} alt={user.name} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                        <Avatar className="h-12 w-12">
+                            <AvatarImage src={user.avatarUrl} alt={user.name} />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                                {user.name.charAt(0)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+                    </div>
                     <div className="flex-1 overflow-hidden">
-                        <p className="font-semibold truncate">{user.name}</p>
+                        <div className="flex items-center justify-between">
+                            <p className="font-semibold truncate">{user.name}</p>
+                            <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
+                                Start Chat
+                            </span>
+                        </div>
                         <p className="text-sm text-muted-foreground">@{user.name.toLowerCase().replace(/\s/g, '')}</p>
                     </div>
                 </button>

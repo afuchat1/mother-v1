@@ -60,26 +60,43 @@ export default function ChatList({ activeChat, setActiveChat }: ChatListProps) {
                 key={chat.id}
                 onClick={() => handleChatSelection(chat)}
                 className={cn(
-                    "flex items-center gap-3 px-4 py-3 text-left transition-colors border-b",
-                    "hover:bg-accent"
+                    "flex items-center gap-3 px-4 py-4 text-left transition-all duration-200 border-b",
+                    "hover:bg-accent hover:shadow-sm active:scale-98",
+                    activeChat?.id === chat.id && "bg-accent border-l-4 border-l-primary"
                 )}
             >
-                <ChatAvatar chat={chat} className="h-14 w-14" />
-                <div className="flex-1 overflow-hidden border-t-0">
-                    <div className="flex justify-between items-center">
+                <div className="relative">
+                    <ChatAvatar chat={chat} className="h-14 w-14" />
+                    {chat.type === 'dm' && (
+                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-background" />
+                    )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-center mb-1">
                         <span className="font-semibold truncate text-lg">{chat.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
                             {formatTimestamp(chat.lastMessage?.timestamp)}
                         </span>
                     </div>
-                    <div className="flex items-start justify-between">
-                        <p className="truncate text-sm text-muted-foreground w-11/12">
-                            {chat.lastMessage?.text || (chat.lastMessage?.imageUrl ? '📷 Image' : chat.lastMessage?.voiceUrl ? '🎤 Voice message' : '📹 Video message')}
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm text-muted-foreground flex-1">
+                            {chat.lastMessage?.text || (chat.lastMessage?.imageUrl ? '📷 Image' : chat.lastMessage?.voiceUrl ? '🎤 Voice message' : chat.lastMessage?.videoUrl ? '📹 Video message' : 'Start a conversation')}
                         </p>
-                         <div className="flex flex-col items-end">
-                            <CheckCheck className="h-5 w-5 text-primary" />
+                        <div className="flex items-center gap-1">
+                            {chat.type === 'group' && (
+                                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                    {chat.participantIds?.length || 0}
+                                </span>
+                            )}
+                            <CheckCheck className="h-4 w-4 text-muted-foreground" />
                         </div>
                     </div>
+                    {chat.type === 'ai' && (
+                        <div className="flex items-center gap-1 mt-1">
+                            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                            <span className="text-xs text-blue-600 dark:text-blue-400">AI Assistant</span>
+                        </div>
+                    )}
                 </div>
             </button>
             ))}

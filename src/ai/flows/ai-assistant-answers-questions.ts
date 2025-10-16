@@ -35,7 +35,6 @@ const aiAssistantAnswersQuestionsFlow = ai.defineFlow(
     name: 'aiAssistantAnswersQuestionsFlow',
     inputSchema: AiAssistantAnswersQuestionsInputSchema,
     outputSchema: AiAssistantAnswersQuestionsOutputSchema,
-    tools: [findUser, findProduct, browse],
   },
   async (input) => {
     const { output } = await ai.generate({

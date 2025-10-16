@@ -56,7 +56,7 @@ export default function CartPage() {
                                             />
                                             <div className="flex-1">
                                                 <h3 className="font-semibold">{item.product.name}</h3>
-                                                <p className="text-sm text-muted-foreground">by {item.product.seller.name}</p>
+                                                <p className="text-sm text-muted-foreground">by {item.product.seller?.name || 'Unknown seller'}</p>
                                                 <p className="font-bold text-primary mt-1">${item.product.price.toFixed(2)}</p>
                                             </div>
                                             <div className="flex items-center gap-2">

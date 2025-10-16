@@ -26,7 +26,7 @@ export type Message = {
 
 export type Chat = {
   id: string;
-  type: 'dm' | 'group';
+  type: 'dm' | 'group' | 'ai';
   name: string;
   avatarUrl?: string;
   participantIds?: string[];
