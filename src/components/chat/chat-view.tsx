@@ -209,20 +209,41 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
   const { data: otherUser } = useDoc<UserProfile>(otherUserRef);
 
   const header = (
-    <header className="flex shrink-0 items-center gap-2 border-b bg-background p-2">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
+    <header className="flex shrink-0 items-center gap-3 border-b bg-background p-3">
+        <Button variant="ghost" size="icon" onClick={handleBack} className="shrink-0">
             <ArrowLeft />
         </Button>
-        <ChatAvatar chat={chat} senderId={chat.type === 'dm' ? otherParticipantId : undefined} />
-        <div className="flex-1">
-          <h2 className="font-semibold font-headline text-base">{chat.type === 'dm' ? otherUser?.name : chat.name}</h2>
+        <div className="relative shrink-0">
+            <ChatAvatar chat={chat} senderId={chat.type === 'dm' ? otherParticipantId : undefined} />
+            {chat.type === 'dm' && (
+                <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+            )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold font-headline text-base truncate">
+              {chat.type === 'dm' ? (otherUser?.name || 'Loading...') : chat.name}
+            </h2>
+            {chat.type === 'ai' && (
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-xs text-blue-600 dark:text-blue-400">AI</span>
+              </div>
+            )}
+          </div>
           {chat.type !== 'ai' && (
-            <p className="text-sm text-muted-foreground">
-                {chat.type === 'dm' ? 'online' : `${chat.participantIds?.length || 0} members`}
+            <p className="text-sm text-muted-foreground truncate">
+                {chat.type === 'dm' 
+                  ? 'Active now' 
+                  : `${chat.participantIds?.length || 0} member${(chat.participantIds?.length || 0) !== 1 ? 's' : ''}`
+                }
             </p>
           )}
+          {chat.type === 'ai' && (
+            <p className="text-xs text-muted-foreground">Your AI assistant is ready to help</p>
+          )}
         </div>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="shrink-0">
           <MoreVertical />
         </Button>
       </header>
@@ -230,7 +251,37 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
 
   const renderContent = () => {
     if (messagesLoading) {
-      return <div className="flex-1 flex items-center justify-center"><p>Loading messages...</p></div>
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-3">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-muted-foreground">Loading conversation...</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (!chat.messages || chat.messages.length === 0) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-4 max-w-sm">
+            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+              <span className="text-2xl">💬</span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold">Start the conversation</h3>
+              <p className="text-sm text-muted-foreground">
+                {chat.type === 'dm' 
+                  ? `Say hello to ${otherUser?.name || 'your contact'}!` 
+                  : chat.type === 'ai'
+                  ? 'Ask me anything! I\'m here to help.'
+                  : 'Be the first to share something with the group.'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      )
     }
 
     return (
@@ -242,11 +293,14 @@ export default function ChatView({ chat: initialChat, setActiveChat }: ChatViewP
                         <div className="p-4">
                             <div className="flex items-end gap-2 justify-start">
                             <ChatAvatar senderId={aiUser.id} />
-                            <div className="relative max-w-lg rounded-xl p-2 px-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
-                                <div className="flex items-center space-x-2 p-2">
-                                    <Skeleton className="h-2 w-2 rounded-full" />
-                                    <Skeleton className="h-2 w-2 rounded-full" />
-                                    <Skeleton className="h-2 w-2 rounded-full" />
+                            <div className="relative max-w-lg rounded-xl p-3 shadow-sm bg-secondary text-secondary-foreground rounded-bl-none">
+                                <div className="flex items-center space-x-2">
+                                    <div className="flex space-x-1">
+                                        <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="h-2 w-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">AI is thinking...</span>
                                 </div>
                             </div>
                             </div>

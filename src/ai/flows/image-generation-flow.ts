@@ -37,7 +37,7 @@ const generateImageFlow = ai.defineFlow(
         prompt,
     });
     
-    if (!media.url) {
+    if (!media || !media.url) {
         throw new Error('Image generation failed to return a URL.');
     }
 
